@@ -9,7 +9,7 @@ On Android and Windows. Fully offline. No account. Free and open source.
 [![Checks](https://github.com/Bashyr18/miftah-app/actions/workflows/check.yml/badge.svg)](https://github.com/Bashyr18/miftah-app/actions/workflows/check.yml)
 [![Licence: MIT](https://img.shields.io/badge/licence-MIT-6b5a3e)](LICENSE)
 
-[**Download**](#download) · [**How to use it**](#how-to-use-it) · [**The illustrated guide**](docs/guide/) · [**Build it yourself**](#build-it-yourself)
+[**Download**](#download) · [**How to use it**](#how-to-use-it) · [**The illustrated guide**](https://bashyr18.github.io/miftah-app/guide/) · [**Build it yourself**](#build-it-yourself)
 
 <img src="docs/screens/hero.webp" alt="Miftāḥ on a Windows computer, with the same child's day on a phone in front of it" width="100%">
 
@@ -116,7 +116,7 @@ Pair once with six digits on your home Wi-Fi. After that the phone joins its rec
 
 ## How to use it
 
-A simple path for the first week. The [illustrated guide](docs/guide/) shows every step on every screen.
+A simple path for the first week. The [illustrated guide](https://bashyr18.github.io/miftah-app/guide/) shows every step on every screen.
 
 1. **Install it** on the phone, the computer, or both ([Download](#download)).
 2. **Open the first door.** Choose English or العربية, press **Begin**, and add your first child: a name and an age. The age sets their stage.
