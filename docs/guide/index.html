@@ -584,6 +584,66 @@ kbd { display: inline-grid; place-items: center; min-width: 26px; height: 26px; 
   .stage .win.w0 { width: 96%; left: 2%; top: 4%; }
   .stage .phone { width: 32%; }
 }
+
+/* ---------- downloads: on the cover, and their own section ---------- */
+.get { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 30px; }
+.gbtn { position: relative; display: inline-flex; align-items: center; gap: 14px; min-width: 228px; padding: 12px 18px 12px 16px; border-radius: 18px;
+  background: var(--t1); color: var(--bg); border: 1px solid transparent; box-shadow: 0 18px 36px -18px rgba(0, 0, 0, .6);
+  transition: transform .35s var(--out), box-shadow .35s var(--out), background .35s; }
+.gbtn > svg:first-child { width: 30px; height: 30px; flex: none; }
+.gbtn span { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+.gbtn small { font: 700 11px/1.2 var(--sans); letter-spacing: .12em; text-transform: uppercase; opacity: .7; }
+.gbtn b { font: 700 21px/1.15 var(--sans); }
+.gbtn em { font: 600 12px/1.3 var(--sans); font-style: normal; opacity: .72; margin-top: 2px; }
+.gbtn .dn { width: 20px; height: 20px; flex: none; opacity: .55; transition: transform .35s var(--out), opacity .35s; }
+.gbtn:hover { transform: translateY(-2px); box-shadow: 0 24px 44px -18px rgba(0, 0, 0, .7), 0 0 0 1px var(--gold-line); }
+.gbtn:hover .dn { transform: translateY(2px); opacity: 1; }
+.gbtn:focus-visible, .dl-go:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+.get-more { display: inline-flex; gap: 6px; margin-top: 12px; font: 700 13px/1.3 var(--sans); color: var(--t3); transition: color .25s; }
+.get-more:hover { color: var(--gold2); }
+.cover .get + .get-more + .cta { margin-top: 22px; }
+
+.dl { padding: clamp(80px, 11vw, 140px) 0; border-top: 1px solid var(--line); background:
+  radial-gradient(60% 50% at 50% 0%, var(--gold-soft), transparent 70%); }
+.dl-head { text-align: center; }
+.dl-head .h2 { max-width: 18ch; margin-inline: auto; }
+.dl-head p { max-width: 52ch; margin: 20px auto 0; color: var(--t2); font: 400 19px/1.6 var(--serif); }
+.dl-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(14px, 2vw, 24px); margin-top: clamp(40px, 5vw, 60px); }
+.dl-card { position: relative; display: grid; grid-template-rows: auto 1fr; border-radius: 28px; overflow: hidden; background: var(--s1); border: 1px solid var(--line2);
+  box-shadow: var(--shadow); transition: transform .5s var(--out), border-color .5s; }
+.dl-card:hover { transform: translateY(-4px); border-color: var(--gold-line); }
+.dl-art { position: relative; height: 250px; overflow: hidden; display: grid; place-items: end center; background:
+  radial-gradient(70% 90% at 50% 100%, var(--gold-soft), transparent 70%), var(--s2); border-bottom: 1px solid var(--line); }
+.dl-ph { width: 168px; height: 300px; margin-bottom: -92px; padding: 7px; border-radius: 30px; background: var(--frame); box-shadow: 0 30px 50px -24px rgba(0, 0, 0, .7); transform: rotate(-4deg); transition: transform .6s var(--out); }
+.dl-ph img { width: 100%; height: 100%; object-fit: cover; object-position: top; border-radius: 24px; display: block; }
+.dl-win { width: min(88%, 430px); margin-bottom: -84px; border-radius: 12px; overflow: hidden; background: var(--s1); border: 1px solid var(--line2); box-shadow: 0 30px 50px -24px rgba(0, 0, 0, .7); transition: transform .6s var(--out); }
+.dl-win > img { display: block; width: 100%; height: auto; }
+.dl-tb { display: flex; align-items: center; gap: 7px; height: 26px; padding: 0 10px; font: 700 11px/1 var(--sans); color: var(--t2); border-bottom: 1px solid var(--line); }
+.dl-tb img { width: 14px; height: 14px; border-radius: 4px; }
+.dl-tb span { flex: 1; }
+.dl-tb i { width: 8px; height: 8px; border-radius: 50%; background: var(--line2); }
+.dl-card:hover .dl-ph { transform: rotate(-2deg) translateY(-8px); }
+.dl-card:hover .dl-win { transform: translateY(-8px); }
+.dl-body { position: relative; padding: 26px clamp(20px, 3vw, 34px) 30px; }
+.dl-ic { position: absolute; top: -28px; inset-inline-start: clamp(20px, 3vw, 34px); width: 56px; height: 56px; border-radius: 18px; display: grid; place-items: center;
+  background: linear-gradient(180deg, #f1d59e, #d9b26f); color: var(--on-gold); box-shadow: 0 14px 28px -12px rgba(217, 178, 111, .8); }
+.dl-ic svg { width: 28px; height: 28px; }
+.dl-body h3 { margin: 28px 0 0; font: 400 clamp(32px, 3.4vw, 42px)/1.05 var(--serif); }
+.dl-req { margin: 6px 0 0; color: var(--t3); font-size: 14.5px; }
+.dl-go { margin-top: 22px; width: 100%; justify-content: center; }
+.dl-go .dn { width: 20px; height: 20px; }
+.dl-meta { margin: 12px 0 0; text-align: center; font: 700 12.5px/1.4 var(--sans); color: var(--t3); }
+.dl-steps { list-style: none; margin: 24px 0 0; padding: 20px 0 0; border-top: 1px solid var(--line); display: grid; gap: 12px; }
+.dl-steps li { display: flex; gap: 12px; align-items: flex-start; font-size: 14.5px; line-height: 1.45; color: var(--t2); }
+.dl-steps li b { color: var(--t1); }
+.dl-steps i { flex: none; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font: 700 12.5px/1 var(--sans); font-style: normal; color: var(--gold2); background: var(--gold-soft); border: 1px solid var(--gold-line); }
+.dl-note { margin: 16px 0 0; font-size: 13.5px; color: var(--t3); line-height: 1.5; }
+.dl-strip { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px 22px; margin-top: 34px; font: 700 13px/1.3 var(--sans); color: var(--t2); }
+.dl-strip span { display: inline-flex; align-items: center; gap: 8px; }
+.dl-strip span i { width: 6px; height: 6px; border-radius: 50%; background: var(--gold2); }
+.dl-strip a { color: var(--gold2); border-bottom: 1px solid var(--gold-line); } .dl-strip a:hover { border-color: var(--gold2); }
+@media (max-width: 860px) { .dl-grid { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 520px) { .get { flex-direction: column; } .gbtn { width: 100%; min-width: 0; } .dl-art { height: 200px; } }
 </style>
 </head>
 <body>
@@ -621,6 +681,11 @@ kbd { display: inline-grid; place-items: center; min-width: 26px; height: 26px; 
           <div class="q" lang="ar">ٱقْرَأْ بِٱسْمِ رَبِّكَ ٱلَّذِى خَلَقَ</div>
           <p>Read, ˹O Prophet,˺ in the Name of your Lord Who created, Al-ʿAlaq 96:1 · The Clear Quran</p>
         </div>
+        <div class="get" aria-label="Download Miftāḥ">
+          <a class="gbtn" href="https://github.com/Bashyr18/miftah-app/releases/latest/download/Miftah.apk" data-dl="apk"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.6 9.48l1.84-3.18a.38.38 0 0 0-.66-.38l-1.86 3.22A11.4 11.4 0 0 0 12 8.2c-1.8 0-3.5.38-4.92.94L5.22 5.92a.38.38 0 0 0-.66.38L6.4 9.48A10.6 10.6 0 0 0 1 18h22a10.6 10.6 0 0 0-5.4-8.52zM7 15.25a1.25 1.25 0 1 1 0-2.5 1.25 1.25 0 0 1 0 2.5zm10 0a1.25 1.25 0 1 1 0-2.5 1.25 1.25 0 0 1 0 2.5z"/></svg><span><small>Download for</small><b>Android</b><em data-size="apk">APK · Android 8 or newer</em></span><svg class="dn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 10.5l5 5 5-5M5 20h14"/></svg></a>
+          <a class="gbtn" href="https://github.com/Bashyr18/miftah-app/releases/latest/download/Miftah-Windows.exe" data-dl="exe"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 5.4l7.4-1v7.1H3zM11.4 4.25L21 3v8.5h-9.6zM3 12.5h7.4v7.1L3 18.6zM11.4 12.5H21V21l-9.6-1.3z"/></svg><span><small>Download for</small><b>Windows</b><em data-size="exe">EXE · Windows 10 and 11</em></span><svg class="dn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 10.5l5 5 5-5M5 20h14"/></svg></a>
+        </div>
+        <a class="get-more" href="#download">Free, no account · <span data-ver>Version 2.0</span> · How to install <span aria-hidden="true">↓</span></a>
         <div class="cta">
           <a class="btn pri" href="#contents">Begin the guide <span class="arr" aria-hidden="true">→</span></a>
           <a class="btn tour" id="tourAll" href="#ch-start"><span class="wi" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.4-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z"/></svg></span>Take the guided tour</a>
@@ -645,6 +710,27 @@ kbd { display: inline-grid; place-items: center; min-width: 26px; height: 26px; 
   </section>
 
   <div id="chapters"></div>
+
+  <section class="dl" id="download">
+    <div class="wrap">
+      <div class="dl-head">
+        <div class="kicker rv">Get Miftāḥ</div>
+        <h2 class="h2 rv">Free, on the phone and the computer</h2>
+        <p class="rv">One family record on both. Pair them once on your home Wi-Fi and they keep each other up to date. No account, no adverts, nothing to pay.</p>
+      </div>
+      <div class="dl-grid">
+<article class="dl-card a rv"><div class="dl-art" aria-hidden="true"><div class="dl-ph"><img src="shots/light/p-home.webp" alt="" loading="lazy" decoding="async"></div></div><div class="dl-body"><div class="dl-ic"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.6 9.48l1.84-3.18a.38.38 0 0 0-.66-.38l-1.86 3.22A11.4 11.4 0 0 0 12 8.2c-1.8 0-3.5.38-4.92.94L5.22 5.92a.38.38 0 0 0-.66.38L6.4 9.48A10.6 10.6 0 0 0 1 18h22a10.6 10.6 0 0 0-5.4-8.52zM7 15.25a1.25 1.25 0 1 1 0-2.5 1.25 1.25 0 0 1 0 2.5zm10 0a1.25 1.25 0 1 1 0-2.5 1.25 1.25 0 0 1 0 2.5z"/></svg></div><h3>Android</h3><p class="dl-req">Phones and tablets with Android 8 or newer</p><a class="btn pri dl-go" href="https://github.com/Bashyr18/miftah-app/releases/latest/download/Miftah.apk" data-dl="apk"><svg class="dn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 10.5l5 5 5-5M5 20h14"/></svg><span>Download the APK</span></a><p class="dl-meta"><span data-size="apk">APK file</span> · <span data-ver>Version 2.0</span> · Free</p><ol class="dl-steps"><li><i>1</i><span>Download the file on the phone</span></li><li><i>2</i><span>Open it from the notification or Downloads</span></li><li><i>3</i><span>Allow installing from this source, then <b>Install</b></span></li></ol></div></article>
+<article class="dl-card w rv"><div class="dl-art" aria-hidden="true"><div class="dl-win"><div class="dl-tb"><img src="shots/icon.svg" alt=""><span>Miftāḥ</span><i></i><i></i><i></i></div><img src="shots/light/d-home.webp" alt="" loading="lazy" decoding="async"></div></div><div class="dl-body"><div class="dl-ic"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 5.4l7.4-1v7.1H3zM11.4 4.25L21 3v8.5h-9.6zM3 12.5h7.4v7.1L3 18.6zM11.4 12.5H21V21l-9.6-1.3z"/></svg></div><h3>Windows</h3><p class="dl-req">Windows 10 and 11 computers and laptops</p><a class="btn pri dl-go" href="https://github.com/Bashyr18/miftah-app/releases/latest/download/Miftah-Windows.exe" data-dl="exe"><svg class="dn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 10.5l5 5 5-5M5 20h14"/></svg><span>Download the EXE</span></a><p class="dl-meta"><span data-size="exe">EXE file</span> · <span data-ver>Version 2.0</span> · Free</p><ol class="dl-steps"><li><i>1</i><span>Download the file</span></li><li><i>2</i><span>Double-click it: it runs at once, no installer</span></li><li><i>3</i><span>If Windows warns about an unknown publisher, choose <b>More info › Run anyway</b></span></li></ol><p class="dl-note">It can add itself to Start and the desktop later, from <b>This computer</b>.</p></div></article>
+      </div>
+      <div class="dl-strip rv">
+        <span><i></i>Same record on both devices</span>
+        <span><i></i>Works fully offline</span>
+        <span><i></i>English and العربية</span>
+        <a href="https://github.com/Bashyr18/miftah-app/releases/latest" target="_blank" rel="noopener">All files and SHA-256 checksums <span aria-hidden="true">↗</span></a>
+        <a href="https://github.com/Bashyr18/miftah-app#build-it-yourself" target="_blank" rel="noopener">Build it yourself <span aria-hidden="true">↗</span></a>
+      </div>
+    </div>
+  </section>
 
   <section class="close" id="end">
     <div class="wrap">
@@ -684,5 +770,18 @@ var MARKS = {"ar/d-dash":{"d":true,"m":[[41.7,8.5],[41.7,16.4],[41.7,32.8]]},"ar
 
 </script>
 <script src="guide.js"></script>
+<script>
+(function () {
+  var mb = function (b) { return Math.round(b / 1048576) + ' MB'; };
+  fetch('https://api.github.com/repos/Bashyr18/miftah-app/releases/latest', { headers: { Accept: 'application/vnd.github+json' } }).then(function (r) { return r.ok ? r.json() : null; }).then(function (rel) {
+    if (!rel || !rel.assets) return;
+    var a = {}; rel.assets.forEach(function (x) { a[x.name] = x; });
+    var v = (rel.tag_name || '').replace(/^v/, '').replace(/\.0$/, '');
+    if (v) document.querySelectorAll('[data-ver]').forEach(function (e) { e.textContent = 'Version ' + v; });
+    var put = function (k, file, label) { var x = a[file]; if (!x) return; document.querySelectorAll('[data-size="' + k + '"]').forEach(function (e) { e.textContent = e.closest('.gbtn') ? label + ' · ' + mb(x.size) : label + ' · ' + mb(x.size); }); };
+    put('apk', 'Miftah.apk', 'APK'); put('exe', 'Miftah-Windows.exe', 'EXE');
+  }).catch(function () { });
+})();
+</script>
 </body>
 </html>
