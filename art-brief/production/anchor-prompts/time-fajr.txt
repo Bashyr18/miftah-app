@@ -1,0 +1,7 @@
+A perfectly round medallion, the whole circle filling the canvas and everything outside it transparent, with a thin polished gold rim. Inside, a small photoreal landscape of low desert hills and one tiny distant masjid, showing the sky at Fajr: deep indigo with a thin pale line of first light along the horizon and a few stars. No people.
+
+Style: A premium photoreal 3D render of one component for an interactive learning instrument, seen exactly straight on or exactly top down as stated, with no perspective tilt. Soft even studio light from the upper left. Real materials. Perfectly centred and symmetrical where the object is symmetrical. Transparent background unless stated. No cast shadow, no floor, no glow. Clean edges, because it will be precisely placed, rotated or tiled.
+
+Strict rules: absolutely no text, letters, numerals, calligraphy or Arabic-looking script anywhere. No faces, eyes or mouths on anything. No people or human silhouettes. No prophets, angels or holy figures, and no glowing figures. No musical instruments, bells, dolls, idols, crosses, six-pointed stars, crescent finials, alcohol, pigs, weapons or blood.
+
+Output: one image, 768 x 768 pixels (aspect ratio 1:1), larger is welcome. Transparent background with real alpha and clean edges. If transparency is not possible, use a perfectly flat pure magenta #FF00FF background with no shadow, gradient or glow.

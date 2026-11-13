@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Miftāḥ · The Guide</title>
+<meta name="description" content="The complete, illustrated guide to Miftāḥ on Android and Windows: every screen and feature, step by step, by day and by night, in English and Arabic.">
+<meta name="color-scheme" content="dark light">
+<meta name="theme-color" content="#f5f1e9">
+<link rel="icon" href="shots/icon.svg" type="image/svg+xml">
+<link rel="preload" as="image" href="shots/light/d-home.webp" fetchpriority="high">
+<link rel="preload" as="font" type="font/woff2" href="fonts/Amiri-400-latin.woff2" crossorigin>
+<style>
+/*BASE-CSS*/
+
+/* ===================== Miftāḥ: two devices, five ages ===================== */
+/* the computer: a real Windows window around the real screen, in the app's own title-bar colours */
+.win { position: relative; display: flow-root; border-radius: 12px; overflow: hidden; background: #f6efe0; box-shadow: var(--shadow), 0 0 0 1px rgba(0, 0, 0, .06); transform-style: preserve-3d; transition: transform .7s var(--out), box-shadow .7s var(--out), --ox .9s var(--out), --oy .9s var(--out); }
+.win.dk { background: #07080d; box-shadow: var(--shadow), 0 0 0 1px rgba(255, 255, 255, .06); }
+.win .tb { display: flex; align-items: center; gap: 8px; height: clamp(22px, 2.4vw, 32px); padding-inline-start: 12px; font: 600 clamp(10px, .9vw, 12px)/1 var(--sans); color: #3a2f1e; user-select: none; }
+.win.dk .tb { color: #e8e1d2; }
+.win .tb img { width: 14px; height: 14px; border-radius: 3px; }
+.win .tb .tg { flex: 1; }
+.win .tb i { width: clamp(30px, 3.4vw, 46px); height: 100%; display: grid; place-items: center; opacity: .75; }
+.win .tb svg { width: 10px; height: 10px; stroke: currentColor; fill: none; stroke-width: 1.2; }
+.win .scr { position: relative; aspect-ratio: 1600 / 1000; overflow: hidden; background: #000; isolation: isolate; }
+.win .scr img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: fill; transition: opacity .5s var(--out), transform .6s var(--out); }
+.win .scr img.next { opacity: 0; transform: scale(1.02); }
+.win .scr::after { content: ""; position: absolute; z-index: 6; inset: -50%; pointer-events: none; background: linear-gradient(115deg, transparent 40%, rgba(255, 255, 255, .12) 50%, transparent 60%); transform: translateX(-60%); transition: transform 1.2s var(--out); }
+.win.tilt:hover .scr::after { transform: translateX(60%); }
+.win .zoom { position: absolute; inset: 0; z-index: 4; border: 0; background: none; cursor: zoom-in; }
+.win.touring .zm { transform: scale(2); }
+.win.touring { box-shadow: var(--shadow), 0 0 0 1px var(--gold-line), 0 40px 90px -40px color-mix(in srgb, var(--gold) 45%, transparent); }
+.win .hs { width: 26px; height: 26px; margin: -13px 0 0 -13px; font-size: 12px; line-height: 26px; }
+/* a spread shows a phone in a slim column, or a window in a wide one */
+.spread.on-d { grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); }
+.spread.on-d.flip { grid-template-columns: minmax(0, 1fr) minmax(0, 1.55fr); }
+.figure { transition: opacity .25s; }
+.figure .win { width: 100%; }
+.cap .devs { margin-inline-start: auto; }
+.seg button svg { width: 15px; height: 15px; vertical-align: -3px; margin-inline-end: 4px; }
+.steps li.nodev { display: none; }
+
+/* the cover: the computer behind, two phones in front, floating */
+.stage .win.w0 { position: absolute; left: 2%; top: 10%; width: 90%; z-index: 1; animation: floatw 11s ease-in-out infinite; }
+@keyframes floatw { 0%, 100% { transform: rotateY(-9deg) rotateX(3deg) translateY(0); } 50% { transform: rotateY(-9deg) rotateX(3deg) translateY(-10px); } }
+.stage .phone { width: 27%; }
+.stage .p1 { left: auto; right: 0; top: 30%; z-index: 3; }
+.stage .p2 { left: -3%; top: 46%; z-index: 2; --r: 14deg; --z: -5deg; }
+.stage .glow { inset: 30% 0 0; }
+/* a computer screen as a contents thumbnail: its middle, where the work is, not the corner of the rail */
+.toc a.wide .th img { object-position: 55% 45%; }
+.cv-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 26px; }
+.cv-chips span { display: inline-flex; align-items: center; gap: 8px; height: 34px; padding: 0 14px; border-radius: 99px; border: 1px solid var(--line2); background: color-mix(in srgb, var(--s1) 70%, transparent); font: 700 12.5px/1 var(--sans); color: var(--t2); }
+.cv-chips i { width: 6px; height: 6px; border-radius: 50%; background: var(--gold2); box-shadow: 0 0 10px var(--gold); }
+
+/* every age, one app: five homes, from three to sixteen, fanned like a hand of cards */
+.ages { position: relative; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: clamp(10px, 2vw, 26px); margin-top: clamp(20px, 4vw, 50px); align-items: end; }
+.ages figure { margin: 0; transition: transform .8s var(--out); }
+.ages figure:nth-child(1) { transform: rotate(-6deg) translateY(34px); } .ages figure:nth-child(2) { transform: rotate(-3deg) translateY(10px); }
+.ages figure:nth-child(4) { transform: rotate(3deg) translateY(10px); } .ages figure:nth-child(5) { transform: rotate(6deg) translateY(34px); }
+.ages:hover figure { transform: none; }
+.ages figure:hover { transform: translateY(-14px) scale(1.04) !important; z-index: 2; }
+.ages figcaption { margin-top: 16px; text-align: center; }
+.ages figcaption b { display: block; font: 400 22px/1.1 var(--serif); color: var(--t1); }
+.ages figcaption span { display: block; margin-top: 4px; font: 700 11.5px/1.3 var(--sans); letter-spacing: .14em; text-transform: uppercase; color: var(--gold2); }
+.ages figcaption small { display: block; margin-top: 6px; font-size: 12.5px; color: var(--t3); line-height: 1.45; }
+.ages-line { position: relative; height: 2px; margin: 40px 10% 0; background: linear-gradient(90deg, transparent, var(--gold-line) 10%, var(--gold-line) 90%, transparent); }
+.ages-line i { position: absolute; top: -5px; width: 12px; height: 12px; border-radius: 50%; background: var(--gold2); box-shadow: 0 0 0 4px var(--gold-soft); }
+
+/* phone and computer: the two devices and the home Wi-Fi between them */
+.link { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, .38fr); align-items: center; gap: clamp(10px, 3vw, 40px); margin: clamp(20px, 4vw, 50px) 0 10px; }
+.link .win, .link .phone { width: 100%; }
+.waves { position: relative; width: clamp(90px, 12vw, 160px); aspect-ratio: 1; display: grid; place-items: center; }
+.waves i { position: absolute; inset: 0; border-radius: 50%; border: 1.5px solid var(--gold-line); animation: wave 3.2s var(--out) infinite; }
+.waves i:nth-child(2) { animation-delay: 1.05s; } .waves i:nth-child(3) { animation-delay: 2.1s; }
+@keyframes wave { 0% { transform: scale(.3); opacity: 1; } 100% { transform: scale(1); opacity: 0; } }
+.waves b { position: relative; width: 44%; aspect-ratio: 1; border-radius: 50%; display: grid; place-items: center; background: linear-gradient(180deg, #f1d59e, #d9b26f); color: #1a1206; box-shadow: 0 14px 30px -12px rgba(217, 178, 111, .9); }
+.waves b svg { width: 46%; height: 46%; }
+.seal { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr)); gap: 14px; margin-top: 34px; }
+
+/* keys: shortcuts as cards, each with its keys drawn */
+kbd { display: inline-grid; place-items: center; min-width: 26px; height: 26px; padding: 0 8px; margin: 0 2px; border-radius: 7px; border: 1px solid var(--line2); border-bottom-width: 2.5px; background: var(--s2); font: 700 12px/1 var(--sans); color: var(--t1); white-space: nowrap; }
+.g .keys { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; min-height: 52px; }
+.g .keys kbd { min-width: 36px; height: 36px; font-size: 13px; }
+.g .keys span { color: var(--t3); font-weight: 700; }
+
+/* themes: the same screens by day, by night and in Arabic */
+.duo4 { display: grid; grid-template-columns: minmax(0, 1.7fr) repeat(2, minmax(0, .5fr)); gap: clamp(14px, 3vw, 36px); margin-top: 40px; align-items: end; }
+.duo4 figure { margin: 0; } .duo4 figcaption { margin-top: 14px; font-size: 12.5px; color: var(--t3); text-align: center; letter-spacing: .12em; text-transform: uppercase; font-weight: 700; }
+.duo4 figure:nth-child(2) { transform: translateY(-24px); }
+
+/* the āyah on the cover and at the close */
+.close .q { font: 400 clamp(30px, 4vw, 44px)/1.9 var(--q); color: var(--gold2); direction: rtl; margin-top: 26px; }
+.close .tr { margin: 6px auto 0; font-size: 14px; color: var(--t3); }
+
+/* the lightbox shows a computer too */
+.lb .win { width: min(92vw, calc((100svh - 170px) * 1.6)); transform: scale(.94) translateY(16px); transition: transform .55s var(--spring); }
+.lb.on .win { transform: none; }
+.lb [hidden] { display: none !important; }
+
+@media (max-width: 860px) {
+  .spread.on-d, .spread.on-d.flip { grid-template-columns: minmax(0, 1fr); }
+  .figure:has(.win) .win { width: min(100%, 560px); }
+  .ages { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: 44vw; overflow-x: auto; scroll-snap-type: x mandatory; padding: 10px var(--g) 20px; margin-inline: calc(-1 * var(--g)); scrollbar-width: none; }
+  .ages::-webkit-scrollbar { display: none; }
+  .ages figure { transform: none !important; scroll-snap-align: center; }
+  .ages-line { display: none; }
+  .link { grid-template-columns: minmax(0, 1fr) minmax(0, .45fr); }
+  .link .waves { position: absolute; left: 62%; top: 50%; transform: translate(-50%, -50%); width: 64px; z-index: 3; }
+  .duo4 { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } .duo4 figure:first-child { grid-column: 1 / -1; }
+  .stage .win.w0 { width: 96%; left: 2%; top: 4%; }
+  .stage .phone { width: 32%; }
+}
+</style>
+</head>
+<body>
+
+<header class="bar" id="bar">
+  <a class="mark" href="#top" aria-label="Back to the cover">
+    <svg viewBox="0 0 40 40" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 3l4.6 6.4 7.7-1.6-1.6 7.7L37 20l-6.3 4.5 1.6 7.7-7.7-1.6L20 37l-4.6-6.4-7.7 1.6 1.6-7.7L3 20l6.3-4.5-1.6-7.7 7.7 1.6z"/><circle cx="20" cy="20" r="6.5"/></g></svg>
+    Miftāḥ
+  </a>
+  <div class="chap" id="chap"><b></b><span></span></div>
+  <div class="seg-l"><span>Screens</span>
+    <div class="seg" id="lang" role="group" aria-label="Language of the app screens"><i class="pill" aria-hidden="true"></i><button type="button" data-l="en" aria-pressed="true" aria-label="English">EN</button><button type="button" data-l="ar" lang="ar" aria-pressed="false" aria-label="العربية">ع</button></div>
+  </div>
+  <button class="tbtn ico" id="theme" type="button" aria-label="Switch to dark">
+    <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M20.5 14.5A8.5 8.5 0 1 1 9.5 3.5a7 7 0 0 0 11 11z"/></svg>
+    <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6"/></svg>
+  </button>
+  <i class="prog" id="prog"></i>
+</header>
+
+<main id="top">
+  <section class="cover">
+    <svg class="orn" id="orn" viewBox="-100 -100 200 200" aria-hidden="true"></svg>
+    <div class="wrap">
+      <div class="rv">
+        <div class="issue"><span>The Guide</span><span>Edition 2.0</span><span>November 2026</span></div>
+        <h1 class="mast">Mift<em>āḥ</em><small>An Islamic homeschool, two to eighteen</small></h1>
+        <p class="dek">Every screen of the app, on the phone and on the computer, every feature, and how to use it, step by step. Free, private and open.</p>
+        <div class="cv-chips"><span><i></i>Android and Windows</span><span><i></i>Five stages</span><span><i></i>English and العربية</span></div>
+        <div class="ayah">
+          <div class="q" lang="ar">ٱقْرَأْ بِٱسْمِ رَبِّكَ ٱلَّذِى خَلَقَ</div>
+          <p>Read, ˹O Prophet,˺ in the Name of your Lord Who created, Al-ʿAlaq 96:1 · The Clear Quran</p>
+        </div>
+        <div class="cta">
+          <a class="btn pri" href="#contents">Begin the guide <span class="arr" aria-hidden="true">→</span></a>
+          <a class="btn tour" id="tourAll" href="#ch-start"><span class="wi" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.4-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z"/></svg></span>Take the guided tour</a>
+        </div>
+      </div>
+      <div class="stage rv" id="stage" aria-hidden="true">
+        <div class="glow"></div>
+        <div class="win w0" data-id="d-home" data-base="d-home" data-shot="light/d-home"><div class="tb"><img src="shots/icon.svg" alt=""><span>Miftāḥ</span><span class="tg"></span><i><svg viewBox="0 0 10 10"><path d="M1 5h8"/></svg></i><i><svg viewBox="0 0 10 10"><rect x="1.5" y="1.5" width="7" height="7"/></svg></i><i><svg viewBox="0 0 10 10"><path d="M1.5 1.5l7 7M8.5 1.5l-7 7"/></svg></i></div><div class="scr"><img src="shots/light/d-home.webp" alt="" fetchpriority="high"></div></div>
+        <div class="phone p2" data-id="p-ink" data-base="p-ink" data-shot="light/p-ink"><div class="scr"><img src="shots/light/p-ink.webp" alt="" decoding="async"></div></div>
+        <div class="phone p1" data-id="p-home" data-base="p-home" data-shot="light/p-home"><div class="scr"><img src="shots/light/p-home.webp" alt="" decoding="async"></div></div>
+      </div>
+    </div>
+    <div class="scroll-hint" aria-hidden="true">Scroll<i></i></div>
+  </section>
+
+  <section class="contents" id="contents">
+    <div class="wrap">
+      <div class="kicker rv">In this issue</div>
+      <h2 class="h2 rv">Contents</h2>
+      <nav class="toc" id="toc" aria-label="Chapters"></nav>
+    </div>
+  </section>
+
+  <div id="chapters"></div>
+
+  <section class="close" id="end">
+    <div class="wrap">
+      <div class="kicker rv">Why it exists</div>
+      <h2 class="h2 rv">Knowledge, kept and passed on</h2>
+      <div class="rv"><div class="q" lang="ar">ٱلَّذِى عَلَّمَ بِٱلْقَلَمِ ۝ عَلَّمَ ٱلْإِنسَـٰنَ مَا لَمْ يَعْلَمْ</div><p class="tr">Who taught by the pen, taught humanity what they knew not. Al-ʿAlaq 96:4–5 · The Clear Quran</p></div>
+      <p class="rv">No adverts, no account, no tracking. A family’s record lives on its own devices and moves between them only on the family’s own Wi-Fi, or in a file they send themselves. The code is open, so anyone can check it, learn from it and make it better.</p>
+      <div class="pillars rv">
+        <div><b>Verified sources</b><span>The Qurʾān byte for byte from Tanzil, its translation from The Clear Quran, duʿāʾ from Ḥiṣn al-Muslim. Never clipped, never a game.</span></div>
+        <div><b>Honest learning</b><span>A lesson counts only when the child shows it alone. Paper and on-screen work count only once a grown-up marks it.</span></div>
+        <div><b>Private</b><span>Learning data stays on your devices. Phone and computer talk only at home, sealed with a key they alone share.</span></div>
+        <div><b>Open source</b><span>MIT licensed. Build the Android and Windows apps yourself, from one shared core.</span></div>
+      </div>
+    </div>
+  </section>
+  <footer>Miftāḥ · The Guide · Edition 2.0 · Every screen shown is from the app itself, with a demonstration family.</footer>
+</main>
+
+<nav class="crail" id="crail" aria-label="Chapters"></nav>
+<nav class="dock" id="dock" aria-label="Chapter navigation">
+  <a href="#" id="dprev" aria-label="Previous chapter"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></a>
+  <a class="mid" href="#contents"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Contents</a>
+  <a href="#" id="dnext" aria-label="Next chapter"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></a>
+</nav>
+
+<div class="leaf" id="leaf" aria-hidden="true"></div>
+<div class="lb" id="lb" role="dialog" aria-modal="true" aria-label="Screenshot"><div class="ct" id="lbc"></div><button class="x" id="lbx" type="button" aria-label="Close">×</button>
+  <button class="nv pv" id="lbp" type="button" aria-label="Previous screen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
+  <div class="phone" id="lbph"><div class="scr"><img id="lbimg" alt=""></div></div>
+  <div class="win" id="lbw" hidden><div class="tb"><img src="shots/icon.svg" alt=""><span>Miftāḥ</span><span class="tg"></span></div><div class="scr"><img id="lbwimg" alt=""></div></div>
+  <button class="nv nx" id="lbn" type="button" aria-label="Next screen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
+  <div class="lt" id="lbt"></div></div>
+
+<script>
+/* where each pointed-at feature sits, on every version of every screen (tools/guide-shots.js measures them) */
+var MARKS = /*MARKS*/{};
+
+</script>
+<script src="guide.js"></script>
+</body>
+</html>

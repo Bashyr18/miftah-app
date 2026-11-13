@@ -1,0 +1,7 @@
+A terracotta pot of dark soil seen exactly front on, centred horizontally, in the lower third of a portrait canvas with its base on the bottom margin, with nothing growing yet.
+
+Style: A premium photoreal 3D render of one component for an interactive learning instrument, seen exactly straight on or exactly top down as stated, with no perspective tilt. Soft even studio light from the upper left. Real materials. Perfectly centred and symmetrical where the object is symmetrical. Transparent background unless stated. No cast shadow, no floor, no glow. Clean edges, because it will be precisely placed, rotated or tiled.
+
+Strict rules: absolutely no text, letters, numerals, calligraphy or Arabic-looking script anywhere. No faces, eyes or mouths on anything. No people or human silhouettes. No prophets, angels or holy figures, and no glowing figures. No musical instruments, bells, dolls, idols, crosses, six-pointed stars, crescent finials, alcohol, pigs, weapons or blood.
+
+Output: one image, 768 x 1024 pixels (aspect ratio 3:4), larger is welcome. Transparent background with real alpha and clean edges. If transparency is not possible, use a perfectly flat pure magenta #FF00FF background with no shadow, gradient or glow.

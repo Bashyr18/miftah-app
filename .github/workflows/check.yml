@@ -1,0 +1,52 @@
+# Runs the offline checks on every push and pull request, and bundles the web app to prove it still builds.
+# The Android APK is signed with a private key, so it is built locally (see README, Build), not here.
+name: check
+on:
+  push:
+  pull_request:
+defaults:
+  run:
+    shell: bash -eo pipefail {0}   # a failing check must fail the job, even through | tail
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: npm ci
+      - name: integrity checks
+        run: node tools/test.js | tail -3
+      - name: behaviour in both languages
+        run: node tools/smoke.js | tail -3
+      - name: every taught lesson computed
+        run: node tools/teach-check.js | tail -3
+      - name: Arabic for every interface string
+        run: node tools/strings.js | head -3
+      - name: the web bundle builds
+        run: python tools/bundle.py web build/www && ls -la build/www/app.js build/www/app.css
+      - name: the Android and Windows bridges match
+        run: node tools/bridge-check.js
+
+  # The Windows app needs nothing but Windows itself: the C# compiler ships with .NET Framework 4.8.
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install pillow
+      - name: build Miftah.exe
+        run: python -I tools/build_windows.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Miftah-Windows
+          path: dist/Miftah.exe

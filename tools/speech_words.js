@@ -1,0 +1,21 @@
+/* Lists every word the lessons ask a child to hear, by running each lesson's real generators. Output: tools/src/speech-words.json */
+const fs = require('fs'), path = require('path');
+const { JSDOM, VirtualConsole } = require('jsdom');
+const root = path.join(__dirname, '..'), web = path.join(root, 'web');
+const page = fs.readFileSync(path.join(web, 'index.html'), 'utf8');
+const html = page.replace(/<meta http-equiv[^>]*>/, '').replace(/<link[^>]*>/g, '').replace(/<script src="[^"]*"><\/script>/g, '');
+const dom = new JSDOM(html, { url: 'https://appassets.androidplatform.net/index.html', runScripts: 'outside-only', pretendToBeVisual: true, virtualConsole: new VirtualConsole() });
+const w = dom.window;
+w.matchMedia = () => ({ matches: true }); w.Element.prototype.animate = () => ({ cancel() { } }); w.Element.prototype.scrollIntoView = () => { }; w.scrollTo = () => { }; w.Path2D = function () { };
+w.Audio = function () { return { play() { return Promise.resolve(); }, pause() { }, removeAttribute() { } }; };
+w.HTMLCanvasElement.prototype.getContext = () => new Proxy({}, { get: (t, k) => (k === 'createLinearGradient' || k === 'createRadialGradient') ? () => ({ addColorStop() { } }) : () => { }, set: () => true });
+[...page.matchAll(/<script src="([^"]+)"/g)].forEach((m) => w.eval(fs.readFileSync(path.join(web, m[1]), 'utf8')));
+const { C, A, Voice } = w, got = { en: new Set(), ar: new Set() };
+const add = (t, l) => { if (typeof t !== 'string' || !t.trim()) return; const lang = l || (/[؀-ۿ]/.test(t) ? 'ar' : 'en'); t.split(/[\s,،.?!؟]+/).filter(Boolean).forEach((x) => { const y = x.replace(/[“”"':;()]/g, ''); if (y && (lang === 'ar' || /^[A-Za-z’'-]+$/.test(y))) got[lang].add(lang === 'en' ? y.toLowerCase() : y); }); };
+Voice.say = (t, o) => { add(t, o && o.lang); return Promise.resolve(); };
+const seen = (s) => { if (!s) return; if (Array.isArray(s)) return s.forEach(seen); try { if (typeof s.listen === 'function') s.listen({}); } catch (e) { } if (typeof s.say === 'string') add(s.say, s.lang); if (s.joined) add(s.joined, s.lang); if (s.word && s.k === 'phon') add(s.word, 'en'); if (s.lines && s.k === 'reader') [].concat(s.lines).forEach((x) => add(typeof x === 'string' ? x : '', 'en')); if (s.speakAr) add(s.speakAr, 'ar'); if (s.lang && s.speak && s.k === 'say') add(Array.isArray(s.speak) ? s.speak[0] : s.speak, s.lang === 'ar' ? 'ar' : 'en'); };
+Object.values(C.skills).forEach((sk) => { for (let i = 0; i < 12; i++) { const r = A.rng(i * 37 + 11); ['meet', 'guided', 'solo', 'make', 'review'].forEach((k) => { const v = sk[k]; try { seen(typeof v === 'function' ? v(r) : v); } catch (e) { } }); } });
+Object.values(C.KEYW || {}).forEach((x) => add(x[0], 'en'));
+const out = { en: [...got.en].sort(), ar: [...got.ar].sort() };
+fs.writeFileSync(path.join(__dirname, 'src/speech-words.json'), JSON.stringify(out, null, 0));
+console.log('en', out.en.length, 'ar', out.ar.length);

@@ -1,0 +1,1887 @@
+{
+  "recorded_at": "2026-11-05T10:43:54.722416+01:00",
+  "state": "generating_web_anchor",
+  "requested_model": "Image 2.5",
+  "actual_model": "ChatGPT web image generator; exact backend model not exposed",
+  "source_brief": "C:\\Projects\\Islamic Apps\\Miftah\\art-brief\\MIFTAH-IMAGE-PROMPTS.md",
+  "source_brief_sha256": "80703babcc97580a3640602c9d974cd908cc9eeb5fe7c05f4440edde6d82694f",
+  "source_prompts": "C:\\Projects\\Islamic Apps\\Miftah\\art-brief\\prompts.jsonl",
+  "delivery_root": "C:\\Projects\\Islamic Apps\\Miftah\\art-inbox",
+  "required": 198,
+  "generated": 1,
+  "accepted": 1,
+  "anchor_order": [
+    "key-forged",
+    "court-fg-day",
+    "room-quran",
+    "plant-0",
+    "s02-makkah-dawn",
+    "time-fajr"
+  ],
+  "batch_counts": {
+    "01-keys": 10,
+    "02-courtyard": 10,
+    "03-rooms": 6,
+    "04-objects": 82,
+    "05-instruments": 18,
+    "06-science": 20,
+    "07-seerah": 17,
+    "08-adab-dua": 24,
+    "09-moments": 8,
+    "10-store": 3
+  },
+  "preflight": {
+    "markdown_jsonl_prompts_match_verbatim": 198,
+    "unique_names": 198,
+    "unique_paths": 198,
+    "all_references_resolve": true
+  },
+  "attempts": [
+    {
+      "asset": "key-forged",
+      "tool": "built-in image_gen",
+      "result": "failed",
+      "error": "http 404 Not Found",
+      "attempt": 1
+    },
+    {
+      "asset": "key-forged",
+      "tool": "built-in image_gen",
+      "result": "failed",
+      "error": "http 404 Not Found",
+      "attempt": 2
+    }
+  ],
+  "fallback": {
+    "model": "gpt-image-2.5-sunburst",
+    "requires": "locally configured OPENAI_API_KEY",
+    "api_key_configured": false,
+    "started": false,
+    "authorized": true,
+    "authorization": "User selected Use Image 2.5 API fallback",
+    "quality": "high",
+    "background": "transparent for alpha assets; opaque for scenes",
+    "official_model_url": "https://developers.openai.com/api/docs/models/gpt-image-2.5-sunburst",
+    "cli": "C:/Users/LEGION/.codex/skills/.system/imagegen/scripts/image_gen.py",
+    "selected": false,
+    "superseded_by": "User instructed use existing ChatGPT browser tab, same conversation, paced generation"
+  },
+  "items": [
+    {
+      "name": "key-forged",
+      "path": "01-keys/key-forged.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": null,
+      "state": "accepted",
+      "attempt": 2,
+      "actual_width": 1024,
+      "actual_height": 1024,
+      "alpha_range": [
+        0,
+        255
+      ],
+      "alpha_bbox": [
+        152,
+        161,
+        872,
+        863
+      ],
+      "sha256": "0921dbf75b277f146080142a55c70c5d57897ea27ac97f5b1c144107e77ec8be",
+      "qa": "Visual: 8-point rosette and star opening, 3 teeth, warm satin brass, upper-left light, no text/figures. File: RGBA alpha, 14.8% minimum clear margin."
+    },
+    {
+      "name": "key-proven",
+      "path": "01-keys/key-proven.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "key-deep",
+      "path": "01-keys/key-deep.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "key-raw",
+      "path": "01-keys/key-raw.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "key-front",
+      "path": "01-keys/key-front.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "keyring",
+      "path": "01-keys/keyring.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "lock-hero",
+      "path": "01-keys/lock-hero.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "lock",
+      "path": "01-keys/lock.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "door-pair",
+      "path": "01-keys/door-pair.png",
+      "width": 1024,
+      "height": 1536,
+      "background": "opaque",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "door",
+      "path": "01-keys/door.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "sky-dawn",
+      "path": "02-courtyard/sky-dawn.png",
+      "width": 1536,
+      "height": 1024,
+      "background": "opaque",
+      "reference": "court-fg-day",
+      "state": "pending"
+    },
+    {
+      "name": "sky-day",
+      "path": "02-courtyard/sky-day.png",
+      "width": 1536,
+      "height": 1024,
+      "background": "opaque",
+      "reference": "court-fg-day",
+      "state": "pending"
+    },
+    {
+      "name": "sky-gold",
+      "path": "02-courtyard/sky-gold.png",
+      "width": 1536,
+      "height": 1024,
+      "background": "opaque",
+      "reference": "court-fg-day",
+      "state": "pending"
+    },
+    {
+      "name": "sky-dusk",
+      "path": "02-courtyard/sky-dusk.png",
+      "width": 1536,
+      "height": 1024,
+      "background": "opaque",
+      "reference": "court-fg-day",
+      "state": "pending"
+    },
+    {
+      "name": "sky-night",
+      "path": "02-courtyard/sky-night.png",
+      "width": 1536,
+      "height": 1024,
+      "background": "opaque",
+      "reference": "court-fg-day",
+      "state": "pending"
+    },
+    {
+      "name": "court-fg-day",
+      "path": "02-courtyard/court-fg-day.png",
+      "width": 1536,
+      "height": 1024,
+      "background": "alpha",
+      "reference": null,
+      "state": "generation_in_progress",
+      "attempt": 2
+    },
+    {
+      "name": "court-fg-dawn",
+      "path": "02-courtyard/court-fg-dawn.png",
+      "width": 1536,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "court-fg-day",
+      "state": "pending"
+    },
+    {
+      "name": "court-fg-gold",
+      "path": "02-courtyard/court-fg-gold.png",
+      "width": 1536,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "court-fg-day",
+      "state": "pending"
+    },
+    {
+      "name": "court-fg-dusk",
+      "path": "02-courtyard/court-fg-dusk.png",
+      "width": 1536,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "court-fg-day",
+      "state": "pending"
+    },
+    {
+      "name": "court-fg-night",
+      "path": "02-courtyard/court-fg-night.png",
+      "width": 1536,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "court-fg-day",
+      "state": "pending"
+    },
+    {
+      "name": "room-quran",
+      "path": "03-rooms/room-quran.png",
+      "width": 1024,
+      "height": 1280,
+      "background": "alpha",
+      "reference": null,
+      "state": "pending"
+    },
+    {
+      "name": "room-arabic",
+      "path": "03-rooms/room-arabic.png",
+      "width": 1024,
+      "height": 1280,
+      "background": "alpha",
+      "reference": "room-quran",
+      "state": "pending"
+    },
+    {
+      "name": "room-deen",
+      "path": "03-rooms/room-deen.png",
+      "width": 1024,
+      "height": 1280,
+      "background": "alpha",
+      "reference": "room-quran",
+      "state": "pending"
+    },
+    {
+      "name": "room-math",
+      "path": "03-rooms/room-math.png",
+      "width": 1024,
+      "height": 1280,
+      "background": "alpha",
+      "reference": "room-quran",
+      "state": "pending"
+    },
+    {
+      "name": "room-english",
+      "path": "03-rooms/room-english.png",
+      "width": 1024,
+      "height": 1280,
+      "background": "alpha",
+      "reference": "room-quran",
+      "state": "pending"
+    },
+    {
+      "name": "room-science",
+      "path": "03-rooms/room-science.png",
+      "width": 1024,
+      "height": 1280,
+      "background": "alpha",
+      "reference": "room-quran",
+      "state": "pending"
+    },
+    {
+      "name": "date",
+      "path": "04-objects/date.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "apple",
+      "path": "04-objects/apple.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "orange",
+      "path": "04-objects/orange.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "olive",
+      "path": "04-objects/olive.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "grape",
+      "path": "04-objects/grape.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "bread",
+      "path": "04-objects/bread.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "egg",
+      "path": "04-objects/egg.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "leaf",
+      "path": "04-objects/leaf.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "tree",
+      "path": "04-objects/tree.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "palm",
+      "path": "04-objects/palm.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "flower",
+      "path": "04-objects/flower.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "seed",
+      "path": "04-objects/seed.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "plant",
+      "path": "04-objects/plant.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "grass",
+      "path": "04-objects/grass.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "sun",
+      "path": "04-objects/sun.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "moon",
+      "path": "04-objects/moon.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "star",
+      "path": "04-objects/star.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "cloud",
+      "path": "04-objects/cloud.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "rain",
+      "path": "04-objects/rain.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "drop",
+      "path": "04-objects/drop.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "ice",
+      "path": "04-objects/ice.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "stone",
+      "path": "04-objects/stone.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "feather",
+      "path": "04-objects/feather.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "coin",
+      "path": "04-objects/coin.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "book",
+      "path": "04-objects/book.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "lantern",
+      "path": "04-objects/lantern.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "cup",
+      "path": "04-objects/cup.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "jug",
+      "path": "04-objects/jug.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "shoe",
+      "path": "04-objects/shoe.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "ball",
+      "path": "04-objects/ball.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "spoon",
+      "path": "04-objects/spoon.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "boat",
+      "path": "04-objects/boat.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "ship",
+      "path": "04-objects/ship.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "wood",
+      "path": "04-objects/wood.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "nail",
+      "path": "04-objects/nail.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "torch",
+      "path": "04-objects/torch.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "mirror",
+      "path": "04-objects/mirror.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "soap",
+      "path": "04-objects/soap.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "tap",
+      "path": "04-objects/tap.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "pencil",
+      "path": "04-objects/pencil.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "pot",
+      "path": "04-objects/pot.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "kettle",
+      "path": "04-objects/kettle.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "water-glass",
+      "path": "04-objects/water-glass.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "magnet",
+      "path": "04-objects/magnet.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "magnifier",
+      "path": "04-objects/magnifier.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "ink",
+      "path": "04-objects/ink.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "box",
+      "path": "04-objects/box.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "van",
+      "path": "04-objects/van.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "umbrella",
+      "path": "04-objects/umbrella.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "yarn",
+      "path": "04-objects/yarn.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "zip",
+      "path": "04-objects/zip.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "chair",
+      "path": "04-objects/chair.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "ring",
+      "path": "04-objects/ring.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "clock",
+      "path": "04-objects/clock.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "prayer-mat",
+      "path": "04-objects/prayer-mat.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "rehal",
+      "path": "04-objects/rehal.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "crayons",
+      "path": "04-objects/crayons.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "blocks",
+      "path": "04-objects/blocks.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "toy-box",
+      "path": "04-objects/toy-box.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "house",
+      "path": "04-objects/house.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "tent",
+      "path": "04-objects/tent.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "well",
+      "path": "04-objects/well.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "masjid",
+      "path": "04-objects/masjid.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "kaaba",
+      "path": "04-objects/kaaba.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "mountain",
+      "path": "04-objects/mountain.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "cave",
+      "path": "04-objects/cave.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "camel",
+      "path": "04-objects/camel.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "sheep",
+      "path": "04-objects/sheep.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "bird",
+      "path": "04-objects/bird.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "fish",
+      "path": "04-objects/fish.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "butterfly",
+      "path": "04-objects/butterfly.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "bee",
+      "path": "04-objects/bee.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "wolf",
+      "path": "04-objects/wolf.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "hand",
+      "path": "04-objects/hand.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "foot",
+      "path": "04-objects/foot.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "ear",
+      "path": "04-objects/ear.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "circle",
+      "path": "04-objects/circle.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "square",
+      "path": "04-objects/square.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "rect",
+      "path": "04-objects/rect.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "triangle",
+      "path": "04-objects/triangle.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "hexagon",
+      "path": "04-objects/hexagon.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "octa",
+      "path": "04-objects/octa.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "well-wood",
+      "path": "05-instruments/well-wood.png",
+      "width": 512,
+      "height": 512,
+      "background": "opaque",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "block-one",
+      "path": "05-instruments/block-one.png",
+      "width": 512,
+      "height": 512,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "bead-blue",
+      "path": "05-instruments/bead-blue.png",
+      "width": 512,
+      "height": 512,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "bead-amber",
+      "path": "05-instruments/bead-amber.png",
+      "width": 512,
+      "height": 512,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "plate-top",
+      "path": "05-instruments/plate-top.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "bowl-water",
+      "path": "05-instruments/bowl-water.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "tray-wood",
+      "path": "05-instruments/tray-wood.png",
+      "width": 1536,
+      "height": 1024,
+      "background": "opaque",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "ruler-blank",
+      "path": "05-instruments/ruler-blank.png",
+      "width": 1536,
+      "height": 256,
+      "background": "opaque",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "clock-blank",
+      "path": "05-instruments/clock-blank.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "lawh",
+      "path": "05-instruments/lawh.png",
+      "width": 1024,
+      "height": 1280,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "sand-tray",
+      "path": "05-instruments/sand-tray.png",
+      "width": 1024,
+      "height": 1280,
+      "background": "opaque",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "tex-walnut",
+      "path": "05-instruments/tex-walnut.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "opaque",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "tex-oak",
+      "path": "05-instruments/tex-oak.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "opaque",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "tex-parchment",
+      "path": "05-instruments/tex-parchment.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "opaque",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "tex-plaster",
+      "path": "05-instruments/tex-plaster.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "opaque",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "tex-midnight",
+      "path": "05-instruments/tex-midnight.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "opaque",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "tex-carpet",
+      "path": "05-instruments/tex-carpet.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "opaque",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "tex-ice",
+      "path": "05-instruments/tex-ice.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "opaque",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "plant-0",
+      "path": "06-science/plant-0.png",
+      "width": 768,
+      "height": 1024,
+      "background": "alpha",
+      "reference": null,
+      "state": "pending"
+    },
+    {
+      "name": "plant-1",
+      "path": "06-science/plant-1.png",
+      "width": 768,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "plant-0",
+      "state": "pending"
+    },
+    {
+      "name": "plant-2",
+      "path": "06-science/plant-2.png",
+      "width": 768,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "plant-0",
+      "state": "pending"
+    },
+    {
+      "name": "plant-3",
+      "path": "06-science/plant-3.png",
+      "width": 768,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "plant-0",
+      "state": "pending"
+    },
+    {
+      "name": "plant-4",
+      "path": "06-science/plant-4.png",
+      "width": 768,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "plant-0",
+      "state": "pending"
+    },
+    {
+      "name": "wilt-1",
+      "path": "06-science/wilt-1.png",
+      "width": 768,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "plant-0",
+      "state": "pending"
+    },
+    {
+      "name": "wilt-2",
+      "path": "06-science/wilt-2.png",
+      "width": 768,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "plant-0",
+      "state": "pending"
+    },
+    {
+      "name": "wilt-3",
+      "path": "06-science/wilt-3.png",
+      "width": 768,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "plant-0",
+      "state": "pending"
+    },
+    {
+      "name": "bg-window",
+      "path": "06-science/bg-window.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "opaque",
+      "reference": "plant-0",
+      "state": "pending"
+    },
+    {
+      "name": "bg-cupboard",
+      "path": "06-science/bg-cupboard.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "opaque",
+      "reference": "plant-0",
+      "state": "pending"
+    },
+    {
+      "name": "moon-disc",
+      "path": "06-science/moon-disc.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "plant-0",
+      "state": "pending"
+    },
+    {
+      "name": "sun-disc",
+      "path": "06-science/sun-disc.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "plant-0",
+      "state": "pending"
+    },
+    {
+      "name": "earth-map",
+      "path": "06-science/earth-map.png",
+      "width": 2048,
+      "height": 1024,
+      "background": "opaque",
+      "reference": "plant-0",
+      "state": "pending"
+    },
+    {
+      "name": "bulb-off",
+      "path": "06-science/bulb-off.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "plant-0",
+      "state": "pending"
+    },
+    {
+      "name": "bulb-on",
+      "path": "06-science/bulb-on.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "plant-0",
+      "state": "pending"
+    },
+    {
+      "name": "battery",
+      "path": "06-science/battery.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "plant-0",
+      "state": "pending"
+    },
+    {
+      "name": "switch-open",
+      "path": "06-science/switch-open.png",
+      "width": 768,
+      "height": 512,
+      "background": "alpha",
+      "reference": "plant-0",
+      "state": "pending"
+    },
+    {
+      "name": "switch-closed",
+      "path": "06-science/switch-closed.png",
+      "width": 768,
+      "height": 512,
+      "background": "alpha",
+      "reference": "plant-0",
+      "state": "pending"
+    },
+    {
+      "name": "water-cycle",
+      "path": "06-science/water-cycle.png",
+      "width": 1536,
+      "height": 1024,
+      "background": "opaque",
+      "reference": "plant-0",
+      "state": "pending"
+    },
+    {
+      "name": "pinhole-box",
+      "path": "06-science/pinhole-box.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "plant-0",
+      "state": "pending"
+    },
+    {
+      "name": "s01-elephant",
+      "path": "07-seerah/s01-elephant.png",
+      "width": 1536,
+      "height": 1024,
+      "background": "opaque",
+      "reference": "s02-makkah-dawn",
+      "state": "pending"
+    },
+    {
+      "name": "s02-makkah-dawn",
+      "path": "07-seerah/s02-makkah-dawn.png",
+      "width": 1536,
+      "height": 1024,
+      "background": "opaque",
+      "reference": null,
+      "state": "pending"
+    },
+    {
+      "name": "s03-shepherd",
+      "path": "07-seerah/s03-shepherd.png",
+      "width": 1536,
+      "height": 1024,
+      "background": "opaque",
+      "reference": "s02-makkah-dawn",
+      "state": "pending"
+    },
+    {
+      "name": "s04-trust",
+      "path": "07-seerah/s04-trust.png",
+      "width": 1536,
+      "height": 1024,
+      "background": "opaque",
+      "reference": "s02-makkah-dawn",
+      "state": "pending"
+    },
+    {
+      "name": "s05-cloth",
+      "path": "07-seerah/s05-cloth.png",
+      "width": 1536,
+      "height": 1024,
+      "background": "opaque",
+      "reference": "s02-makkah-dawn",
+      "state": "pending"
+    },
+    {
+      "name": "s06-hira",
+      "path": "07-seerah/s06-hira.png",
+      "width": 1536,
+      "height": 1024,
+      "background": "opaque",
+      "reference": "s02-makkah-dawn",
+      "state": "pending"
+    },
+    {
+      "name": "s07-home-lamp",
+      "path": "07-seerah/s07-home-lamp.png",
+      "width": 1536,
+      "height": 1024,
+      "background": "opaque",
+      "reference": "s02-makkah-dawn",
+      "state": "pending"
+    },
+    {
+      "name": "s08-patience",
+      "path": "07-seerah/s08-patience.png",
+      "width": 1536,
+      "height": 1024,
+      "background": "opaque",
+      "reference": "s02-makkah-dawn",
+      "state": "pending"
+    },
+    {
+      "name": "s09-taif",
+      "path": "07-seerah/s09-taif.png",
+      "width": 1536,
+      "height": 1024,
+      "background": "opaque",
+      "reference": "s02-makkah-dawn",
+      "state": "pending"
+    },
+    {
+      "name": "s10-two-mountains",
+      "path": "07-seerah/s10-two-mountains.png",
+      "width": 1536,
+      "height": 1024,
+      "background": "opaque",
+      "reference": "s02-makkah-dawn",
+      "state": "pending"
+    },
+    {
+      "name": "s11-thawr",
+      "path": "07-seerah/s11-thawr.png",
+      "width": 1536,
+      "height": 1024,
+      "background": "opaque",
+      "reference": "s02-makkah-dawn",
+      "state": "pending"
+    },
+    {
+      "name": "s12-road",
+      "path": "07-seerah/s12-road.png",
+      "width": 1536,
+      "height": 1024,
+      "background": "opaque",
+      "reference": "s02-makkah-dawn",
+      "state": "pending"
+    },
+    {
+      "name": "s13-masjid-madinah",
+      "path": "07-seerah/s13-masjid-madinah.png",
+      "width": 1536,
+      "height": 1024,
+      "background": "opaque",
+      "reference": "s02-makkah-dawn",
+      "state": "pending"
+    },
+    {
+      "name": "s14-badr",
+      "path": "07-seerah/s14-badr.png",
+      "width": 1536,
+      "height": 1024,
+      "background": "opaque",
+      "reference": "s02-makkah-dawn",
+      "state": "pending"
+    },
+    {
+      "name": "s15-return",
+      "path": "07-seerah/s15-return.png",
+      "width": 1536,
+      "height": 1024,
+      "background": "opaque",
+      "reference": "s02-makkah-dawn",
+      "state": "pending"
+    },
+    {
+      "name": "s16-farewell",
+      "path": "07-seerah/s16-farewell.png",
+      "width": 1536,
+      "height": 1024,
+      "background": "opaque",
+      "reference": "s02-makkah-dawn",
+      "state": "pending"
+    },
+    {
+      "name": "map-arabia",
+      "path": "07-seerah/map-arabia.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "opaque",
+      "reference": "s02-makkah-dawn",
+      "state": "pending"
+    },
+    {
+      "name": "adab-salam",
+      "path": "08-adab-dua/adab-salam.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "adab-eating",
+      "path": "08-adab-dua/adab-eating.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "adab-truth",
+      "path": "08-adab-dua/adab-truth.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "adab-parents",
+      "path": "08-adab-dua/adab-parents.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "adab-anger",
+      "path": "08-adab-dua/adab-anger.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "adab-mercy",
+      "path": "08-adab-dua/adab-mercy.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "adab-smile",
+      "path": "08-adab-dua/adab-smile.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "adab-harm",
+      "path": "08-adab-dua/adab-harm.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "adab-love",
+      "path": "08-adab-dua/adab-love.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "adab-speech",
+      "path": "08-adab-dua/adab-speech.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "adab-sneeze",
+      "path": "08-adab-dua/adab-sneeze.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "adab-gentle",
+      "path": "08-adab-dua/adab-gentle.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "adab-constant",
+      "path": "08-adab-dua/adab-constant.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "adab-knowledge",
+      "path": "08-adab-dua/adab-knowledge.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "dua-wake",
+      "path": "08-adab-dua/dua-wake.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "dua-sleep",
+      "path": "08-adab-dua/dua-sleep.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "dua-food",
+      "path": "08-adab-dua/dua-food.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "dua-home",
+      "path": "08-adab-dua/dua-home.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "dua-toilet",
+      "path": "08-adab-dua/dua-toilet.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "dua-dress",
+      "path": "08-adab-dua/dua-dress.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "dua-rain",
+      "path": "08-adab-dua/dua-rain.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "wudu-hands",
+      "path": "08-adab-dua/wudu-hands.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "wudu-arm",
+      "path": "08-adab-dua/wudu-arm.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "wudu-feet",
+      "path": "08-adab-dua/wudu-feet.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "time-fajr",
+      "path": "09-moments/time-fajr.png",
+      "width": 768,
+      "height": 768,
+      "background": "alpha",
+      "reference": null,
+      "state": "pending"
+    },
+    {
+      "name": "time-dhuhr",
+      "path": "09-moments/time-dhuhr.png",
+      "width": 768,
+      "height": 768,
+      "background": "alpha",
+      "reference": "time-fajr",
+      "state": "pending"
+    },
+    {
+      "name": "time-asr",
+      "path": "09-moments/time-asr.png",
+      "width": 768,
+      "height": 768,
+      "background": "alpha",
+      "reference": "time-fajr",
+      "state": "pending"
+    },
+    {
+      "name": "time-maghrib",
+      "path": "09-moments/time-maghrib.png",
+      "width": 768,
+      "height": 768,
+      "background": "alpha",
+      "reference": "time-fajr",
+      "state": "pending"
+    },
+    {
+      "name": "time-isha",
+      "path": "09-moments/time-isha.png",
+      "width": 768,
+      "height": 768,
+      "background": "alpha",
+      "reference": "time-fajr",
+      "state": "pending"
+    },
+    {
+      "name": "welcome-night",
+      "path": "09-moments/welcome-night.png",
+      "width": 1024,
+      "height": 1536,
+      "background": "opaque",
+      "reference": "time-fajr",
+      "state": "pending"
+    },
+    {
+      "name": "day-done",
+      "path": "09-moments/day-done.png",
+      "width": 1536,
+      "height": 1024,
+      "background": "opaque",
+      "reference": "time-fajr",
+      "state": "pending"
+    },
+    {
+      "name": "rest",
+      "path": "09-moments/rest.png",
+      "width": 1536,
+      "height": 1024,
+      "background": "opaque",
+      "reference": "time-fajr",
+      "state": "pending"
+    },
+    {
+      "name": "icon-foreground",
+      "path": "10-store/icon-foreground.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "alpha",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "icon-background",
+      "path": "10-store/icon-background.png",
+      "width": 1024,
+      "height": 1024,
+      "background": "opaque",
+      "reference": "key-forged",
+      "state": "pending"
+    },
+    {
+      "name": "feature-graphic",
+      "path": "10-store/feature-graphic.png",
+      "width": 1024,
+      "height": 500,
+      "background": "opaque",
+      "reference": "key-forged",
+      "state": "pending"
+    }
+  ],
+  "selected_route": "ChatGPT web via user-opened browser",
+  "web_conversation_url": "https://chatgpt.com/c/6aec4e46-4cd4-83e9-899d-97963d1badcd",
+  "rejected_variants": [
+    {
+      "name": "key-forged",
+      "file": "C:\\Projects\\Islamic Apps\\Miftah\\art-brief\\production\\rejected\\key-forged-v1.png",
+      "reason": "Insufficient transparent margins; alpha threshold 16 bbox (103,0,1130,1208) on 1254x1254 canvas.",
+      "generation_route": "ChatGPT web"
+    },
+    {
+      "name": "court-fg-day",
+      "file": "C:\\Projects\\Islamic Apps\\Miftah\\art-brief\\production\\rejected\\court-fg-day-v1.png",
+      "reason": "Architecture rendered too close: facade about 67% of width; base about 74% down. Source brief requires central 55% width and base at 62%. Genuine sky alpha verified.",
+      "generation_route": "ChatGPT web"
+    }
+  ],
+  "downloaded_variants": 3,
+  "current_asset": "court-fg-day"
+}

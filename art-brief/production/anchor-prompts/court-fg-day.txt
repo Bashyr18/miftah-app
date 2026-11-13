@@ -1,0 +1,7 @@
+A generic classical masjid in warm white stone, centred and occupying the central 55% of the width: one large smooth dome in muted gold on a drum, a colonnaded arcade of pointed arches along the front, two slender minarets, one each side, topped with plain pointed spires. The building base sits at 62% down from the top of the image. In front, an empty courtyard of pale patterned marble runs to the bottom edge, with a long still reflecting pool on the centre line. Two date palms frame the left and right edges. Low warm desert hills behind. Everything above the skyline is fully transparent, so the sky is empty alpha. No people. Morning light from the upper left.
+
+Style: A photoreal architectural render, with soft natural light and high detail, of one fixed scene. Keep the exact composition described.
+
+Strict rules: absolutely no text, letters, numerals, calligraphy or Arabic-looking script anywhere. No faces, eyes or mouths on anything. No people or human silhouettes. No prophets, angels or holy figures, and no glowing figures. No musical instruments, bells, dolls, idols, crosses, six-pointed stars, crescent finials, alcohol, pigs, weapons or blood.
+
+Output: one image, 1536 x 1024 pixels (aspect ratio 3:2), larger is welcome. Transparent background with real alpha and clean edges. If transparency is not possible, use a perfectly flat pure magenta #FF00FF background with no shadow, gradient or glow.

@@ -1,0 +1,509 @@
+/* Boots the real page in jsdom and walks a child's week, in both languages. Canvas instruments are exercised in the browser audit, not here. */
+const fs = require('fs'), path = require('path');
+const { JSDOM, VirtualConsole } = require('jsdom');
+const root = path.join(__dirname, '..', 'web');
+const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8').replace(/<meta http-equiv[^>]*>/, '').replace(/<link[^>]*>/g, '').replace(/<script src="[^"]*"><\/script>/g, '');
+const scripts = [...fs.readFileSync(path.join(root, 'index.html'), 'utf8').matchAll(/<script src="([^"]+)"/g)].map(m => m[1]);
+let pass = 0, fail = 0;
+const ok = (c, m) => { if (c) pass++; else { fail++; console.log('FAIL ' + m); } };
+function boot(stored, iso) {
+  const errors = [];
+  const vc = new VirtualConsole(); vc.on('error', e => errors.push(String(e && e.stack || e))); vc.on('jsdomError', e => { if (!/Not implemented|canvas/i.test(String(e))) errors.push(String(e.stack || e)); });
+  const dom = new JSDOM(html, { url: 'https://appassets.androidplatform.net/index.html', runScripts: 'outside-only', pretendToBeVisual: true, virtualConsole: vc });
+  const w = dom.window;
+  w.matchMedia = () => ({ matches: true });   /* reduced motion: skips animation in tests */
+  w.Element.prototype.animate = function () { return { finish() { }, cancel() { }, onfinish: null }; };
+  w.Element.prototype.scrollIntoView = function () { };
+  w.HTMLCanvasElement.prototype.getContext = function () { return new Proxy({}, { get: (t, k) => (k === 'createLinearGradient' || k === 'createRadialGradient') ? () => ({ addColorStop() { } }) : k === 'getImageData' ? () => ({ data: new Uint8ClampedArray(4 * 200 * 200) }) : () => { }, set: () => true }); };
+  w.Path2D = function () { };
+  w.Audio = function () { return { play() { return Promise.resolve(); }, pause() { }, removeAttribute() { } }; };
+  w.scrollTo = () => { };
+  if (stored) w.localStorage.setItem('miftah.v1', JSON.stringify(stored));
+  const R = Date; if (iso) { const t = new R(iso).getTime(); w.eval('(function(){var R=Date;var t=' + t + ';window.__t=t;window.Date=function(a,b,c,d,e,f){if(arguments.length===0)return new R(window.__t);if(arguments.length===1)return new R(a);return new R(a,b,c||0,d||0,e||0,f||0)};Date.UTC=R.UTC;Date.now=function(){return window.__t};Date.prototype=R.prototype;})()'); }
+  for (const s of scripts) w.eval(fs.readFileSync(path.join(root, s), 'utf8'));
+  return { w, A: w.A, errors, go: (h) => { w.location.hash = '#/' + h; w.A.rerender(); } };
+}
+const year = 2026;
+const kid = (age, id) => ({ id: id || 'c1', name: 'Amina', by: year - age, bm: 1, g: 'f', hue: 'emerald', since: '2026-11-05' });
+
+/* fresh install */
+let T = boot(null, '2026-11-05T09:00:00');
+ok(T.A.route() === 'welcome' || T.w.location.hash.includes('welcome') , 'a new install opens on the welcome');
+ok(T.A.$('#wel-go') && (T.A.$('.wel-door') || T.A.$('.wel-plate')), 'the welcome scene shows the door and one way in');
+ok(T.errors.length === 0, 'no errors at start: ' + T.errors[0]);
+
+/* every room's lessons for a 6-year-old open */
+for (const age of [3, 6, 9]) {
+  T = boot({ profiles: [kid(age)], cur: 'c1' }, '2026-11-05T09:00:00');
+  const { A, w } = T;
+  const st = A.stage();
+  ok(st === (age < 5 ? 0 : age < 8 ? 1 : 2), 'age ' + age + ' gets the right stage');
+  T.go('home');
+  ok(A.$$('.pstop').length > 0, 'age ' + age + ': today has a path');
+  const pl = w.Plan.today();
+  ok(pl.stops.every(s => s.t && !s.done), 'the path starts undone');
+  if (st === 0) {
+    ok(pl.stops.every(s => s.t === 'nursery'), 'Little Steps gets parent-led activities only');
+    ok(!A.$('.rooms'), 'Little Steps shows no rooms');
+    T.go('stop/0'); ok(A.$('#nur-go'), 'the adult card comes first');
+    A.$('#nur-go').click(); ok(A.$('.nur-child'), 'then one big thing for the child');
+    ok(!/Check|score|points/i.test(A.$('.nur-child').textContent.replace('Grown-up: finish', '')), 'no text or score for a toddler');
+    A.$('#nur-back').click(); ok(A.$('.obs'), 'then a neutral observation');
+    A.$('.obs button').click();
+    ok(A.D().obs.length === 1 && A.D().obs[0].kind === 'nursery', 'an observation is kept');
+    ok(w.Plan.today().stops[0].done, 'and the stop is done');
+  } else {
+    ok(pl.stops.some(s => s.t === 'hifz'), 'the Qurʾān is on every day’s path');
+    ok(pl.stops.some(s => s.t === 'lesson'), 'there is new learning');
+    T.go('keys'); ok(A.$('.empty'), 'no keys yet: an invitation, not an empty room');
+    for (const r of w.C.order) { T.go('room/' + r); ok(A.$('.wrap'), 'room ' + r + ' opens'); }
+  }
+  ok(T.errors.length === 0, 'age ' + age + ' raised no errors: ' + T.errors[0]);
+}
+
+/* the evidence gate */
+T = boot({ profiles: [kid(6)], cur: 'c1' }, '2026-11-05T09:00:00');
+{
+  const { A, w } = T; const M = w.M;
+  T.go('home');
+  const s = 'm.count5';
+  ok(M.state(s) === 'new', 'an untouched skill is new');
+  M.log(s, { k: 'recognition', ok: true });
+  M.forge(s);
+  ok(M.state(s) === 'forged', 'passing the lesson forges a key');
+  M.log(s, { k: 'production', ok: true });
+  M.log(s, { k: 'recall', ok: true });
+  ok(M.state(s) === 'forged', 'three quick successes the same day do not prove it');
+  ok(M.light(s) > .9, 'a fresh key is bright');
+  w.__t += 3 * 864e5;
+  ok(M.light(s) < .5, 'three days later it has dimmed');
+  ok(M.due().some(x => x.s === s), 'and it comes due for review');
+  M.log(s, { k: 'recall', ok: true, rv: true });
+  ok(M.state(s) === 'proven', 'recall after a real delay, with production already shown, proves it');
+  ok(M.light(s) > .9, 'recalling it relights the key');
+  const h = M.key(s).h; ok(h > 3, 'and memory now lasts longer: half-life ' + h.toFixed(1));
+  const a = 'a.l1'; M.log(a, { k: 'recall', ok: true, a: true });
+  ok(M.key(a).okInd === 0, 'assisted work never counts as independent');
+  const before = JSON.stringify(A.D().keys);
+  M.rebuild();
+  ok(JSON.stringify(A.D().keys) === before, 'the whole record can be rebuilt from its events');
+  M.log(a, { k: 'recognition', ok: false, e: 'letter-shape' });
+  ok(A.D().led.some(e => e.e === 'letter-shape'), 'wrong answers keep their type');
+  w.__t += 14 * 864e5 + 1;
+  M.log(s, { k: 'recall', ok: true, rv: true });
+  ok(M.state(s) === 'deep', 'after two weeks it is deep');
+}
+
+/* lesson flow through the real player, with the real rules */
+T = boot({ profiles: [kid(6)], cur: 'c1' }, '2026-11-05T09:00:00');
+{
+  const { A, w } = T; const { C, M } = w;
+  T.go('lesson/m.bond5');
+  ok(A.$('.pl'), 'a lesson opens in the player');
+  ok(A.$('.keybar'), 'the key forms at the top');
+  ok(!/score|points/i.test(A.$('.pl').textContent), 'no score anywhere');
+  /* a skill locked by its prerequisite cannot be started from the room */
+  T.go('room/math');
+  const locked = A.$$('.mapn.lock'); ok(locked.length > 0, 'later doors are locked');
+  /* placement for older children */
+  const older = kid(9, 'c2'); A.S.profiles.push(older); w.A.placeDefault(older);
+  ok(M.met('m.count5', 'c2'), 'a nine-year-old is placed past early maths');
+  ok(!M.met('a.l1', 'c2'), 'but starts Arabic letters unless a parent says otherwise');
+  ok(C.next('math', 'c2').band === 2, 'the next maths door is at their level');
+  ok(C.next('arabic', 'c2').id === 'a.old1', 'and the next Arabic door is the older beginners’ road, not a five-year-old’s letters');
+  older.arabic = 'reads'; ok(C.next('arabic', 'c2').y >= 2 && !C.next('arabic', 'c2').older, 'a nine-year-old who reads starts near their year');
+  /* day rollover */
+  const p1 = w.Plan.today().day; w.__t += 864e5; ok(w.Plan.today().day !== p1, 'a new day builds a new path');
+}
+
+/* ḥifẓ: sabaq, sabqī, manzil */
+T = boot({ profiles: [kid(6)], cur: 'c1' }, '2026-11-05T09:00:00');
+{
+  const { A, w } = T; const H = w.Hifz;
+  let t = H.today();
+  ok(t.sabaq.s === 1 && t.sabaq.from === 1, 'memorising starts with al-Fātiḥah');
+  H.mark(1, 1, 2, 'parent'); H.advance(1);
+  t = H.today(); ok(t.sabaq.from === 2, 'then the next āyah');
+  ok(t.sabqi.length === 0, 'nothing is due the same day');
+  w.__t += 864e5; t = H.today();
+  ok(t.sabqi.includes('1:1'), 'next day it returns as recent revision');
+  H.mark(1, 1, 2, 'self');
+  w.__t += 9 * 864e5; t = H.today();
+  ok(t.manzil.includes('1:1'), 'after a week it moves to the long cycle');
+  H.mark(1, 1, 0, 'parent'); ok(H.state().u['1:1'].lapse === 1, 'a slip is recorded and comes back sooner');
+  ok(H.state().log.every(x => x.by === 'parent' || x.by === 'self'), 'every check names who heard it');
+  T.go('hifz'); ok(A.$('#hf-v') , 'the session opens');
+  ok(!A.$('.opt'), 'the Qurʾān has no multiple-choice games');
+  T.go('surah/112'); ok(A.$$('.tx-v').length === 4, 'Al-Ikhlāṣ shows its four āyāt');
+  T.go('room/quran'); ok(A.$$('.kitem').length === 38, 'the shelf has all of Juzʾ ʿAmma and al-Fātiḥah');
+  ok(T.errors.length === 0, 'ḥifẓ raised no errors: ' + T.errors[0]);
+}
+
+/* the parent area */
+T = boot({ profiles: [kid(6)], cur: 'c1' }, '2026-11-05T09:00:00');
+{
+  const { A } = T;
+  T.go('parent'); ok(A.$('.gate'), 'parents sit behind a gate');
+  const q = A.$('.gate p').textContent.split('+').map(x => parseInt(x)); const ans = q[0] + q[1];
+  A.$$('.numopt').find(b => +b.dataset.v === ans).click();
+  ok(A.$('.fc'), 'the right answer opens it');
+  for (const t of ['today', 'hear', 'rooms', 'talk', 'record', 'set']) { T.go('parent/c1/' + t); ok(A.$('.tabs'), 'tab ' + t); }
+  T.go('parent/settings'); ok(A.$('.segs'), 'settings');
+  { const win = A.$('body').ownerDocument.defaultView; win.__tidyNow && win.__tidyNow(); const cs = A.$$('.card.acc'); if (cs.length > 1) { const shut = cs.find(c => c.classList.contains('shut')), open = cs.find(c => !c.classList.contains('shut')); shut.querySelector('h3').click(); ok(!shut.classList.contains('shut') && open.classList.contains('shut'), 'tapping a closed section opens it and closes the other'); shut.querySelector('h3').click(); ok(shut.classList.contains('shut'), 'tapping an open one closes it'); } else ok(false, 'settings sections fold'); }
+  T.go('parent/voices'); ok(A.$$('.li').length > 40, 'voices lists letters and sounds');
+  T.go('parent/about'); ok(A.$('.card'), 'about');
+  ok(T.errors.length === 0, 'parent raised no errors: ' + T.errors[0]);
+}
+
+/* persistence and damaged backups */
+T = boot({ profiles: [kid(6)], cur: 'c1', lang: 'ar', theme: 'dark' }, '2026-11-05T09:00:00');
+{
+  const { A, w } = T;
+  w.M.log('m.count5', { k: 'recall', ok: true }); A.saveNow();
+  const raw = JSON.parse(w.localStorage.getItem('miftah.v1'));
+  ok(raw.data.c1.led.length === 1, 'progress persists');
+  ok(raw.lang === 'ar', 'language persists');
+  ok(w.document.documentElement.dir === 'rtl', 'Arabic is right to left');
+  ok(JSON.stringify(A.shape({ profiles: 'nope', lang: 7, data: 3, theme: 'x' })).length > 0, 'a damaged backup cannot break the app');
+  T.go('home'); ok(/طريق اليوم/.test(A.$('.pathbox').textContent), 'the path speaks Arabic');
+  T.go('lesson/m.count5'); ok(/تعرّف|تذكّر/.test(A.$('.pl-ph').textContent), 'the lesson speaks Arabic');
+  T.go('keys'); T.go('room/deen');
+  ok(T.errors.length === 0, 'Arabic raised no errors: ' + T.errors[0]);
+}
+/* v2: an interrupted lesson keeps its place */
+T = boot({ profiles: [kid(6)], cur: 'c1' }, '2026-11-05T09:00:00');
+{
+  const { A, w } = T;
+  T.go('lesson/m.bond5');
+  A.D().resume = { skill: 'm.bond5', seed: 77, stop: null, i: 2, solo: 0, soloOk: 0, t: w.Date.now() };
+  T.go('home'); ok(/Carry on/.test(A.$('.hero').textContent), 'a left lesson is offered first');
+  T.go('lesson/m.bond5'); ok(A.$('.pl'), 'and it reopens');
+  ok(A.D().resume && A.D().resume.seed === 77, 'with the same questions');
+  w.__t += 8 * 864e5; ok(A.resumeOf() === null, 'an old place is let go after a week');
+  ok(T.errors.length === 0, 'resume raised no errors: ' + T.errors[0]);
+}
+/* v2: a child's deed is a claim until a person confirms it */
+T = boot({ profiles: [kid(6)], cur: 'c1' }, '2026-11-05T09:00:00');
+{
+  const { A, w } = T; const { M, C } = w;
+  const id = Object.keys(C.missions).find(k => C.missions[k].skill), m = C.missions[id];
+  M.claim(id, m);
+  ok(!M.key(m.skill) || !M.key(m.skill).n.observed, 'a claim is not evidence');
+  ok(A.D().pending.length === 1, 'it waits for a grown-up');
+  M.confirm(id, true);
+  ok(M.key(m.skill).n.observed === 1, 'a grown-up’s yes counts as seen in real life');
+  ok(M.key(m.skill).okInd === 1, 'and as independent');
+  ok(A.D().pending.length === 0, 'the queue clears');
+  ok(A.D().led.some(e => e.k === 'observed' && e.by === 'parent'), 'the ledger says who saw it');
+  M.claim(id, m); M.confirm(id, false); ok(M.key(m.skill).n.observed === 1, 'a no does not count');
+  const before = JSON.stringify(A.D().keys); M.rebuild(); ok(JSON.stringify(A.D().keys) === before, 'still rebuildable from events');
+  M.log('m.count5', { k: 'exposure', ok: true }); ok(M.key('m.count5').okInd === 0, 'seeing is not knowing');
+}
+/* v2: the day fits the parent's limit, and the limit is held */
+T = boot({ profiles: [kid(9)], cur: 'c1' }, '2026-11-05T09:00:00');
+{
+  const { A, w } = T; const { Plan } = w, p = A.P();
+  const big = Plan.build('c1').stops.filter(s => s.t === 'lesson').length;
+  p.limit = 10; const small = Plan.build('c1').stops;
+  ok(small.filter(s => s.t === 'lesson').length === 1 && big > 1, 'a short limit means fewer new doors, never none');
+  ok(small.some(s => s.t === 'hifz'), 'and the Qurʾān stays');
+  ok(!Plan.over(), 'not over at the start');
+  A.D().screen[A.day()] = 11 * 60000; ok(Plan.over(), 'over the limit is over');
+  T.go('rest'); ok(/rest/i.test(A.$('.wel-c').textContent), 'time to rest is said kindly');
+  Plan.extend(15); ok(!Plan.over(), 'a grown-up can add time');
+  ok(T.errors.length === 0, 'limits raised no errors: ' + T.errors[0]);
+}
+/* v2: a door refused twice rests, and what it stands on comes back */
+T = boot({ profiles: [kid(6)], cur: 'c1' }, '2026-11-05T09:00:00');
+{
+  const { A, w } = T; const { M, C, Plan } = w;
+  const first = C.next('math'), s0 = first.id; M.forge(s0); M.log(s0, { k: 'recall', ok: true });
+  const sk = C.next('math'); ok(sk.needs.includes(s0), 'the next door builds on the last');
+  M.noteNotYet(sk.id); ok(M.stuck().length === 0, 'once is ordinary');
+  M.noteNotYet(sk.id); ok(M.stuck().includes(sk.id), 'twice is stuck');
+  const pl = Plan.build('c1');
+  ok(!pl.stops.some(s => s.t === 'lesson' && s.s === sk.id), 'the stuck door rests today');
+  if (C.skill(s0).review) ok(pl.stops.some(s => s.t === 'review' && s.items.includes(s0)), 'and its foundation comes back');
+  w.__t += 2 * 864e5; ok(M.stuck().includes(sk.id), 'it stays flagged for the parent');
+  M.clearNotYet(sk.id); ok(M.stuck().length === 0, 'passing clears it');
+}
+/* v2: tracking measures come from the ledger */
+T = boot({ profiles: [kid(6)], cur: 'c1' }, '2026-11-05T09:00:00');
+{
+  const { A, w } = T; const { M, Hifz } = w;
+  M.log('m.count5', { k: 'recall', ok: true, rv: true }); M.log('m.count5', { k: 'recall', ok: false, rv: true }); M.log('m.count5', { k: 'recall', ok: true, a: true, rv: true });
+  const r = M.retention('c1', 30, 'math'); ok(r.of === 3 && r.ok === 1, 'retention counts only unaided recall');
+  const u = M.unaided('c1', 14); ok(u.now.ind === 1 && u.now.help === 1, 'alone and helped are told apart');
+  ok(M.timeline('m.count5').length === 1, 'evidence is grouped by day');
+  Hifz.mark(1, 1, 2, 'self'); ok(Hifz.toHear('c1').includes('1:1'), 'what only the child has checked waits for a listener');
+  Hifz.mark(1, 1, 2, 'parent'); ok(!Hifz.toHear('c1').includes('1:1'), 'being heard clears it');
+  w.__t += 15 * 864e5; ok(Hifz.toHear('c1').includes('1:1'), 'and it returns in two weeks');
+  T.go('hifz'); ok(!/Someone heard me/.test(A.$('.pl').textContent), 'a child cannot claim to have been heard');
+}
+/* v2: more than one child means asking who, each time */
+T = boot({ profiles: [kid(6), kid(9, 'c2')], cur: 'c1' }, '2026-11-05T09:00:00');
+ok(T.w.location.hash === '#/who', 'two children: the app asks who is learning');
+/* engine: strands weave in, not wait */
+T = boot({ profiles: [kid(6)], cur: 'c1' }, '2026-11-05T09:00:00');
+{
+  const { A, w } = T; const { C, M } = w;
+  ok(C.next('deen').id === 'd.creator', 'Living Islam begins with who made us');
+  M.forge('d.creator'); M.log('d.creator', { k: 'recall', ok: true });
+  const n1 = C.next('deen'); ok(C.units[n1.unit].strand, 'the second door is from a strand, not the next of 23 in a row');
+  M.forge(n1.id);
+  const n2 = C.next('deen'); ok(n2.unit !== n1.unit, 'strands take turns: ' + n2.id);
+  ok(C.next('arabic').id === 'a.l1', 'sequential rooms stay in order');
+  ok(!C.open(C.skill('m.shapes')), 'the maths strands wait for the numbers under them');
+}
+/* engine: the shape of the week */
+T = boot({ profiles: [kid(9)], cur: 'c1' }, '2026-11-05T09:00:00');
+{
+  const { A, w } = T; const { Plan, M, C, Flow } = w; const p = A.P();
+  ok(Flow.dayKind(p) === 'school', 'Thursday is a school day');
+  const big = Plan.build('c1');
+  ok(big.stops.some(s => s.t === 'move') || big.stops.reduce((a, s) => a + Plan.est(s, 2), 0) < 18, 'a long day has somewhere to stand up');
+  ok(big.stops.filter(s => s.t === 'move').every(s => Plan.est(s, 2) === 1), 'a move is a minute');
+  const firstLesson = big.stops.filter(s => s.t === 'lesson').map(s => C.skill(s.s).room);
+  ok(new Set(firstLesson).size === firstLesson.length, 'no room twice in a day');
+  p.days = [0, 1, 2, 3, 5, 6]; const rest = Plan.build('c1');
+  ok(rest.stops.every(s => s.t === 'hifz' || s.t === 'mission'), 'a rest day holds only the Qurʾān and a deed');
+  ok(rest.why.length > 0, 'and says why');
+  delete p.days;
+  ['m.pv1000', 'a.l1', 'a.l2', 'd.creator', 'd.iman', 'e.pos'].forEach(s => M.forge(s));
+  p.light = 4; const light = Plan.build('c1');
+  ok(!light.stops.some(s => s.t === 'lesson'), 'the remembering day opens no new doors');
+  delete p.light;
+}
+/* engine: pace follows memory */
+T = boot({ profiles: [kid(6)], cur: 'c1' }, '2026-11-05T09:00:00');
+{
+  const { A, w } = T; const { M, Flow, C } = w;
+  const base = Flow.pace('c1').news; ok(base === 2, 'Explorers start at two new doors');
+  const skills = C.list.filter(s => s.band === 1 && s.review).slice(0, 12).map(s => s.id);
+  skills.forEach(s => M.forge(s)); w.__t += 12 * 864e5;
+  ok(M.due().length >= 10, 'a long gap brings keys due');
+  const low = Flow.pace('c1'); ok(low.news < base, 'review debt means fewer new doors');
+  ok(low.why.length > 0, 'and the plan says why');
+  const pl = w.Plan.build('c1'); ok(pl.stops[0].t === 'review', 'memory comes first');
+  const days = Flow.preview('c1', 7); ok(days.length === 7, 'a week ahead can be seen');
+  const seq = days.flatMap(d => d.lessons.map(s => s.id)); ok(new Set(seq).size === seq.length, 'the forecast never repeats a door');
+  const f = Flow.forecast('math'); ok(f.total > 10 && f.left <= f.total && f.weeks > 0, 'each room can say how long is left');
+  w.M.log('m.count5', { k: 'recall', ok: true, a: true, rv: false });
+}
+/* milestones and promises */
+T = boot({ profiles: [kid(6)], cur: 'c1' }, '2026-11-05T09:00:00');
+{
+  const { A, w } = T; const { M, Flow, C, Plan } = w; const p = A.P();
+  p.promises = [{ id: 'p1', what: 'A trip to the park', n: 1, kind: 'unit' }];
+  const u = C.units['m-count']; u.skills.forEach(s => M.forge(s.id));
+  ok(Flow.unitsReady('c1').includes('m-count'), 'a finished unit is ready for its check');
+  ok(Plan.build('c1').stops.some(s => s.t === 'check' && s.unit === 'm-count'), 'the check joins the path');
+  A.D().path = null; T.go('home'); const i = Plan.today().stops.findIndex(s => s.t === 'check');
+  T.go('stop/' + i); ok(A.$('.pl'), 'the check opens in the player');
+  ok(!A.$('.pl-help'), 'with no hints');
+  Flow.unitNotYet('m-count'); ok(!Flow.unitsReady('c1').includes('m-count'), 'not yet means a few days to polish');
+  Flow.unitDone('m-count');
+  ok(Flow.lanterns().some(x => x.id === 'm-count' && x.lit), 'passing lights a lantern');
+  ok(p.promises[0].fired, 'and a promise tied to it is earned');
+  A.D().path = null; T.go('home'); ok(/park/.test(A.$('.promise').textContent), 'the child hears about it');
+  ok(Flow.inbox().some(x => x.kind === 'promise'), 'and the parent is reminded to keep it');
+  T.go('keys'); ok(A.$('.lamp.lit'), 'lanterns hang on the key ring');
+  ok(T.errors.length === 0, 'milestones raised no errors: ' + T.errors[0]);
+}
+/* printables: every sheet, at every stage, in both languages */
+for (const [age, lang] of [[3, 'en'], [6, 'en'], [9, 'en'], [9, 'ar']]) {
+  T = boot({ profiles: [kid(age)], cur: 'c1', lang }, '2026-11-05T09:00:00');
+  const { A, w } = T; const { Print, M, C, Flow } = w;
+  if (age > 3) ['a.l1', 'a.l2', 'a.l3', 'e.p1', 'e.p1.1', 'm.count5', 'm.count10', 'm.frame', 'm.bond5', 'm.add10', 'd.creator', 'd.iman'].forEach(s => M.forge(s));
+  Flow.unitDone('m-bonds');
+  let n = 0;
+  Print.available('c1').forEach(k => { let r = null; try { r = Print.make(k.id, 'c1', 12345); } catch (e) { ok(false, k.id + ' threw at age ' + age + ': ' + e.message); return; } n++; if (r) { ok(typeof r.html === 'string' && !/undefined|\[object|NaN/.test(r.html.replace(/<svg[\s\S]*?<\/svg>/g, '')), k.id + ' is clean at age ' + age + ' ' + lang); ok(Print.make(k.id, 'c1', 12345).html === r.html, k.id + ' can be reproduced from its seed'); } });
+  ok(n >= (age > 3 ? 15 : 5), 'age ' + age + ' has sheets: ' + n);
+  ok(T.errors.length === 0, 'printables raised no errors: ' + T.errors[0]);
+}
+T = boot({ profiles: [kid(6)], cur: 'c1' }, '2026-11-05T09:00:00');
+{
+  const { A, w } = T; const { Print, M } = w;
+  M.forge('m.add10'); M.forge('m.bond10');
+  const r = Print.make('practice-math', 'c1', 77); ok(r.q && r.q.length >= 8, 'a practice sheet knows its answers');
+  ok(r.q.every(q => /^m\.(add10|bond10)$/.test(q.s)), 'and comes only from what they have been taught');
+  Print.keep(r, 'c1'); ok(w.Flow.inbox().some(x => x.kind === 'sheet'), 'a printed sheet waits to be marked');
+  T.go('parent'); const q = A.$('.gate p').textContent.split('+').map(x => parseInt(x)); A.$$('.numopt').find(b => +b.dataset.v === q[0] + q[1]).click();
+  T.go('parent/c1/mark/' + r.code); ok(A.$$('.mk').length === r.q.length, 'marking shows every answer');
+  const before = M.key('m.add10').n.production; Print.mark(r.code, r.q.map((_, i) => i !== 0), 'c1');
+  const led = A.D().led.filter(e => e.by === 'parent' && e.k === 'production'); ok(led.length === r.q.length, 'each mark is evidence, and says a person gave it');
+  ok(led.filter(e => !e.ok).length === 1, 'and a miss is kept as a miss');
+  ok(!w.Flow.inbox().some(x => x.kind === 'sheet'), 'the inbox clears');
+  for (const t of ['plan', 'make', 'hear', 'rooms', 'set']) { T.go('parent/c1/' + t); ok(A.$('.tabs'), 'tab ' + t + ' opens'); }
+  T.go('parent/c1/sheet/trace-ar'); ok(A.$('.ppz .pp'), 'a sheet previews');
+  T.go('parent/media'); ok(A.$('.fab'), 'the media library opens'); A.acts['m-add'](); ok(A.$$('.ao').length === 5, 'five kinds can be added, photos among them'); A.closeSheet();
+  T.go('place/c1/math'); ok(A.$('.pl'), 'finding the level opens');
+  {
+    const Sync = A.Sync, base = JSON.parse(JSON.stringify(A.S)), M = w.M, mine = JSON.parse(JSON.stringify(A.S)), id = 'c1';
+    const ev = (i, sk, t, ok) => ({ i, t, s: sk, k: 'recall', ok, a: false, by: 'child' });
+    mine.data[id] = Object.assign({}, mine.data[id], { led: [ev('a', 'm.add10', 1000, true)], keys: { 'm.add10': { forged: 1000, n: {}, e: {} } }, cards: [{ f: 'Q', b: 'A', next: 5 }], papers: [{ r: 'math', t: 1, p: 50 }], work: [{ title: 'E', text: 'old', t: 1 }] });
+    const theirs = JSON.parse(JSON.stringify(mine)); theirs.profiles[0].id = 'other'; theirs.data = { other: Object.assign({}, mine.data[id], { led: [ev('a', 'm.add10', 1000, true), ev('b', 'm.add10', 2000, true), ev('c', 'm.count', 3000, true)], keys: { 'm.add10': { forged: 900, n: {}, e: {} }, 'm.count': { forged: 3000, n: {}, e: {} } }, cards: [{ f: 'Q', b: 'A', next: 9 }, { f: 'Q2', b: 'B', next: 1 }], papers: [{ r: 'math', t: 2, p: 80 }], work: [{ title: 'E', text: 'new', t: 2 }] }) };
+    theirs.media = [{ kind: 'youtube', ref: 'abc' }, { kind: 'image', ref: 'x.jpg' }];
+    const r = Sync.merge(mine, theirs), d = r.S.data[id];
+    ok(r.S.profiles.length === mine.profiles.length, 'the same child on two devices stays one child');
+    ok(d.led.length === 3, 'histories join without duplicates'); ok(d.keys['m.count'].forged && d.keys['m.add10'].forged === 900, 'mastery from either device is kept');
+    ok(r.report[0].lessons === 1, 'and the report says what arrived'); ok(d.cards.length === 2 && d.cards[0].next === 9, 'cards join, the later schedule wins');
+    ok(d.papers.length === 2, 'papers from both are kept'); ok(d.work[0].text === 'new' && d.work[0].versions[0].text === 'old', 'the older essay stays as a version');
+    ok(r.S.media.length === (mine.media || []).length + 1, 'links travel, files stay');
+    ok(Sync.merge(mine, theirs, true).S.media.length === (mine.media || []).length + 2, 'a family file brings its files too');
+    const again = Sync.merge(r.S, theirs); ok(again.S.data[id].led.length === 3 && again.report[0].lessons === 0, 'receiving the same file twice changes nothing');
+    const nu = JSON.parse(JSON.stringify(theirs)); nu.profiles = [Object.assign({}, nu.profiles[0], { id: 'x9', name: 'Zayd', by: 2015 })]; nu.data = { x9: nu.data.other };
+    ok(Sync.merge(mine, nu).S.profiles.length === mine.profiles.length + 1, 'a child this device has not met is added');
+    A.S = A.shape(base);
+  }
+  {
+    const C0 = w.C, P0 = w.Player; let bad = [], thin = 0, n = 0;
+    Object.keys(C0.skills).forEach(id => { const sk = C0.skills[id]; for (let t = 0; t < 12; t++) { const st = P0.compose(sk, A.rng(t * 13 + 5)); st.forEach(x => { if (x.k === 'pad' && !(x.allKeys ? /^-?\d*\.?\d+(\/\d+)?$/.test(String(x.a)) : (typeof x.a === 'number' && Number.isInteger(x.a) && x.a >= 0))) bad.push(id + ':' + x.eq + '=' + x.a); }); if (sk.review) { const r = sk.review(A.rng(t * 7 + 1)); const q = Array.isArray(r) ? r[0] : r; if (!q || !q.k) bad.push(id + ':review'); } } });
+    ok(bad.length === 0, 'every pad answer can be typed on the keys the child is given: ' + bad.slice(0, 6).join(' ; '));
+    const noAr = new Set(); Object.keys(C0.skills).forEach(id => { const sk = C0.skills[id]; for (let t = 0; t < 12; t++) { const look = x => { if (x && (x.k === 'pad' || x.k === 'expr') && x.eq != null) { const k = A.eqKind(x.eq); if (k.needsRow && !A.eqRows[A.eqKey(k.eq)]) noAr.add(A.eqKey(k.eq)); } }; P0.compose(sk, A.rng(t * 31 + 7)).forEach(look); if (sk.review) { const q = sk.review(A.rng(t * 17 + 3)); (Array.isArray(q) ? q : [q]).forEach(look); } } });
+    ok(noAr.size === 0, 'every worded problem has Arabic: ' + noAr.size + ' ' + [...noAr].slice(0, 12).join(' | '));
+    const shallow = []; Object.keys(C0.skills).forEach(id => { const sk = C0.skills[id]; const u = Object.values(C0.units).find(x => x.skills.includes(sk)); if (!u || u.y < 8 || id.startsWith('a') || id.startsWith('m') || id.startsWith('d1') && false) return; const seen = new Set(); for (let t = 0; t < 4; t++) P0.compose(sk, A.rng(1000 + t * 77)).forEach(x => { if (x.ph === 'solo' || x.ph === 'make') seen.add(JSON.stringify([x.p, x.eq, x.a, x.o && x.o.map(o => o.t)])); }); if (seen.size <= 1) shallow.push(id); });
+    ok(shallow.length <= 8, 'from Year 8 a lesson asks more than one question: ' + shallow.length + ' ' + shallow.slice(0, 12).join(','));
+  }
+  {
+    const P0 = w.Player, S0 = A.S, host = A.$('body').ownerDocument.createElement('div'); let got = null;
+    const mk = () => ({ k: 'choice', p: ['Q', 'Q'], ph: 'solo', skill: 'm.add10', o: [{ t: ['R', 'R'], ok: true }, { t: ['W', 'W'], ok: false }], shuffle: false });
+    const sv = S0.profiles[0].by; S0.profiles[0].by = year - 13; host.id = 'hx'; A.$('body').appendChild(host);
+    P0.start(host, { steps: [mk(), mk()], mode: 'review', exam: true, rng: A.rng(1), onDone: r => { got = r; } });
+    const opt = t => A.$$('.opt', host).find(b => b.textContent.trim() === t);
+    opt('W').click(); ok(P0.cur() && P0.cur().p, 'an exam accepts the answer');
+    ok(!got, 'and carries on');
+    S0.profiles[0].by = sv; P0.stop(); host.remove();
+    const K = M0 => M0.blank(); const k1 = K(w.M); w.M.apply(k1, { t: 1, k: 'forge', ok: true }); const D1 = 864e5; [1, 2, 3].forEach(n => w.M.apply(k1, { t: n * D1 * 2, k: 'recognition', ok: true, a: false })); ok(k1.proven, 'proven is reachable by recalling on separate later days');
+  }
+  ok(T.errors.length === 0, 'parent tools raised no errors: ' + T.errors[0]);
+}
+/* media: links, the right moment, and no way to mistake watching for knowing */
+T = boot({ profiles: [kid(6)], cur: 'c1' }, '2026-11-05T09:00:00');
+{
+  const { A, w } = T; const { Media, Player, C, M } = w;
+  const id = 'dQw4w9WgXcQ';
+  for (const u of ['https://www.youtube.com/watch?v=' + id, 'https://youtu.be/' + id, 'youtu.be/' + id + '?t=90', 'https://m.youtube.com/watch?v=' + id + '&t=1m30s', 'https://www.youtube.com/shorts/' + id, 'https://www.youtube.com/embed/' + id]) { const r = Media.parse(u); ok(r && r.ref === id, 'understands ' + u); }
+  ok(Media.parse('youtu.be/' + id + '?t=90').start === 90, 'keeps the start time');
+  for (const u of ['https://evil.example/watch?v=' + id, 'not a link', 'https://www.youtube.com/@channel', '']) ok(!Media.parse(u), 'refuses ' + u);
+  const later = Media.add({ kind: 'youtube', ref: id, title: 'Later', when: 'before', ages: [1], attach: { type: 'skill', id: 'm.add20' } });
+  ok(!Media.visible(later), 'a lesson’s video waits for its door to open');
+  const now = Media.add({ kind: 'youtube', ref: id, title: 'Now', when: 'before', ages: [1], attach: { type: 'skill', id: 'm.count5' } });
+  ok(Media.visible(now), 'an open lesson’s video can show');
+  const steps = Player.compose(C.skill('m.count5'), A.rng(1));
+  ok(steps[0].k === 'watch' && steps[0].media === now.id, 'it comes where the parent put it');
+  const shelf = Media.add({ kind: 'youtube', ref: id, title: 'Shelf', when: 'shelf', ages: [2], attach: { type: 'room', id: 'math' } });
+  ok(!Media.shelf('math').length, 'not for this child’s stage: not shown');
+  shelf.ages = [1]; ok(Media.shelf('math').length === 1, 'for their stage: on the shelf');
+  T.go('room/math'); ok(A.$('.shelf-i'), 'the room shows it');
+  T.go('watch/' + shelf.id); ok(A.$('iframe') && /youtube-nocookie/.test(A.$('iframe').src), 'it plays privately');
+  ok(/sandbox/.test(A.$('iframe').outerHTML), 'in a sandbox with no way out');
+  Media.watched(now); ok(!(M.key('m.count5') || { okInd: 0 }).okInd, 'watching is never knowing');
+  Media.remove(now.id); ok(!Media.get(now.id), 'a parent can remove it');
+  ok(T.errors.length === 0, 'media raised no errors: ' + T.errors[0]);
+}
+/* tightening */
+T = boot({ profiles: [kid(6)], cur: 'c1' }, '2026-11-05T09:00:00');
+{
+  const { A, w } = T; const { Hifz, Plan, C, M } = w;
+  Hifz.markKnown(114); ok(Hifz.known(114).n === Hifz.known(114).of, 'a sūrah learned earlier can be marked known');
+  ok((Hifz.state().finished || []).includes(114), 'and is finished');
+  w.__t += 40 * 864e5; ok(Hifz.today().manzil.length > 0, 'and joins the long revision cycle');
+  const pl = Plan.today(); const les = pl.stops.find(s => s.t === 'lesson');
+  ok(Plan.completeSkill(les.s) && les.done, 'a lesson done from its room counts on the path');
+}
+
+/* ---------- ages 12 to 18 ---------- */
+for (const age of [13, 16]) {
+  const T2 = boot({ profiles: [kid(age, 't')], cur: 't' }, '2026-11-05T09:00:00'); const { A, w } = T2, { C, Plan, M, Flow, I } = w;
+  ok(A.stage() === (age < 15 ? 3 : 4), age + ': stage from age');
+  ok(Flow.yearOf(A.P()) === age - 4, age + ': year from age');
+  const m = C.next('math'); ok(m && m.y >= age - 6, age + ': starts near their own year, not at counting');
+  ok(C.next('computing') && C.next('engineering') && C.next('life'), age + ': the older rooms are open');
+  const pl = Plan.build('t'); ok(pl.stops.some(x => x.t === 'lesson'), age + ': a day has lessons');
+  for (const r of ['home', 'rooms', 'room/math', 'room/engineering', 'room/computing', 'keys', 'study', 'flash', 'write', 'marking', 'parent/set']) { T2.go(r); ok(T2.errors.length === 0, age + ': ' + r + ' renders ' + (T2.errors[0] || '').slice(0, 100)); }
+  T2.go('home'); ok(A.$('.ti') && !A.$('#sky'), age + ': a clean list, not the courtyard');
+  ok(w.document.body.dataset.age === String(A.stage()), age + ': the page knows its age');
+  /* flashcards widen their gap */
+  A.D().cards = [{ f: 'q', b: 'a', next: 0, gap: 0 }]; T2.go('flash'); A.$('[data-a="t-flip"]').click(); const g = A.$('[data-a="t-grade"][data-g="2"]'); ok(!!g, age + ': a card can be graded'); A.acts['t-grade'](g); ok(A.D().cards[0].gap >= 1 && A.D().cards[0].next > w.__t, age + ': a known card comes back later');
+  /* typed maths */
+  const host = w.document.createElement('div'); w.document.body.appendChild(host); let oks = 0, bads = 0;
+  const typed = (keys, a) => { I.expr({ el: host, step: { k: 'expr', eq: 'x', a }, ok: () => oks++, bad: () => bads++ }); keys.forEach(k => host.querySelector('[data-k="' + k + '"]').click()); host.querySelector('[data-k="ok"]').click(); };
+  typed(['-', '8'], -8); typed(['1', '/', '2'], '2/4'); typed(['0', '.', '5'], '1/2'); typed(['3'], 4);
+  ok(oks === 3 && bads === 1, age + ': typed answers accept equal values and refuse wrong ones');
+  /* written work is the student's, and is checked honestly */
+  let wOk = 0; I.write({ el: host, step: { p: ['Q', 'س'], min: 3, check: [['a', 'أ'], ['b', 'ب']] }, ok: () => wOk++, bad: () => { } });
+  host.querySelector('#i-w').value = 'one two three four'; host.querySelector('#i-w-go').click(); host.querySelector('.wcheck').click(); host.querySelector('#i-w-end').click();
+  ok(wOk === 1 && A.D().work.length === 1, age + ': written work is kept');
+  A.D().work[0].shared = false; T2.go('marking'); ok(!A.$('#app').textContent.includes('one two three'), age + ': unshared work stays private');
+  A.D().work[0].shared = true; T2.go('marking'); ok(A.$('#app').textContent.includes('one two three'), age + ': shared work reaches the parent');
+  ok(C.skill('d10.evolution').sup && C.skill('d10.palestine').sup && C.skill('d10.puberty').sup, age + ': sensitive lessons are supervised');
+  ok(T2.errors.length === 0, age + ': no errors ' + (T2.errors[0] || '').slice(0, 120));
+}
+{ /* the door and rooms for a young child are untouched */
+  const T3 = boot({ profiles: [kid(6, 'y')], cur: 'y' }, '2026-11-05T09:00:00'); const { A, w } = T3;
+  T3.go('rooms'); const t = A.$('#app').textContent; ok(!t.includes('Life and Future'), 'a six-year-old does not see the room for older students');
+  ok(w.Flow.yearOf(A.P()) === 2 && !A.$('.ti.tl'), 'a young child keeps the rooms design');
+}
+
+/* ---------- placement, calm, lab, tracking, exams, controls ---------- */
+const await_ui = (ww) => { ww.__tidyNow && ww.__tidyNow(); };
+const unlock = (TT) => { TT.go('parent'); const qq = TT.A.$('.gate p').textContent.split('+').map(x => parseInt(x)); TT.A.$$('.numopt').find(b => +b.dataset.v === qq[0] + qq[1]).click(); };
+{
+  const T4 = boot({ profiles: [kid(11, 'e')], cur: 'e' }, '2026-11-05T09:00:00'); const { A, w } = T4, { C, M, Flow, Plan } = w;
+  ok(A.S.sound === false && A.motion() === 'calm', 'quiet and calm by default');
+  ok(C.next('arabic').id === 'a.old1', 'an eleven-year-old new to Arabic takes the older road, not the first letters');
+  A.P().arabic = 'reads'; const a11 = C.next('arabic'); ok(a11 && a11.y >= 5 && a11.id !== 'a.l1', 'an eleven-year-old who reads starts near their year');
+  const d11 = C.next('deen'); ok(d11 && (d11.y >= 5 || C.units['d-worship'].skills.indexOf(d11) >= 0), 'Living Islam starts at their age, keeping the prayer basics');
+  A.P().start = { math: 3 }; ok(C.next('math').y <= 4, 'a parent can move a subject’s starting year');  A.P().start = {};
+  ok(C.SIMS.length >= 40 && C.SIMS.every(s => s.skills.some(k => C.skills[k])), 'every simulation joins at least one lesson');
+  const withSim = C.skills['m8.pyth']; ok((typeof withSim.meet === 'function' ? withSim.meet(A.rng(1)) : withSim.meet).some(x => x.k === 'sim'), 'a lesson opens its simulation');
+  ok(C.USEDBY['m8.ratio'] && C.skills['c9.moles'].uses.length > 0, 'subjects are linked');
+  unlock(T4);
+  T4.go('parent/e/log'); ok(A.$('details.logu'), 'parents see every lesson tracked');
+  T4.go('parent/e/set'); ok(A.$('[data-c-start="math"]') && A.$('[data-k="arabic"]'), 'parents can set the start per subject');
+  T4.go('parent/settings'); ok(A.$('#c-pin') && A.$('[data-k="motion"]'), 'settings hold motion and the PIN');
+  for (const r of ['lab', 'lab/triangle', 'rooms', 'room/arabic', 'keys', 'parent/e/log', 'parent/e/set', 'parent/settings', 'parent/media']) { T4.go(r); ok(T4.errors.length === 0, r + ' renders ' + (T4.errors[0] || '').slice(0, 120)); }
+  /* a year exam opens when most of a year is mastered, and its certificate follows a real score */
+  const y = 6, sk = C.rooms.math.units.filter(u => u.y === y && u.band <= 2).flatMap(u => u.skills);
+  ok(!A.examOffer('math', y, 'e'), 'no exam before the work is done');
+  sk.forEach(s => M.forge(s.id)); ok(!!A.examOffer('math', y, 'e'), 'the year exam opens');
+  T4.go('exam/math/' + y); ok(A.$('#t-exam') && T4.errors.length === 0, 'the exam starts ' + (T4.errors[0] || '').slice(0, 100));
+  /* tracking and root cause */
+  ok(Flow.rootCause('c9.moles', 'e') && Flow.rootCause('c9.moles', 'e').skill.id === 'm8.ratio', 'stuck in chemistry can trace to maths');
+  /* PIN */
+  
+  ok(T4.errors.length === 0, 'no errors ' + (T4.errors[0] || '').slice(0, 120));
+}
+
+/* ---------- only real voices; parents' simulations ---------- */
+{
+  const T5 = boot({ profiles: [kid(6, 'v')], cur: 'v' }, '2026-11-05T09:00:00'); const { A, w } = T5, { Voice, Media } = w;
+  let spoke = 0; w.speechSynthesis = { speak() { spoke++; }, cancel() { } }; w.SpeechSynthesisUtterance = function () { };
+  w.AndroidBridge = undefined; const cu = {}; Voice.say('zzzqqq', { lang: 'en' }); ok(spoke === 0, 'no synthetic voice is ever used');
+  ok(!Voice.can('zzzqqq') && !Voice.real('zzzqqq'), 'a word with no recording stays silent');
+  w.SPEECH.sunword = 7; ok(Voice.real('Sunword.') === 'audio/s/7.ogg', 'a real recording is found for a word');
+  const q = { k: 'choice', p: ['Which word do you hear?', 'أي كلمة تسمع؟'], listen: function () { Voice.say('zzzqqq', { lang: 'en' }); }, o: [] }, ad = Voice.adapt(q);
+  ok(!ad.listen && ad.gu === 'zzzqqq' && /grown-up/i.test(ad.p[0]), 'with nothing real to hear, a grown-up becomes the voice');
+  const q2 = { k: 'choice', p: ['What does it mean?', 'ما معناها؟'], listen: function () { Voice.say('zzzqqq', { lang: 'en' }); }, o: [] }, ad2 = Voice.adapt(q2);
+  ok(!ad2.listen && !ad2.gu, 'an optional listen button simply goes away');
+  const q3 = { k: 'choice', p: ['Which word do you hear?', 'x'], listen: function () { Voice.say('sunword', { lang: 'en' }); }, o: [] }; ok(Voice.adapt(q3) === q3, 'a real recording keeps the question as it is');
+  unlock(T5);
+  const m = Media.add({ kind: 'html', ref: 'x.html', title: 'Mine', ages: [1, 2, 3, 4], attach: { type: 'room', id: 'math' } });
+  T5.go('parent/media'); ok(A.$('.mi[data-id="' + m.id + '"]'), 'a simulation sits in the library');
+  T5.go('lab/h-' + m.id); ok(A.$('.simstage iframe') && A.$('.simstage iframe').getAttribute('sandbox') === 'allow-scripts', 'it plays full screen, sandboxed');
+  T5.go('watch/' + m.id); ok(w.location.hash.includes('lab/h-'), 'from a subject shelf it opens the same player');
+  T5.go('parent/media'); A.acts['m-edit'](A.$('.mi[data-id="' + m.id + '"]')); ok(A.$('a#e-p[href="#/lab/h-' + m.id + '"]') && A.$('#e-t'), 'its sheet plays and renames it'); A.$('#e-d').onclick.call(A.$('#e-d')); ok(Media.get(m.id), 'delete asks twice'); A.$('#e-d').onclick.call(A.$('#e-d')); ok(!Media.get(m.id), 'and then it is gone');
+  { const T6 = boot({ profiles: [kid(13, 'g')], cur: 'g', pin: '1234' }, '2026-11-05T09:00:00'); T6.go('parent'); ok(T6.A.$('#gp-pin') && !T6.A.$('.numopt'), 'a PIN replaces the sum at the gate');
+    const i6 = T6.A.$('#gp-pin'); i6.value = '0000'; T6.A.$('#gp-go').click(); ok(T6.A.$('#gp-pin'), 'a wrong PIN stays locked'); T6.A.$('#gp-pin').value = '1234'; T6.A.$('#gp-go').click(); ok(!T6.A.$('#gp-pin') && !T6.A.$('.gate'), 'the right PIN opens it'); }
+  { const T7 = boot({ profiles: [kid(13, 'u')], cur: 'u' }, '2026-11-05T09:00:00'); const A7 = T7.A, w7 = T7.w; unlock(T7); T7.go('parent/u/set');
+    await_ui(w7); const ns = A7.$$('select').filter(x => x.style.display !== 'none'); ok(ns.length === 0 && A7.$$('.pk').length > 3, 'no native select is ever shown');
+    const sl = A7.$('select[data-c-start="math"]'); sl.closest('.card').classList.remove('shut'); sl.nextSibling.click(); ok(w7.document.querySelector('.sheet .pk-row'), 'choosing opens our own list');
+    const pick = [...w7.document.querySelectorAll('.sheet .pk-row')][2]; pick.click(); ok(sl.value !== '' && A7.profile('u').start.math === +sl.value, 'and choosing still saves');
+    ok(A7.$$('.tabs a.tab').filter(t => t.style.display !== 'none').length <= 4 && A7.$$('.tabs button.tab').length === 1, 'parent tabs: four and More');
+    T7.go('study'); await_ui(w7); ok(!A7.$$('input[type=date]').some(x => x.style.display !== 'none'), 'no native date field');
+    T7.go('parent/u/plan'); await_ui(w7); ok(T7.errors.length === 0, 'tidy runs clean ' + (T7.errors[0] || '').slice(0, 100)); }
+  ok(T5.errors.length === 0, 'no errors ' + (T5.errors[0] || '').slice(0, 120));
+}
+console.log(pass + ' passed, ' + fail + ' failed');
+process.exit(fail ? 1 : 0);

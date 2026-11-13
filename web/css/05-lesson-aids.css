@@ -1,0 +1,84 @@
+/* lesson aids */
+.aids{display:flex;gap:6px;justify-content:center;width:100%;margin-bottom:8px}
+.aid{display:inline-flex;align-items:center;gap:6px;min-height:40px;padding:0 12px;border-radius:var(--r1);background:var(--s1);border:1px solid var(--line2);color:var(--t2);font-size:13px;font-weight:600}.aid:active{background:var(--s2)}
+.lb{display:grid;gap:10px;max-height:60dvh;overflow-y:auto}.lb p{font-size:16px;line-height:1.55;color:var(--t1)}.lb-hint{padding:10px 12px;border-radius:var(--r2);background:var(--s2);font-size:15px;line-height:1.45;color:var(--t1)}
+.wk-pad{display:block;width:100%;height:46dvh;border-radius:var(--r2);background:var(--s2);border:1px solid var(--line2);touch-action:none}
+.clc{display:grid;gap:8px}.clc output{display:block;padding:12px 14px;border-radius:var(--r2);background:var(--s2);font-size:26px;font-weight:600;text-align:right;overflow:hidden;white-space:nowrap;font-variant-numeric:tabular-nums}.clc-k{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}.clc-k button{min-height:50px;border-radius:var(--r1);background:var(--s2);border:1px solid var(--line2);font-size:18px;font-weight:600;color:var(--t1)}.clc-k .on{background:var(--gold2);border-color:var(--gold2);color:var(--on-gold)}
+.pl-why{margin:10px auto 0;max-width:640px;padding:10px 12px;border-radius:var(--r2);background:var(--s1);border:1px solid var(--line2);font-size:14.5px;line-height:1.45;color:var(--t1);text-align:start}.pl-why small{display:block;font-size:12px;color:var(--t3);margin-bottom:3px}
+.wkx{display:grid;gap:8px;width:100%;max-width:640px;margin:0 auto;padding-inline:var(--g)}.wkx-l{display:flex;gap:10px;align-items:flex-start;padding:12px;border-radius:var(--r2);background:var(--s1);border:1px solid var(--line2);font-size:16.5px;line-height:1.45;color:var(--t1);text-align:start}.wkx-l i{flex:none;display:grid;place-items:center;width:24px;height:24px;margin-top:1px;border-radius:50%;background:var(--s3);font-style:normal;font-size:12.5px;font-weight:700;color:var(--t2)}
+.wkx-go{min-height:50px;padding:0 22px;margin-inline-start:auto}
+
+
+/* teaching pages: read from the top, the idea first */
+body[data-age="2"] .st-say:has(.tch,.wkx),body[data-age="3"] .st-say:has(.tch,.wkx),body[data-age="4"] .st-say:has(.tch,.wkx){margin-block:6px auto}
+.tch{display:grid;gap:12px;padding:18px;border-radius:var(--r3,18px);background:var(--s1);border:1px solid var(--line2)}
+.tch-art{display:flex;justify-content:center;margin-bottom:2px}
+.tch-key{font-size:20px;line-height:1.4;font-weight:600;color:var(--t1);text-wrap:pretty}
+.tch-l{font-size:17px;line-height:1.55;color:var(--t1);padding-inline-start:12px;border-inline-start:2px solid var(--line2);text-wrap:pretty}
+.tch-eq{justify-self:stretch;text-align:center;padding:14px 12px;border-radius:var(--r2);background:var(--s2);font-size:23px;font-weight:600;letter-spacing:.01em;color:var(--t1);font-variant-numeric:tabular-nums;unicode-bidi:isolate;overflow-wrap:anywhere}
+.wkx{padding-inline:0;margin:0;position:relative;gap:0}
+.wkx-l{position:relative;margin-bottom:8px}
+.wkx-l[hidden]{display:none}
+.wkx-l:has(+ .wkx-l:not([hidden]))::after{content:"";position:absolute;inset-inline-start:23px;bottom:-9px;width:2px;height:9px;background:var(--line2)}
+@media (prefers-reduced-motion:no-preference){.wkx-l{animation:wkxIn .28s cubic-bezier(.16,1,.3,1)}}
+@keyframes wkxIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+/* older students: the answers sit under the question, not adrift in the middle of the screen */
+body[data-age="3"] .st-choice,body[data-age="4"] .st-choice{margin-block:10px auto}
+
+/* teaching a topic: drawings, working, the mistake to find */
+.dia{display:block;width:100%;max-width:340px;height:auto;margin:0 auto;color:var(--t1)}
+.dia-w{display:grid;place-items:center;padding:4px 0}
+.d-s{stroke:currentColor;stroke-width:1.8;fill:none;stroke-linecap:round}
+.d-l{stroke:var(--line2);stroke-width:1;fill:none}
+.d-o{stroke:currentColor;stroke-width:1.8;fill:none;stroke-linejoin:round}
+.d-f{stroke:currentColor;stroke-width:1.8;fill:var(--s2);stroke-linejoin:round}
+.d-r{stroke:currentColor;stroke-width:1.4;fill:none}
+.d-v{stroke:currentColor;stroke-width:1.8;fill:color-mix(in srgb,var(--gold,#c79c52) 22%,transparent)}
+.d-m{stroke:var(--gold,#c79c52);stroke-width:2.2;fill:none;stroke-linecap:round}
+.d-m2{stroke:var(--t3);stroke-width:2;fill:none}
+.d-c{stroke:var(--gold,#c79c52);stroke-width:2.6;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.d-a{fill:var(--gold,#c79c52);stroke:none}
+.d-g0{fill:color-mix(in srgb,var(--gold,#c79c52) 55%,var(--s1));stroke:currentColor;stroke-width:1}
+.d-g1{fill:color-mix(in srgb,var(--gold,#c79c52) 24%,var(--s1));stroke:currentColor;stroke-width:1}
+.d-g2{fill:var(--s2);stroke:currentColor;stroke-width:1}
+.d-g9{fill:var(--s1);stroke:currentColor;stroke-width:1}
+.d-t{fill:currentColor;font-weight:600;font-family:inherit}
+.d-ta{fill:var(--h,#8a5a12);font-weight:700}
+.fr{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;line-height:1.05;margin:0 2px;font-size:.82em}
+.fr i{font-style:normal;padding:0 3px}.fr i:first-child{border-bottom:1.6px solid currentColor}
+.wls{display:grid;gap:8px;width:100%}
+.wl{padding:10px 12px;border-radius:var(--r2);background:var(--s1);border:1px solid var(--line2)}
+.wl small{display:block;font-size:13.5px;line-height:1.35;color:var(--t2);margin-bottom:4px}
+.wl-m{font-size:20px;font-weight:600;color:var(--t1);line-height:1.5;overflow-wrap:anywhere;text-align:left}
+.wl.now{border-color:var(--gold,#c79c52);box-shadow:0 0 0 1px var(--gold,#c79c52)}
+.wl .pad-out{min-width:44px;padding:0 6px;border-bottom-width:3px}
+.pad-eq.wl-eq{font-size:clamp(22px,6.4vw,28px);font-weight:700;min-height:0}
+.st-work,.st-along,.st-spot{margin-block:6px auto}
+.st-along .pad,.st-work .pad{margin-top:4px}
+.pad.pad-x button{height:48px;font-size:22px}
+.pad .pad-s{font-weight:700;color:var(--t2);background:var(--s2)}
+.sps{display:grid;gap:8px}
+.sp-l{display:block;width:100%;padding:12px 14px;border-radius:var(--r2);background:var(--s1);border:1px solid var(--line2);font-size:19px;font-weight:600;color:var(--t1);text-align:left;line-height:1.45}
+.sp-l.not-it{opacity:.55}
+.sp-l.wrong-found{border-color:var(--bad);box-shadow:0 0 0 1px var(--bad)}
+.tch-tag{display:block;font-size:12.5px;font-weight:600;letter-spacing:.02em;color:var(--t3)}
+.lb .wls{margin-bottom:6px}.lb-q{font-weight:600}
+.pl-note{white-space:normal;text-wrap:pretty}
+
+/* science: lines of words read in the child's direction, and a missing word is chosen */
+.wl-m.wd{font-size:17.5px;font-weight:600;text-align:start;line-height:1.55}
+.al-o{display:grid;gap:8px;margin-top:12px}
+.al-o .opt{min-height:52px;text-align:start}
+.al-o .opt.not-it{opacity:.45;text-decoration:line-through}
+
+/* watch, for a question with choices: the choices, then the reasoning, then the right one */
+.wk-o{display:grid;gap:8px}
+.wk-oi{padding:12px 14px;border-radius:var(--r-md,14px);background:var(--s1);border:1.5px solid var(--line2);font-weight:600;font-size:15.5px;line-height:1.35;transition:opacity .35s,border-color .35s,background .35s}
+.wk-oi.right{border-color:var(--ok,#3f9b62);background:color-mix(in srgb,var(--ok,#3f9b62) 12%,var(--s1))}
+.wk-oi.right::after{content:' ✓';color:var(--ok,#3f9b62);font-weight:800}
+.wk-oi.dim{opacity:.45}
+.wk-oh{display:block;color:var(--t2);font-size:13.5px;font-weight:600;margin:2px 2px -4px}
+.wk-oi{pointer-events:none}
+
+/* diagrams are drawn left to right in both languages; SVG ignores the dir attribute, so say it in CSS */
+svg.dia{direction:ltr}

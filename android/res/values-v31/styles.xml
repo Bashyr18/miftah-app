@@ -1,0 +1,1 @@
+<?xml version="1.0" encoding="utf-8"?><resources><style name="Theme.Miftah" parent="android:Theme.Material.NoActionBar"><item name="android:windowBackground">@drawable/splash</item><item name="android:windowSplashScreenBackground">#FF07080D</item><item name="android:windowSplashScreenAnimatedIcon">@drawable/ic_launcher_fg</item></style></resources>

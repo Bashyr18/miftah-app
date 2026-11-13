@@ -1,0 +1,192 @@
+/* the family page */
+.fc{padding:0;overflow:hidden}.fc-top{display:block;padding:var(--sp4);color:var(--t1)}.fc-top:active{background:var(--s2)}
+.fc-add{padding:var(--sp4)}
+.fc-go{display:flex;align-items:center;gap:var(--sp2);width:100%;min-height:54px;padding:8px var(--sp4);border-top:1px solid var(--line);background:color-mix(in srgb,var(--gold2) 9%,transparent);color:var(--t1);text-align:start}.fc-go:active{background:color-mix(in srgb,var(--gold2) 18%,transparent)}.fc-go small{display:block;font-size:11.5px;color:var(--t3)}.fc-go b{display:block;font-size:14.5px;font-weight:600;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.fc-go.quiet{background:transparent;color:var(--t2)}.fc-lvl{font-size:13.5px;font-weight:600;background:transparent;color:var(--t1);min-height:44px}.fc-lvl>svg:first-child{color:var(--gold2);flex:none}
+.fday{margin-bottom:var(--sp3)}.fday-h{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:40px}.fday-h b{font-size:15.5px;font-weight:600}
+.fday-r{display:flex;flex-wrap:wrap;align-items:center;gap:5px;margin-top:6px}.fday-r small{font-size:12px;color:var(--t3);margin-inline-end:4px}.fday-r span{padding:4px 9px;border-radius:999px;background:var(--s2);font-size:12.5px;color:var(--t2)}
+.sy{display:grid;gap:10px;padding-bottom:var(--sp2)}.sy-how{margin:0;padding-inline-start:20px;font-size:14px;line-height:1.5;color:var(--t2)}.sy-last{text-align:center;color:var(--t3);font-size:12.5px}
+/* readable teaching, at every age */
+.sc-t{font-size:19px;line-height:1.4;font-weight:600;color:var(--t1)}
+body[data-age="1"] .pl-p,body[data-age="2"] .pl-p{font-size:21px;line-height:1.35}
+body[data-age="3"] .sc-t,body[data-age="4"] .sc-t{font-size:16.5px;font-weight:500}
+/* the button is the same gold at every age, with text that can be read on it */
+.btn.pri,body[data-age] .btn.pri{color:#1a1206}
+body[data-age="3"] .btn.pri,body[data-age="4"] .btn.pri,body[data-view=parent] .btn.pri,.fab{background:var(--gold2);color:var(--on-gold)}
+/* nothing reads through the bottom bar */
+.nav{isolation:isolate}.nav::before{content:'';position:absolute;inset:-22px -20px -40px;z-index:-1;background:linear-gradient(to top,var(--bg) 62%,transparent);pointer-events:none}
+
+/* the door */
+.dr{position:fixed;inset:0;z-index:70;overflow:hidden;cursor:pointer}
+.dr-box{position:absolute;left:50%;top:50%;width:max(100vw,66.67vh);width:max(100vw,66.67dvh);aspect-ratio:2/3;transform:translate(-50%,-50%);transform-origin:50% 54%;will-change:transform}
+.dr-wall{position:absolute;left:-292.97%;top:-195.31%;width:685.94%;height:490.63%;display:block}
+.dr-pers{position:absolute;inset:0;perspective:1100px;perspective-origin:50% 54%}
+.dr-frame{position:absolute;inset:0;width:100%;height:100%;display:block}
+.dr-leaf{position:absolute;top:11.78%;height:83.66%;width:36.57%;transform-style:preserve-3d;will-change:transform;backface-visibility:visible}
+.dr-leaf>img:first-child{position:absolute;inset:0;width:100%;height:100%;display:block}
+.dr-leaf>i{position:absolute;inset:0;opacity:0;pointer-events:none;-webkit-mask-size:100% 100%;mask-size:100% 100%;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat}
+.dr-leaf.l{left:13.48%;transform-origin:left center}
+.dr-leaf.r{left:50%;transform-origin:right center}
+.dr-leaf.l>i{background:linear-gradient(90deg,rgba(10,5,2,.2),rgba(10,5,2,1))}
+.dr-leaf.r>i{background:linear-gradient(270deg,rgba(10,5,2,.2),rgba(10,5,2,1))}
+.dr-gap{position:absolute;left:49.2%;width:1.6%;top:12%;height:83%;opacity:0;background:rgb(var(--glow));filter:blur(9px);mix-blend-mode:screen;pointer-events:none}
+.dr-plate{position:absolute;left:3%;top:48%;width:27%;height:auto;filter:drop-shadow(0 4px 5px rgba(0,0,0,.55))}
+.dr-key{position:absolute;left:16.5%;top:55%;height:30%;width:auto;opacity:0;transform-origin:48% 100%;filter:drop-shadow(0 6px 6px rgba(0,0,0,.4))}
+
+/* four sections on a phone: icon over word, so no two can touch */
+@media (max-width:440px){.nav:has(a:nth-of-type(4)){border-radius:20px}.nav:has(a:nth-of-type(4)) a{flex-direction:column;gap:2px;height:54px;padding:0 2px;font-size:11.5px;border-radius:15px}}
+.hello small{line-height:1.3}.hello-d{margin-top:3px;font-size:12px!important;opacity:.85}
+.info::after{content:'';position:absolute;inset:-11px}
+.li.wk small{display:block;white-space:normal;overflow:visible;-webkit-line-clamp:unset;text-overflow:clip;max-height:none}
+.li.wk{height:auto;align-items:flex-start;padding-block:8px}
+/* the row under an answer: the aids wrap, the Next button never gets squeezed */
+.pl-foot{flex-wrap:wrap}
+.pl-foot .aids{flex:1 1 100%;margin-bottom:0}
+.pl-foot .pl-next{flex:none;white-space:nowrap;margin-inline-start:auto}
+.pl-foot .pl-next span{white-space:nowrap}
+
+/* memorising: the verse is the whole point of the screen, so it reads large */
+.step.tx > .quran{font-size:clamp(32px,9.6vw,46px);line-height:1.95;padding:4px 2px}
+
+/* young readers (stages 0 and 1, up to about age 7): no label under 13px, and the prompt that asks them to think stands out */
+body[data-age="0"] .tx-l,body[data-age="1"] .tx-l{font-size:13px;letter-spacing:.08em}
+body[data-age="0"] .step small,body[data-age="1"] .step small{font-size:max(13px,1em)}
+body[data-age="0"] .hf-tier,body[data-age="1"] .hf-tier{font-size:16px;font-weight:700}
+
+/* rest screen: the sky may be bright daylight, so the words sit on a soft glass panel that reads on any sky */
+.wel.rest .wel-c > h2,.wel.rest .wel-c > p{position:relative}
+.wel.rest .wel-c{gap:16px}
+.wel.rest .wel-c > p{max-width:32ch;padding:14px 18px;border-radius:18px;background:rgba(12,16,34,.55);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);color:#f5f0e7}
+.wel.rest .wel-c > h2{color:#fff;text-shadow:0 2px 10px rgba(0,0,0,.45)}
+.wel.rest .rest-more{color:#fff;background:rgba(12,16,34,.45);border-color:rgba(255,255,255,.3)}
+
+/* lanterns, one row per subject */
+.lamp-rows{display:grid;gap:2px}
+.lamp-row{display:flex;align-items:center;gap:10px;padding:7px 0;border-top:1px solid var(--line)}
+.lamp-row:first-child{border-top:0}
+@media (min-width:860px){.lamp-rows>.lamp-row:nth-child(2){border-top:0}}
+.lamp-row .grow{flex:1;min-width:0}.lamp-row b{display:block;font-size:14.5px;font-weight:600;color:var(--t1)}
+.lamp-row .num{font-size:13px;font-weight:700;color:var(--t2);flex:none;min-width:52px;text-align:end;font-variant-numeric:tabular-nums;align-self:flex-end;margin-bottom:-2px}
+.lamp-bar{display:block;height:6px;margin-top:5px;border-radius:9px;background:var(--s2);overflow:hidden}
+.lamp-bar > i{display:block;height:100%;border-radius:9px;background:var(--h2,var(--gold2))}
+.lamp-row .lamp{flex:none}
+
+/* a list row followed only by hidden rows is the last one you can see: no divider under it */
+.lst > .li:has(~ .li[style*="display:none"]):not(:has(~ .li:not([style*="display:none"]))){border-bottom:0} /* hidden rows do not count */
+
+/* homeschool group: the sheet, the card preview, the challenge picker */
+.grp p,.grp-mk p,.grp-in p{color:var(--t2);line-height:1.5;font-size:14.5px;margin:0 0 12px}
+.grp-b{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.grp h4{font-size:13px;color:var(--t2);margin:6px 0 4px}
+.grp-hint{display:block;color:var(--t3);font-size:13px;line-height:1.45}
+.grp-prev{display:grid;gap:12px}.grp-prev img{width:100%;max-width:360px;margin:0 auto;border-radius:16px;box-shadow:0 12px 30px -16px rgba(0,0,0,.6)}
+.grp-prev p{text-align:center;color:var(--t2);font-size:13.5px;margin:0}
+.grp-mk small,.grp-in small{display:block;font-weight:700;font-size:13px;color:var(--t2);margin:10px 0 6px}
+.grp-mk .chips{display:flex;flex-wrap:wrap;gap:6px}.grp-mk p{margin-top:12px}
+.grp-in b{display:block;font-size:19px;margin-bottom:6px}
+.grp-opt{display:grid;gap:12px}
+
+/* the day and night switch: a slim pill, the knob slides to the sun or the moon; a faint ring when it follows the sun by itself */
+.dn{--w:66px;--h:36px;--k:28px;position:relative;flex:none;width:var(--w);height:var(--h);padding:0 10px;border-radius:99px;border:1px solid var(--line);background:var(--s1);color:var(--t3);display:inline-flex;align-items:center;justify-content:space-between;cursor:pointer;transition:background .35s var(--ease),border-color .35s;-webkit-tap-highlight-color:transparent}
+.dn>.dn-s,.dn>.dn-m{display:grid;opacity:.55}
+.dn i{position:absolute;top:calc((var(--h) - 2px - var(--k)) / 2);inset-inline-start:3px;width:var(--k);height:var(--k);border-radius:50%;display:grid;place-items:center;background:linear-gradient(145deg,#ffe3a1,#e9a83a);color:#7a4a08;box-shadow:0 2px 6px rgba(0,0,0,.22),inset 0 1px 0 rgba(255,255,255,.6);transition:transform .45s var(--spring),background .35s}
+.dn i span{grid-area:1/1;display:grid;transition:opacity .25s,transform .45s var(--spring)}
+.dn i .dn-m{opacity:0;transform:rotate(-60deg) scale(.6)}
+.dn[aria-checked=true] i{transform:translateX(calc(var(--w) - var(--k) - 8px));background:linear-gradient(145deg,#f1f3fb,#aeb7d0);color:#2a3150}
+[dir=rtl] .dn[aria-checked=true] i{transform:translateX(calc((var(--w) - var(--k) - 8px) * -1))}
+.dn[aria-checked=true] i .dn-s{opacity:0;transform:rotate(60deg) scale(.6)}
+.dn[aria-checked=true] i .dn-m{opacity:1;transform:none}
+.dn.auto::after{content:'';position:absolute;inset:-4px;border-radius:99px;border:1.5px dashed color-mix(in srgb,var(--gold) 55%,transparent);pointer-events:none}
+.dn:active i{width:calc(var(--k) + 4px)}
+.dn.glass{--w:76px;padding:0 11px;--h:46px;--k:38px;background:rgba(10,12,20,.58);border-color:rgba(255,255,255,.2);color:#fff;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+.dn.glass>.dn-s,.dn.glass>.dn-m{opacity:.7}
+.dn.glass svg{width:18px;height:18px}
+.abar .dn{align-self:center}.th .dn{margin-top:1px}
+[data-motion=off] .dn i,[data-motion=off] .dn i span{transition:none}
+.topbtns~.hello,.hello{max-width:calc(100% - 230px)}
+
+/* the welcome: the carved door, and one clear way in */
+.wel-door{position:relative;height:min(38vh,320px);aspect-ratio:2/3;margin:6px auto 4px;cursor:pointer;filter:drop-shadow(0 24px 40px rgba(0,0,0,.55))}
+.wel-door img{position:absolute;display:block;user-select:none;-webkit-user-drag:none}
+.wel-door .wd-f{inset:0;width:100%;height:100%}
+.wel-door .wd-l,.wel-door .wd-r{top:11.78%;height:83.66%;width:36.57%}
+.wel-door .wd-l{left:13.48%}.wel-door .wd-r{left:50%}
+.wel-door .wd-glow{position:absolute;left:49%;width:2%;top:13%;height:80%;background:rgb(255,214,150);filter:blur(8px);opacity:.35;mix-blend-mode:screen;animation:wdg 3.2s ease-in-out infinite}
+@keyframes wdg{0%,100%{opacity:.18}50%{opacity:.5}}
+html[data-motion=off] .wel-door .wd-glow,html[data-motion=calm] .wel-door .wd-glow{animation:none}
+.wel-plate{width:170px;margin:6px auto}
+.wel-plate img,.wel-plate svg{display:block;width:100%;height:auto}
+.wel-lang{max-width:300px;width:100%}
+.wel-go{min-width:min(300px,100%);gap:10px}
+@media (max-height:620px){ .wel-door{height:30vh} .wel .arname{font-size:30px} .wel h1{font-size:34px} }
+/* My keys: three numbers, each saying what it means */
+.kstats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));margin:6px 0 18px;border-radius:var(--r3);background:var(--s1);border:1px solid var(--line2);box-shadow:var(--hi)}
+.kst{display:grid;justify-items:start;gap:2px;padding:14px 16px;min-width:0}
+.kst+.kst{border-inline-start:1px solid var(--line)}
+.kst b{font-size:26px;line-height:1.1;font-variant-numeric:tabular-nums}
+.kst span{font-size:13.5px;font-weight:700;color:var(--t1)}
+.kst small{font-size:12px;color:var(--t3);line-height:1.35}
+.kst-lv{display:flex;gap:3px;align-items:flex-end;height:14px;margin-bottom:6px}
+.kst-lv em{width:5px;border-radius:2px;background:var(--line2)}
+.kst-lv em:nth-child(1){height:6px}.kst-lv em:nth-child(2){height:10px}.kst-lv em:nth-child(3){height:14px}
+.kst-lv.l1 em:nth-child(-n+1),.kst-lv.l2 em:nth-child(-n+2),.kst-lv.l3 em{background:var(--gold)}
+@media (max-width:420px){ .kst{padding:12px 10px} .kst b{font-size:22px} .kst small{display:none} }
+/* the sync sheet: the family's computer first, a file second */
+.sy-h{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--t3);margin-top:6px}
+html[lang=ar] .sy-h{letter-spacing:0;font-size:13px}
+.sy-lan{display:grid;gap:8px;padding:14px;border-radius:var(--r3);background:var(--s1);border:1px solid var(--line2)}
+.sy-pc{border-bottom:0;padding:8px 0;min-height:0}
+.sy-pc .ic{color:var(--gold);flex:none}
+.sy-pc.on b{color:var(--t1)}
+#sy-found{display:grid;gap:4px}
+#sy-found .sy-pc{border:1px solid var(--line2);border-radius:14px;padding:10px 12px;background:var(--bg)}
+.sy-st{display:block;text-align:center;font-size:13px;color:var(--t3);line-height:1.45}
+.sy-st:empty{display:none}
+.sy-p{font-size:14px;color:var(--t2);line-height:1.45;text-align:center}
+.sy-code{text-align:center;font-size:28px;letter-spacing:.35em;font-weight:700;font-variant-numeric:tabular-nums}
+.sy-manual{justify-self:center;font-size:13px;color:var(--t3);text-decoration:underline;text-underline-offset:3px;padding:6px}
+.sy-lan .btn.ghost.sm{justify-self:center}
+/* ===== sheets on screen (v-ink.js) ===== */
+.ink-v{position:fixed;inset:0;z-index:20;display:flex;flex-direction:column;background:var(--bg);padding-top:var(--sat,0px);padding-bottom:var(--sab,0px)}
+.ink-h{flex:none;display:flex;align-items:center;gap:12px;padding:10px var(--g);border-bottom:1px solid var(--line)}
+.ink-h b{display:block;font-size:16px;line-height:1.25}.ink-h small{display:block;font-size:12.5px;color:var(--t3);margin-top:2px;line-height:1.35}
+.ink-h .grow{min-width:0}
+.ink-back{width:42px;height:42px;flex:none;display:grid;place-items:center;border-radius:50%;background:var(--s1);border:1px solid var(--line2);color:var(--t1)}
+.ink-st{flex:none;font-size:12.5px;font-weight:700;color:var(--gold);padding:7px 12px;border-radius:99px;background:var(--gold-soft)}
+.ink-host{flex:1;min-height:0;display:flex}
+.ink{flex:1;min-width:0;min-height:0;display:flex;flex-direction:column}
+.ink-stage{flex:1;min-height:0;display:grid;place-items:center;padding:8px;overflow:hidden;background:radial-gradient(80% 60% at 50% 40%,var(--s2),var(--bg))}
+.ink-box{position:relative;background:#fff;border-radius:4px;box-shadow:0 1px 0 rgba(0,0,0,.05),0 24px 48px -24px rgba(0,0,0,.45);overflow:hidden}
+.ink-page{position:absolute;left:0;top:0;transform-origin:0 0;pointer-events:none;padding:11mm;background:#fff}
+.ink-page .pp{margin:0;box-shadow:none}
+.ink-cv{position:absolute;left:0;top:0;touch-action:none}
+.ink.edit .ink-cv{cursor:crosshair}
+.ink-bar{flex:none;display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;padding:10px var(--g) 12px;border-top:1px solid var(--line);background:var(--bg2)}
+.ink-tools,.ink-pg{display:flex;align-items:center;gap:6px;padding:4px;border-radius:99px;background:var(--s1);border:1px solid var(--line2);box-shadow:var(--hi)}
+.ink-pg[hidden]{display:none}
+.ink-t{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;color:var(--t2);transition:background .15s,color .15s}
+.ink-t.on{background:var(--gold-soft);color:var(--t1)}
+.ink-t[disabled]{opacity:.35}
+.ink-c{width:44px;height:44px;border-radius:50%;display:grid;place-items:center}
+.ink-c i{width:22px;height:22px;border-radius:50%;background:var(--c);box-shadow:0 0 0 2px var(--s1),0 0 0 3px transparent;transition:box-shadow .15s,transform .15s}
+.ink-c.on i{box-shadow:0 0 0 2px var(--s1),0 0 0 4px var(--gold);transform:scale(1.08)}
+.ink-sep{width:1px;height:26px;background:var(--line2);margin:0 2px}
+.ink-n{min-width:52px;text-align:center;font-size:13px;font-weight:700;color:var(--t2);font-variant-numeric:tabular-nums}
+.ink-home{display:grid;gap:8px;margin:0 0 14px}
+.ink-hc{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:var(--r3);background:linear-gradient(120deg,var(--gold-soft),transparent 70%),var(--s1);border:1px solid var(--gold-line);color:var(--t1);text-decoration:none;box-shadow:var(--hi)}
+.ink-hc small{display:block;font-size:12.5px;font-weight:700;color:var(--gold)}.ink-hc b{display:block;font-size:15px;line-height:1.3}
+.ink-hc-i{width:42px;height:42px;flex:none;display:grid;place-items:center;border-radius:12px;background:var(--gold);color:#1a1206}
+.ink-hc.done{border-color:var(--line2);background:var(--s1)}.ink-hc.done .ink-hc-i{background:var(--ok);color:#fff}.ink-hc.done small{color:var(--ok)}
+.ink-q{color:var(--t2);line-height:1.5;margin-bottom:14px}
+.ink-q2{display:flex;gap:10px;flex-wrap:wrap}.ink-q2 .btn{flex:1 1 140px}
+/* the parent marking an on-screen sheet: the page in a card, the questions beside it on a wide screen */
+.mk-ink h3{display:flex;flex-direction:column;gap:2px}.mk-ink h3 small{font-size:12.5px;font-weight:600;color:var(--t3)}
+.ink-host.in-card{height:min(72vh,760px);margin:4px -8px -8px;border-radius:14px;overflow:hidden;border:1px solid var(--line)}
+.mk-acts{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}.mk-acts .btn{flex:1 1 160px}
+@media (min-width:1000px){
+  .mk-wrap.has-ink{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(320px,1fr);gap:16px;align-items:start}
+  .mk-wrap.has-ink .mk-side{position:sticky;top:16px}
+  .mk-wrap.has-ink .mk-ink{margin:0}
+}
+/* on a computer the rail stays; the sheet takes the rest */
+html.is-desk body.has-rail .ink-v{inset-inline-start:var(--rail)}
+@media (max-width:860px){ html.is-desk body.has-rail .ink-v{inset-inline-start:0} }
