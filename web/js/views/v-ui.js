@@ -103,7 +103,7 @@
     A.$$('input[type=date]:not([data-ui])').forEach(enhanceDate);
     A.$$('input[type=time]:not([data-ui])').forEach(enhanceTime);
     A.$$('.card > p:not([data-ui])', app).forEach(function (p) { var st = p.getAttribute('style') || ''; if (st.indexOf('--t2') >= 0 && p.textContent.length > 45 && !p.classList.contains('keep') && !/[0-9٠-٩]/.test(p.textContent)) foldNote(p); });
-    A.$$('.ph > p, .th p', app).forEach(function (p) { if (p.textContent.length > 38) p.hidden = true; });
+    A.$$('.ph > p, .th p', app).forEach(function (p) { if (p.textContent.length > 38 && !p.classList.contains('dates')) p.hidden = true; });
     A.$$('.wrap > p, .wrap > .ref, .dwrap > p', app).forEach(function (p) { if (p.textContent.length > 45) p.hidden = true; });
     A.$$('.tabs', app).forEach(foldTabs);
     var r = route();

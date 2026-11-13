@@ -199,3 +199,14 @@ html.is-desk body.has-rail .ink-v{inset-inline-start:var(--rail)}
 /* page width: the sheet scrolls under the tools instead of shrinking */
 .ink-stage.scroll{overflow:auto;place-items:start center;padding:16px 16px 24px;overscroll-behavior:contain}
 .ink-zm[hidden]{display:none}
+
+/* both calendars on one line. Every piece carries its dot in front of it, and the line is clipped by one dot's width at its
+   start: a piece that begins a line hides its dot, so a dot only ever shows between two pieces on the same line */
+.dates{display:flex;flex-wrap:wrap;align-items:baseline;row-gap:1px;margin-inline-start:-14px;clip-path:inset(-6px -6px -6px 14px)}
+[dir=rtl] .dates,html[dir=rtl] .dates{clip-path:inset(-6px 14px -6px -6px)}
+.dates>span{position:relative;padding-inline-start:14px;white-space:nowrap}
+.dates>span::before{content:"·";position:absolute;inset-inline-start:4px;opacity:.7}
+/* the greeting on the picture is narrow: the two dates sit on their own lines */
+.hello .hello-d.dates{display:flex;flex-direction:column;align-items:flex-start;row-gap:0;margin-inline-start:0;clip-path:none}.hello .hello-d.dates>span{padding-inline-start:0}.hello .hello-d.dates>span::before{content:none}
+.fday-h .chip2{flex:none;white-space:nowrap}
+.fday-h .dates .dl-h{color:var(--t2);font-weight:600}

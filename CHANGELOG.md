@@ -4,6 +4,9 @@ The version is set in `version.txt`.
 
 ## 2.0 (code 2), November 2026
 
+**Dates (update, 13 November)**
+- Both calendars: the Gregorian date beside the Islamic (Umm al-Qurā) date, with its year, on a child's home, a teen's home and the parent's day, on the phone and the computer. A narrow screen puts them on separate lines.
+
 **Sheets and paper (update, 13 November)**
 - Printed and saved sheets are white to the edge of the A4. The cream border around PDFs from the computer is gone, and ruled lines and grids now print even when the print window's background setting is off.
 - Room to write: each answer is a real box instead of a thin line, every maths question has squared working space, written answers get 9 mm lines, and sheets with many questions use two columns so no question is squeezed.

@@ -10,7 +10,7 @@
     var t = function (k, ic, a) { return '<a href="#/' + k + '" class="' + (on === k ? 'on' : '') + '">' + A.icon(ic, 21) + '<span>' + esc(L(a)) + '</span></a>'; };
     return '<nav class="nav" aria-label="' + esc(L(['Sections', 'الأقسام'])) + '">' + t('home', 'path', ['Today', 'اليوم']) + t('rooms', 'rooms', ['Subjects', 'المواد']) + t('study', 'book', ['Study', 'الدراسة']) + t('keys', 'keys', ['Record', 'السجل']) + '</nav>';
   }
-  function head(title, sub, back) { return '<header class="th"><div class="grow">' + (back ? '<a class="backp" href="#/' + back[0] + '">' + A.icon('back', 18) + '<span>' + esc(L(back[1])) + '</span></a>' : '') + '<h1>' + esc(title) + '</h1>' + (sub ? '<p>' + esc(sub) + '</p>' : '') + '</div></header>'; }
+  function head(title, sub, back) { return '<header class="th"><div class="grow">' + (back ? '<a class="backp" href="#/' + back[0] + '">' + A.icon('back', 18) + '<span>' + esc(L(back[1])) + '</span></a>' : '') + '<h1>' + esc(title) + '</h1>' + (sub ? (sub.html ? '<p class="dates">' + sub.html + '</p>' : '<p>' + esc(sub) + '</p>') : '') + '</div></header>'; }
   function daysTo(iso) { return Math.ceil((new Date(iso + 'T23:59:00').getTime() - A.now().getTime()) / DAY); }
   function roomStats(r, pid) {
     var st = A.stage(A.profile(pid)), all = 0, met = 0, fl = Flow.floorOf(A.profile(pid)), yr = Flow.yearOf(A.profile(pid));
@@ -33,7 +33,7 @@
     var ns = nx != null && nx >= 0 && pl.stops[nx], ni = ns && A.stopInfo(ns);
     var nextH = ns && !ns.done && !sk ? '<button class="tnext" data-a="go-stop" data-i="' + nx + '"><span class="grow"><small>' + esc(L(doneN ? ['Next', 'التالي'] : ['First today', 'أول اليوم'])) + ' · ' + mins(ns) + '</small><b>' + esc(L(ni.title)) + '</b><small>' + esc(L(ni.sub)) + '</small></span><span class="tgo">' + esc(L(['Start', 'ابدأ'])) + A.icon('next', 18) + '</span></button>' : '';
     var goal = (d.weekly && d.weekly.goal) || '';
-    return { html: head(L(['As-salāmu ʿalaykum', 'السلام عليكم']) + ', ' + p.name, (Voice.hijri() || '') + (Voice.hijri() ? ' · ' : '') + L(A.STAGES[A.stage()].name)) + '<div class="tw">' +
+    return { html: head(L(['As-salāmu ʿalaykum', 'السلام عليكم']) + ', ' + p.name, { html: Voice.dateLine() + '<span class="dl-s">' + esc(L(A.STAGES[A.stage()].name)) + '</span>' }) + '<div class="tw">' +
       (sk ? '<button class="tnext" data-a="go-resume"><span class="grow"><small>' + esc(L(['Carry on where you stopped', 'تابع من حيث توقفت'])) + '</small><b>' + esc(L(sk.title)) + '</b></span><span class="tgo">' + esc(L(['Carry on', 'تابع'])) + A.icon('next', 18) + '</span></button>' : nextH) +
       (exams.length ? '<a class="tcard" style="min-height:0;margin-bottom:10px" href="#/study"><small>' + esc(L(['Next exam', 'الاختبار القادم'])) + '</small><b>' + esc(exams[0].title) + '</b><small>' + esc(L(['Days left: ', 'الأيام المتبقية: '])) + N(daysTo(exams[0].date)) + '</small></a>' : '') +
       '<div class="tsec">' + esc(L(['Today', 'اليوم'])) + ' · ' + N(doneN) + ' / ' + N(pl.stops.length) + (Plan.left() ? ' · ' + esc(L(['about', 'نحو'])) + ' ' + N(Plan.left()) + ' ' + esc(L(['min', 'د'])) : '') + '</div><div class="tl">' + (rows || '<div class="ti"><span class="grow"><b>' + esc(L(['A clear day', 'يوم خالٍ'])) + '</b><small>' + esc(L(['Nothing is due. Read something you love.', 'لا شيء مطلوب. اقرأ ما تحب.'])) + '</small></span></div>') + '</div>' +

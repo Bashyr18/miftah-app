@@ -305,7 +305,7 @@
   kind('certificate', 'reward', ['Certificate', 'شهادة'], ['For the newest lantern they have lit', 'لآخر فانوس أضاءه'], function (c) {
     var lit = Flow.lanterns(c.pid).filter(function (x) { return x.lit; }), d = A.D(c.pid).units || {}; lit.sort(function (a, b) { return d[b.id].t - d[a.id].t; });
     var u = lit[0]; if (!u) return null;
-    return { html: page(c, '', '', '<div class="cert fill">' + A.art('key', 160) + '<p>' + esc(T('With thanks to Allah, this key is earned by')) + '</p><h1>' + esc(c.p.name) + '</h1><p>' + esc(L(C.rooms[u.room].name)) + '</p><h2>' + esc(L(u.title)) + '</h2><p>' + esc(new Date(d[u.id].t).toLocaleDateString(A.ar() ? 'ar' : 'en', { year: 'numeric', month: 'long', day: 'numeric' })) + (Voice.hijri() ? ' · ' + esc(Voice.hijri()) : '') + '</p></div>', { bare: 1, nofoot: 1 }) };
+    return { html: page(c, '', '', '<div class="cert fill">' + A.art('key', 160) + '<p>' + esc(T('With thanks to Allah, this key is earned by')) + '</p><h1>' + esc(c.p.name) + '</h1><p>' + esc(L(C.rooms[u.room].name)) + '</p><h2>' + esc(L(u.title)) + '</h2><p>' + esc(new Date(d[u.id].t).toLocaleDateString(A.ar() ? 'ar' : 'en', { year: 'numeric', month: 'long', day: 'numeric' })) + (Voice.dates().h ? ' · ' + esc(Voice.dates().h) : '') + '</p></div>', { bare: 1, nofoot: 1 }) };
   }, { need: function (pid) { return Flow.lanterns(pid).some(function (x) { return x.lit; }); } });
   kind('poster', 'reward', ['My keys poster', 'ملصق مفاتيحي'], ['Everything they have earned so far, and what comes next, to go on the wall', 'كل ما حققه حتى الآن وما يليه، ليعلق على الحائط'], function (c) {
     /* every cell is 13 mm and every room heading 11 mm, so the pages are packed by arithmetic, never by luck; a long room carries on over the page */
