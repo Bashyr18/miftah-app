@@ -10,6 +10,8 @@ The version is set in `version.txt`.
 - Powers show as powers (x⁵, not x^5) in lessons, on sheets and in marking.
 - On the computer, printing and saving a PDF no longer make the window flash away. The main button says Print, and Do it on screen offers Open it now, here.
 - A sheet done on a computer screen opens at page width, so the writing is large, with a button for the whole page.
+- Each question gets the room it needs: questions are measured on the page, long ones and diagrams never run into the next question, and a sheet that needs more room goes on to a second page with the questions shared evenly.
+- The print view always has a way out: a Back to Miftāḥ button (not printed), the phone's Back button, Esc, and returning to the app.
 
 **Miftāḥ for Windows**
 - A native Windows 10 and 11 app (`dist/Miftah.exe`): one file, no installer needed, and it can add itself to Start, the desktop and Settings › Apps without an administrator.

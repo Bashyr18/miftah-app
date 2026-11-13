@@ -229,6 +229,7 @@ Serve the `web/` folder with any static server and open it at a phone-sized wind
 | `node tools/cdp.js tools/e2e-honesty.js build/e2e` | A cheating child can't pass an exam or master lessons by tapping |
 | `node tools/bridge-check.js` | Every bridge method the Android app has also exists in the Windows app |
 | `node tools/cdp.js tools/ink-test.js build/ink` | A sheet done on screen: sent, written, finished, marked, joined between devices |
+| `node tools/cdp.js tools/sheet-check.js build/sheets` | Every printable for three ages in both languages, laid out at true A4 size and measured: nothing off the paper, no question running into the next, working space never squeezed, answer boxes big enough to write in |
 | `node tools/link-test.js <code>` | Pairing and sync with a running Windows app: wrong codes and foreign keys refused, files and records exchanged |
 
 ## Where things live

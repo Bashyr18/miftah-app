@@ -194,6 +194,7 @@
   });
   A.backTo = function (fb) { if (stack.length > 1) history.back(); else A.go(fb || 'home', { replace: true }); };
   window.__native.onBack = function () {
+    if (window.Print && Print.leave && Print.leave()) return 'handled';
     if (A.closeSheet && A.closeSheet()) return 'handled';
     if (cur && cur.onBack && cur.onBack() === 'handled') return 'handled';
     var r = parse(A.route());
