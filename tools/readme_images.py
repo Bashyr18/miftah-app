@@ -105,3 +105,33 @@ for r, a in ((44, 70), (70, 45), (96, 24)):
     d.ellipse((cx - r * S, cy - r * S, cx + r * S, cy + r * S), outline=(201, 156, 82, a), width=3 * S)
 d.ellipse((cx - 22 * S, cy - 22 * S, cx + 22 * S, cy + 22 * S), fill=(217, 178, 111))
 save(c, 'together.webp', 1600)
+
+
+# the guide itself, in a browser window with its real address (from tools/guide-preview.js)
+from PIL import ImageFont
+PREV = os.path.join(ROOT, 'build', 'preview')
+
+
+def browser(img, w, url):
+    sc = img.crop((0, 0, img.width - 72, img.height)).resize((w, round(img.height * w / (img.width - 72))), Image.LANCZOS)
+    bar = round(w * .036)
+    f = Image.new('RGBA', (w, sc.height + bar), (236, 230, 218, 255)); f.paste(sc, (0, bar)); d = ImageDraw.Draw(f)
+    r = bar // 6
+    for i, c in enumerate(((236, 106, 94), (244, 190, 79), (98, 197, 84))):
+        cx = bar * .55 + i * bar * .42; d.ellipse((cx - r, bar / 2 - r, cx + r, bar / 2 + r), fill=c)
+    px0, px1 = round(w * .3), round(w * .7)
+    d.rounded_rectangle((px0, round(bar * .2), px1, round(bar * .8)), round(bar * .3), fill=(250, 247, 240))
+    try: font = ImageFont.truetype(os.path.join(os.environ.get('WINDIR', 'C:/Windows'), 'Fonts', 'segoeui.ttf'), round(bar * .36))
+    except Exception: font = ImageFont.load_default()
+    tw = d.textlength(url, font=font); d.text(((px0 + px1 - tw) / 2, bar * .5), url, fill=(110, 98, 80), font=font, anchor='lm')
+    return rounded(f, round(w * .012))
+
+
+if os.path.exists(os.path.join(PREV, 'guide-cover.jpg')):
+    for src, name in (('guide-cover.jpg', 'guide.webp'), ('guide-walk.jpg', 'guide-walk.webp')):
+        W, H = 1800 * S, 1180 * S
+        c = ground(W, H)
+        b = browser(Image.open(os.path.join(PREV, src)).convert('RGB'), 1640 * S, 'bashyr18.github.io/miftah-app/guide')
+        x, y = (W - b.width) // 2, (H - b.height) // 2
+        shadow(c, (x, y, x + b.width, y + b.height), 24 * S, 40 * S, 80, 22 * S); c.alpha_composite(b, (x, y))
+        save(c, name, 1600)

@@ -9,11 +9,27 @@ On Android and Windows. Fully offline. No account. Free and open source.
 [![Checks](https://github.com/Bashyr18/miftah-app/actions/workflows/check.yml/badge.svg)](https://github.com/Bashyr18/miftah-app/actions/workflows/check.yml)
 [![Licence: MIT](https://img.shields.io/badge/licence-MIT-6b5a3e)](LICENSE)
 
-[**Download**](#download) · [**How to use it**](#how-to-use-it) · [**The illustrated guide**](https://bashyr18.github.io/miftah-app/guide/) · [**Build it yourself**](#build-it-yourself)
+[![Download for Android](https://img.shields.io/badge/Android-download%20APK-3ddc84?logo=android&logoColor=white)](https://github.com/Bashyr18/miftah-app/releases/latest/download/Miftah.apk)
+[![Download for Windows](https://img.shields.io/badge/Windows-download%20EXE-0078d4?logo=windows&logoColor=white)](https://github.com/Bashyr18/miftah-app/releases/latest/download/Miftah-Windows.exe)
+[![The illustrated guide](https://img.shields.io/badge/the%20guide-read%20online-c79c52)](https://bashyr18.github.io/miftah-app/guide/)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-Bashir%20Badmus-0a66c2?logo=linkedin&logoColor=white)](https://www.linkedin.com/in/bashirbadmus/)
+
+[**Download**](#download) · [**The guide**](#the-illustrated-guide) · [**How to use it**](#how-to-use-it) · [**Build it yourself**](#build-it-yourself) · [**The maker**](#the-maker)
 
 <img src="docs/screens/hero.webp" alt="Miftāḥ on a Windows computer, with the same child's day on a phone in front of it" width="100%">
 
 </div>
+
+## Contents
+
+- [What it is](#what-it-is)
+- [Download](#download)
+- [The illustrated guide](#the-illustrated-guide)
+- [A look inside](#a-look-inside)
+- [How to use it](#how-to-use-it)
+- [Sources and privacy](#sources-and-privacy)
+- [Build it yourself](#build-it-yourself) · [Tests](#tests) · [Where things live](#where-things-live) · [Contributing](#contributing)
+- [The maker](#the-maker) · [Licence](#licence)
 
 ## What it is
 
@@ -28,10 +44,27 @@ Each day a child gets a short, balanced path: Qurʾān first, then Arabic, Livin
 
 | | |
 |---|---|
-| **Android** 8 or newer | Download **`Miftah-2.0.apk`** from the [latest release](https://github.com/Bashyr18/miftah-app/releases/latest), open it on the phone and allow the install. |
-| **Windows** 10 or 11 | Download **`Miftah-2.0-Windows.exe`** and double-click it. It runs straight away, with no installer, and can add itself to the Start menu later. If Windows says the publisher is unknown, choose **More info › Run anyway**. |
+| **Android** 8 or newer | [**Download `Miftah.apk`**](https://github.com/Bashyr18/miftah-app/releases/latest/download/Miftah.apk), open it on the phone and allow the install. |
+| **Windows** 10 or 11 | [**Download `Miftah-Windows.exe`**](https://github.com/Bashyr18/miftah-app/releases/latest/download/Miftah-Windows.exe) and double-click it. It runs straight away, with no installer, and can add itself to the Start menu later. If Windows says the publisher is unknown, choose **More info › Run anyway**. |
 
-Both read and write the same family record, so a family can use the phone and the computer side by side.
+Both read and write the same family record, so a family can use the phone and the computer side by side. Every file, with its checksum, is on the [releases page](https://github.com/Bashyr18/miftah-app/releases/latest).
+
+## The illustrated guide
+
+<a href="https://bashyr18.github.io/miftah-app/guide/"><img src="docs/screens/guide.webp" alt="The illustrated guide to Miftāḥ, open in a browser" width="100%"></a>
+
+**[Open the guide →](https://bashyr18.github.io/miftah-app/guide/)**
+
+Every screen of the app, on the phone and the computer, with each feature marked and explained step by step.
+
+| | |
+|---|---|
+| **Twenty spreads** | From the first door to backups, in the order a family meets them. |
+| **Guided tours** | Press **Walk me through** on any spread and the guide shows each step in turn. |
+| **Day, night and Arabic** | The same pages in the light theme, the dark theme and in العربية, right to left. |
+| **Works anywhere** | One page in any browser, on a phone or a computer. |
+
+<a href="https://bashyr18.github.io/miftah-app/guide/"><img src="docs/screens/guide-walk.webp" alt="A guided tour in the guide, on step 1 of 8" width="100%"></a>
 
 ## A look inside
 
@@ -176,6 +209,7 @@ python -I tools/build_guide.py        # the guide page; new screenshots come fro
 ### The README pictures
 
 ```bash
+node tools/cdp.js tools/guide-preview.js build/preview   # pictures of the guide itself (serve docs/guide on port 5192 first)
 python -I tools/readme_images.py      # docs/screens/*.webp, composed from the guide's screenshots
 ```
 
@@ -223,6 +257,10 @@ See [CONTRIBUTING.md](CONTRIBUTING.md). The most valuable contributions right no
 - native Arabic review of the interface and lessons.
 
 The roadmap is the checklist at the end of [docs/REVIEW-2026-11.md](docs/REVIEW-2026-11.md).
+
+## The maker
+
+Made by **Bashir Badmus**. Questions, ideas and corrections are welcome on [LinkedIn](https://www.linkedin.com/in/bashirbadmus/) or as a [GitHub issue](https://github.com/Bashyr18/miftah-app/issues).
 
 ## Licence
 
