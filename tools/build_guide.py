@@ -16,8 +16,12 @@ SHOTS = os.path.join(ROOT, 'build', 'guide2')
 OUT = os.path.join(ROOT, 'docs', 'guide')
 FONTS = os.path.join(OUT, 'fonts'); os.makedirs(FONTS, exist_ok=True)
 
-marks = json.load(io.open(os.path.join(SHOTS, 'marks.json'), encoding='utf8'))
-compact, total = {}, 0
+KEPT = os.path.join(OUT, 'marks.json')   # the measured places, kept with the guide so the page can be rebuilt without new screenshots
+fresh = os.path.exists(os.path.join(SHOTS, 'marks.json'))
+marks = json.load(io.open(os.path.join(SHOTS, 'marks.json'), encoding='utf8')) if fresh else {}
+compact, total = ({} if fresh else json.load(io.open(KEPT, encoding='utf8'))), 0
+if not fresh:
+    print('no new screenshots in build/guide2: rebuilding the page with the pictures already in docs/guide/shots')
 for key, m in sorted(marks.items()):
     v, sid = key.split('/')
     src = os.path.join(SHOTS, v, sid + '.png')
@@ -44,6 +48,8 @@ old = os.path.join(OUT, 'img')
 if os.path.isdir(old):
     shutil.rmtree(old)   # the first edition's pictures, replaced by shots/
 
+if fresh:
+    io.open(KEPT, 'w', encoding='utf8').write(json.dumps(compact, separators=(',', ':')))
 page = io.open(os.path.join(OUT, 'guide.src.html'), encoding='utf8').read()
 base = io.open(os.path.join(OUT, 'guide-base.css'), encoding='utf8').read()
 assert '/*BASE-CSS*/' in page and '/*MARKS*/{}' in page

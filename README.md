@@ -1,36 +1,137 @@
+<div align="center">
+
 # Miftāḥ · مِفْتَاح
 
-**An Islamic homeschool for children aged 2 to 18, in English and Arabic, that works fully offline on Android and Windows.**
+**An Islamic homeschool for children aged 2 to 18, in English and Arabic.**<br>
+On Android and Windows. Fully offline. No account. Free and open source.
 
-**[Read the illustrated guide](docs/guide/index.html)**: every screen on the phone and the computer, step by step.
+[![Download](https://img.shields.io/github/v/release/Bashyr18/miftah-app?label=download&color=c79c52)](https://github.com/Bashyr18/miftah-app/releases/latest)
+[![Checks](https://github.com/Bashyr18/miftah-app/actions/workflows/check.yml/badge.svg)](https://github.com/Bashyr18/miftah-app/actions/workflows/check.yml)
+[![Licence: MIT](https://img.shields.io/badge/licence-MIT-6b5a3e)](LICENSE)
 
-Each day a child gets a short, balanced path, and every skill they master becomes a key:
-- Qurʾān memorisation;
-- Arabic, maths, science and English;
-- Living Islam;
-- the wider world.
+[**Download**](#download) · [**How to use it**](#how-to-use-it) · [**The illustrated guide**](docs/guide/) · [**Build it yourself**](#build-it-yourself)
 
-Parents see what each child did, what they remember, and where they are stuck. Nothing needs an account or the internet.
+<img src="docs/screens/hero.webp" alt="Miftāḥ on a Windows computer, with the same child's day on a phone in front of it" width="100%">
 
-<p>
-<img src="docs/screens/child-home.webp" width="180" alt="A child's home screen">
-<img src="docs/screens/lesson-diagram.webp" width="180" alt="A science lesson with a diagram">
-<img src="docs/screens/teen-home.webp" width="180" alt="A teenager's plan for the day">
-<img src="docs/screens/parent-dashboard.webp" width="180" alt="A parent's view of one child">
-<img src="docs/screens/child-home-arabic-dark.webp" width="180" alt="The home screen in Arabic, night theme">
-</p>
+</div>
 
-## What makes it different
+## What it is
 
-- **Honest learning.** A lesson counts only when the child shows it on their own. Exams give one try and no hints, and a script plays the cheating child on every release to prove guessing doesn't pay.
-- **Taught, not just tested.** Maths for Years 5–10 and science for Years 7–10 follow the same pattern: I show you, we do it together, you do it, you explain it. A checker computes every worked line and balances every chemical equation on every build.
-- **Memory that lasts.** Mastered skills come back for review just as they start to fade.
-- **Religious text from verified sources only.** The Qurʾān is byte-identical to Tanzil and is never gamified. See [CONTENT.md](CONTENT.md).
-- **Private by design.**
-  - Learning data stays on the phone. Families move it between devices by sending a file, with no server.
-  - Homeschool groups share a picture card or a challenge file through WhatsApp or Telegram.
+Each day a child gets a short, balanced path: Qurʾān first, then Arabic, Living Islam, maths, English, science and the wider world, with movement breaks and things to do away from the screen. Every skill they master is kept, and checked again later so it is not forgotten. Parents see what each child did, what they remember and where they are stuck.
 
-## Build
+- **Honest learning.** A lesson counts only when the child shows it on their own. Guessing never pays.
+- **Taught, not just tested.** I show you, we do it together, you do it, you explain it.
+- **Religious text from verified sources only.** The Qurʾān is byte for byte from Tanzil, never clipped, and never turned into a game.
+- **Private.** Learning data stays on your devices. Nothing needs an account or the internet.
+
+## Download
+
+| | |
+|---|---|
+| **Android** 8 or newer | Download **`Miftah-2.0.apk`** from the [latest release](https://github.com/Bashyr18/miftah-app/releases/latest), open it on the phone and allow the install. |
+| **Windows** 10 or 11 | Download **`Miftah-2.0-Windows.exe`** and double-click it. It runs straight away, with no installer, and can add itself to the Start menu later. If Windows says the publisher is unknown, choose **More info › Run anyway**. |
+
+Both read and write the same family record, so a family can use the phone and the computer side by side.
+
+## A look inside
+
+### A child's day
+
+<table>
+<tr>
+<td width="33%"><img src="docs/guide/shots/light/p-home.webp" alt="A child's home"></td>
+<td width="33%"><img src="docs/guide/shots/light/p-lesson.webp" alt="A maths lesson with the number pad"></td>
+<td width="33%"><img src="docs/guide/shots/light/p-keys.webp" alt="What the child remembers"></td>
+</tr>
+<tr>
+<td><b>Today</b><br>One big card for what comes next, and the day's path beneath it.</td>
+<td><b>A lesson</b><br>A number pad, picture choices or tracing, with help that teaches rather than tells.</td>
+<td><b>What stays</b><br>Learned, still right after a break, kept for months: memory shown honestly.</td>
+</tr>
+</table>
+
+### Every age, one app
+
+<img src="docs/screens/ages.webp" alt="The same home at five stages: Little Steps, Explorers, Seekers, Builders and Scholars" width="100%">
+
+Five stages, from **Little Steps** (2 to 4, played beside a grown-up) to **Scholars** (15 to 18, with exams, papers and their own record). The design, the pace and the voice change with the child.
+
+### For parents
+
+<table>
+<tr>
+<td width="62%"><img src="docs/guide/shots/light/d-family.webp" alt="The family page on the computer"></td>
+<td width="38%"><img src="docs/guide/shots/light/p-dash.webp" alt="One child's dashboard on the phone"></td>
+</tr>
+<tr>
+<td><b>The whole family</b><br>Every child on one page, the week in minutes, and the paper waiting for you.</td>
+<td><b>One child, in depth</b><br>Today, lessons, print and Qurʾān, in tabs.</td>
+</tr>
+</table>
+
+### Paper, or the screen
+
+<table>
+<tr>
+<td width="38%"><img src="docs/guide/shots/light/p-ink.webp" alt="A practice sheet done on the phone with a finger"></td>
+<td width="62%"><img src="docs/guide/shots/light/d-ink-mark.webp" alt="The parent marking it on the computer"></td>
+</tr>
+<tr>
+<td><b>Done on screen</b><br>Any practice or writing sheet can be done on the real page, with a finger, a pen or a mouse.</td>
+<td><b>Marked by a grown-up</b><br>Red marks on their page, then question by question. Only this marking counts, exactly as on paper.</td>
+</tr>
+</table>
+
+Every sheet is made fresh from what the child knows today and fills a true A4 page in English or Arabic. On the computer, **Print Studio** prints several at once or saves them as one PDF.
+
+### On the computer
+
+<table>
+<tr>
+<td width="50%"><img src="docs/guide/shots/light/d-lesson.webp" alt="A lesson on the computer: the sum and working paper on the left, the answer on the right"></td>
+<td width="50%"><img src="docs/guide/shots/light/d-palette.webp" alt="The command bar"></td>
+</tr>
+<tr>
+<td><b>Room to work</b><br>The sum and squared working paper on the left, the answer opposite. Type the answer, press Enter.</td>
+<td><b>Go anywhere</b><br>Ctrl K finds any child, subject, lesson or tool.</td>
+</tr>
+</table>
+
+Also on Windows: thirty days of backups, start with Windows, a daily reminder in the tray, **Focus** (a lesson fills the screen and only a grown-up can leave it), and the size of everything from 70% to 200%.
+
+### Phone and computer, together
+
+<img src="docs/screens/together.webp" alt="The computer showing a six-digit code and the phone typing it" width="100%">
+
+Pair once with six digits on your home Wi-Fi. After that the phone joins its record with the computer by itself whenever Miftāḥ opens at home, recordings and photos included. Every message is sealed (AES-256 with HMAC-SHA256) with a key only the two share. No account, no cloud.
+
+### By night, and in Arabic
+
+<table>
+<tr>
+<td width="62%"><img src="docs/guide/shots/dark/d-home.webp" alt="The computer at night"></td>
+<td width="38%"><img src="docs/guide/shots/ar/p-home.webp" alt="The phone in Arabic"></td>
+</tr>
+</table>
+
+## How to use it
+
+A simple path for the first week. The [illustrated guide](docs/guide/) shows every step on every screen.
+
+1. **Install it** on the phone, the computer, or both ([Download](#download)).
+2. **Open the first door.** Choose English or العربية, press **Begin**, and add your first child: a name and an age. The age sets their stage.
+3. **Start the day.** Each child taps their name, then **Open the door**. They work through today's path one step at a time.
+4. **Open the parent area** with the button at the top right (a small sum keeps young children out, or set a PIN). Here you add brothers and sisters, see each child's day, and change their plan.
+5. **Print or send a sheet.** In a child's **Print** tab, choose a sheet and print it, save a PDF, or press **Do it on screen**. When it comes back, mark it from **Today**.
+6. **Join your phone and computer.** On the computer open **Phone and computer**, turn it on and press **Pair a phone**. On the phone open **Parent area › Devices › Find my computer** and type the six digits. Without Wi-Fi, **Send to my other device** does the same with a file.
+7. **Back up.** On the computer, **This computer › Backups** keeps a copy each day. On the phone, a family file is a complete backup too.
+
+## Sources and privacy
+
+- The Qurʾān from Tanzil; its translation from *The Clear Quran* (Dr Mustafa Khattab, used with permission); duʿāʾ from Ḥiṣn al-Muslim. Every source is listed in [CONTENT.md](CONTENT.md), and the build checks the text on every change.
+- No adverts, no analytics, no account. The only internet use is a video a grown-up adds, or a recitation fetched once and then kept.
+
+## Build it yourself
 
 **You need:**
 - Node 20 or newer;
@@ -69,7 +170,13 @@ The first run fetches the WebView2 SDK from nuget.org into `tools/.bin/`. No Vis
 ### The guide
 
 ```bash
-python -I tools/build_guide.py        # docs/guide/index.html from the screenshots in build/guide2 (see tools/guide-shots.js)
+python -I tools/build_guide.py        # the guide page; new screenshots come from tools/guide-shots.js
+```
+
+### The README pictures
+
+```bash
+python -I tools/readme_images.py      # docs/screens/*.webp, composed from the guide's screenshots
 ```
 
 ### Try it in a browser

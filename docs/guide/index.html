@@ -507,6 +507,13 @@ footer { padding: 30px 0 60px; text-align: center; font-size: 13px; color: var(-
 .stage .p1 { left: auto; right: 0; top: 30%; z-index: 3; }
 .stage .p2 { left: -3%; top: 46%; z-index: 2; --r: 14deg; --z: -5deg; }
 .stage .glow { inset: 30% 0 0; }
+/* the way to the code: an icon in the bar, a quiet line in the footer */
+.tbtn.gh { color: var(--t2); } .tbtn.gh:hover { color: var(--gold2); border-color: var(--gold-line); }
+.tbtn.gh svg { width: 17px; height: 17px; }
+.foot-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 22px; margin-bottom: 14px; }
+.foot-links a { display: inline-flex; align-items: center; gap: 7px; color: var(--t2); font-weight: 700; font-size: 13px; transition: color .25s; }
+.foot-links a:hover { color: var(--gold2); }
+.foot-links svg { width: 15px; height: 15px; }
 /* a computer screen as a contents thumbnail: its middle, where the work is, not the corner of the rail */
 .toc a.wide .th img { object-position: 55% 45%; }
 .cv-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 26px; }
@@ -584,6 +591,7 @@ kbd { display: inline-grid; place-items: center; min-width: 26px; height: 26px; 
   <div class="seg-l"><span>Screens</span>
     <div class="seg" id="lang" role="group" aria-label="Language of the app screens"><i class="pill" aria-hidden="true"></i><button type="button" data-l="en" aria-pressed="true" aria-label="English">EN</button><button type="button" data-l="ar" lang="ar" aria-pressed="false" aria-label="العربية">ع</button></div>
   </div>
+  <a class="tbtn ico gh" href="https://github.com/Bashyr18/miftah-app" target="_blank" rel="noopener" aria-label="Miftāḥ on GitHub" title="Miftāḥ on GitHub: the code, and the apps to download"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.2a9.8 9.8 0 0 0-3.1 19.1c.5.1.7-.2.7-.5v-1.7c-2.7.6-3.3-1.3-3.3-1.3-.5-1.1-1.1-1.4-1.1-1.4-.9-.6.1-.6.1-.6 1 .1 1.5 1 1.5 1 .9 1.5 2.3 1.1 2.9.8.1-.6.3-1.1.6-1.3-2.2-.3-4.5-1.1-4.5-4.9 0-1.1.4-2 1-2.7-.1-.3-.4-1.3.1-2.6 0 0 .8-.3 2.7 1a9.4 9.4 0 0 1 4.9 0c1.9-1.3 2.7-1 2.7-1 .5 1.3.2 2.3.1 2.6.6.7 1 1.6 1 2.7 0 3.8-2.3 4.6-4.5 4.9.4.3.7.9.7 1.8v2.7c0 .3.2.6.7.5A9.8 9.8 0 0 0 12 2.2z"/></svg></a>
   <button class="tbtn ico" id="theme" type="button" aria-label="Switch to dark">
     <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M20.5 14.5A8.5 8.5 0 1 1 9.5 3.5a7 7 0 0 0 11 11z"/></svg>
     <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6"/></svg>
@@ -643,7 +651,7 @@ kbd { display: inline-grid; place-items: center; min-width: 26px; height: 26px; 
       </div>
     </div>
   </section>
-  <footer>Miftāḥ · The Guide · Edition 2.0 · Every screen shown is from the app itself, with a demonstration family.</footer>
+  <footer><div class="foot-links"><a href="https://github.com/Bashyr18/miftah-app" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.2a9.8 9.8 0 0 0-3.1 19.1c.5.1.7-.2.7-.5v-1.7c-2.7.6-3.3-1.3-3.3-1.3-.5-1.1-1.1-1.4-1.1-1.4-.9-.6.1-.6.1-.6 1 .1 1.5 1 1.5 1 .9 1.5 2.3 1.1 2.9.8.1-.6.3-1.1.6-1.3-2.2-.3-4.5-1.1-4.5-4.9 0-1.1.4-2 1-2.7-.1-.3-.4-1.3.1-2.6 0 0 .8-.3 2.7 1a9.4 9.4 0 0 1 4.9 0c1.9-1.3 2.7-1 2.7-1 .5 1.3.2 2.3.1 2.6.6.7 1 1.6 1 2.7 0 3.8-2.3 4.6-4.5 4.9.4.3.7.9.7 1.8v2.7c0 .3.2.6.7.5A9.8 9.8 0 0 0 12 2.2z"/></svg><span>Source on GitHub</span></a><a href="https://github.com/Bashyr18/miftah-app/releases/latest" target="_blank" rel="noopener"><span>Download for Android and Windows</span></a><a href="https://github.com/Bashyr18/miftah-app/blob/main/LICENSE" target="_blank" rel="noopener"><span>MIT licence</span></a></div>Miftāḥ · The Guide · Edition 2.0 · Every screen shown is from the app itself, with a demonstration family.</footer>
 </main>
 
 <nav class="crail" id="crail" aria-label="Chapters"></nav>
