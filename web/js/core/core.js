@@ -32,6 +32,12 @@
   /* Arabic digits inside a left-to-right line of maths: the browser treats them as right-to-left numbers and pulls the signs between them
      into a reversed run, so 16 ÷ 16 = 1 showed as 1 = 16 ÷ 16. A left-to-right mark on each side of every number keeps the line in order. */
   A.bidi = function (html) { return A.ar() ? String(html).replace(/[٠-٩][٠-٩.٫]*/g, '\u200E$&\u200E') : html; };
+  /* powers in escaped HTML: x^5, (x − 3)^2, 10^−3 and 9^(1/2) become raised; a lone ' ^ ' between words stays as written */
+  A.pow = function (html) { return String(html).replace(/\^(\(([^()]*)\)|[−\-]?[0-9٠-٩.٫]+|[A-Za-z])/g, function (m, all, inner) { return '<sup>' + (inner != null ? inner : all).replace(/\//g, '⁄') + '</sup>'; }); };
+  /* the same powers as plain text (a list line, a notification): x⁵, 10⁻³; anything a superscript font lacks keeps its caret */
+  A.powText = function (s) { var SU = { '0': '⁰', '1': '¹', '2': '²', '3': '³', '4': '⁴', '5': '⁵', '6': '⁶', '7': '⁷', '8': '⁸', '9': '⁹', '−': '⁻', '-': '⁻', 'n': 'ⁿ' };
+    var up = function (x) { return /^[0-9−\-n]+$/.test(x) ? x.split('').map(function (c) { return SU[c]; }).join('') : '^(' + x + ')'; };
+    return String(s).replace(/<sup>([^<]*)<\/sup>/g, function (m, x) { return up(x); }).replace(/\^([−\-]?[0-9]+|n)(?![0-9])/g, function (m, x) { return up(x); }); };
   A.num = function (n) { var s = String(n); return A.ar() ? s.replace(/[0-9]/g, function (d) { return '٠١٢٣٤٥٦٧٨٩'[+d]; }) : s; };
 
   /* ---------- state ---------- */

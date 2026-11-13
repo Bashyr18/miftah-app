@@ -70,7 +70,7 @@
       '<button class="ink-t" data-t="undo" aria-label="' + esc(L(['Undo', 'تراجع'])) + '"><svg class="ic" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14L4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg></button></div>' : '';
     host.innerHTML = '<div class="ink' + (edit ? ' edit' : '') + '"><style>' + Print.CSS.replace('@page{size:A4;margin:11mm}', '') + '</style>' +
       '<div class="ink-stage"><div class="ink-box"><div class="ink-page"></div><canvas class="ink-cv"></canvas></div></div>' +
-      '<div class="ink-bar">' + tools + '<div class="ink-pg"><button class="ink-t" data-pg="-1" aria-label="' + esc(L(['Previous page', 'الصفحة السابقة'])) + '">' + A.icon('back', 20) + '</button><span class="ink-n"></span><button class="ink-t" data-pg="1" aria-label="' + esc(L(['Next page', 'الصفحة التالية'])) + '">' + A.icon('next', 20) + '</button></div>' + (hooks.extra || '') + '</div></div>';
+      '<div class="ink-bar">' + tools + '<div class="ink-pg ink-zm"><button class="ink-t" data-z="1" aria-label="' + esc(L(['Page width or whole page', 'عرض الصفحة أو الصفحة كاملة'])) + '" title="' + esc(L(['Page width or whole page', 'عرض الصفحة أو الصفحة كاملة'])) + '"><svg class="ic" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5M8.5 11h5M11 8.5v5"/></svg></button></div><div class="ink-pg"><button class="ink-t" data-pg="-1" aria-label="' + esc(L(['Previous page', 'الصفحة السابقة'])) + '">' + A.icon('back', 20) + '</button><span class="ink-n"></span><button class="ink-t" data-pg="1" aria-label="' + esc(L(['Next page', 'الصفحة التالية'])) + '">' + A.icon('next', 20) + '</button></div>' + (hooks.extra || '') + '</div></div>';
     var stage = $('.ink-stage', host), box = $('.ink-box', host), page = $('.ink-page', host), cv = $('.ink-cv', host), g = cv.getContext('2d');
     var PW = 0, PH = 0, s = 1, cur = null;
     function layer(key) { var o = sh[key] = sh[key] || {}; return o[at] = o[at] || []; }
@@ -82,16 +82,22 @@
       ((sh.mk || {})[at] || []).forEach(function (st) { drawStroke(g, st, s, PW); });
       if (cur) drawStroke(g, cur, s, PW);
     }
+    /* two views: the whole page, or the page at a comfortable writing width that scrolls. A short wide screen (a computer)
+       starts at page width, since the whole page there leaves the writing too small. */
+    var wideFit = Ink.wide != null ? Ink.wide : (innerWidth >= 1000 && innerHeight < 1100);
     function fit() {
       page.style.transform = 'none'; PW = page.offsetWidth || 794; PH = page.offsetHeight || 1123;   /* the whole sheet of paper, margins included */
-      var aw = stage.clientWidth - 16, ah = stage.clientHeight - 16; s = Math.max(.2, Math.min(aw / PW, ah / PH, 1.6));
+      var aw = stage.clientWidth - 16, ah = stage.clientHeight - 16, whole = Math.max(.2, Math.min(aw / PW, ah / PH, 1.6)), wide = Math.min(Math.min(aw - 32, 1000) / PW, 1.6);
+      s = wideFit ? Math.max(whole, wide) : whole;
+      stage.classList.toggle('scroll', PH * s > ah + 1);
+      var zb = $('[data-z]', host); if (zb) { zb.classList.toggle('on', wideFit); zb.parentNode.hidden = wide - whole < .08; }
       page.style.transform = 'scale(' + s + ')'; box.style.width = PW * s + 'px'; box.style.height = PH * s + 'px'; paint();
     }
     function show(i) {
       at = Math.max(0, Math.min(pages.length - 1, i)); page.innerHTML = pages[at];
       $('.ink-n', host).textContent = A.num(at + 1) + ' / ' + A.num(pages.length);
       $$('[data-pg]', host).forEach(function (b) { b.disabled = (+b.dataset.pg < 0 && at === 0) || (+b.dataset.pg > 0 && at === pages.length - 1); });
-      $('.ink-pg', host).hidden = pages.length < 2;
+      $('.ink-pg:not(.ink-zm)', host).hidden = pages.length < 2;
       requestAnimationFrame(fit);
     }
     function pt(e) { var r = cv.getBoundingClientRect(); return [Math.round((e.clientX - r.left) / r.width * 1000), Math.round((e.clientY - r.top) / r.width * 1000)]; }
@@ -125,6 +131,7 @@
       }; });
     }
     $$('[data-pg]', host).forEach(function (b) { b.onclick = function () { show(at + +b.dataset.pg); }; });
+    var zb = $('[data-z]', host); if (zb) zb.onclick = function () { wideFit = Ink.wide = !wideFit; stage.scrollTop = 0; fit(); };
     var key = function (e) { if ((e.ctrlKey || e.metaKey) && (e.key === 'z' || e.key === 'Z') && edit) { e.preventDefault(); var u = $('[data-t=undo]', host); if (u) u.click(); } else if (e.key === 'PageDown' || (e.key === 'ArrowRight' && !edit)) show(at + 1); else if (e.key === 'PageUp' || (e.key === 'ArrowLeft' && !edit)) show(at - 1); };
     var onR = function () { clearTimeout(fit._t); fit._t = setTimeout(fit, 80); };
     addEventListener('resize', onR); document.addEventListener('keydown', key);

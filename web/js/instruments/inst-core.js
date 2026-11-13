@@ -129,7 +129,7 @@
     var s = c.step, val = '';
     /* the answer box goes where the question mark is; a bare sum gets one at the end */
     /* code reads as code, and a worded problem as what is given, with the answer box under it */
-    var kind = A.eqKind(s.eq), given = kind.code ? '<pre class="pad-code" dir="ltr">' + esc(kind.eq.replace(/;\s*/g, '\n')) + '</pre>' : kind.given ? '<div class="pad-given" dir="' + (kind.rtl ? 'rtl' : 'ltr') + '">' + (kind.rtl ? esc(A.num(kind.text)) : A.bidi(esc(A.num(kind.text)))) + '</div>' : '';
+    var kind = A.eqKind(s.eq), given = kind.code ? '<pre class="pad-code" dir="ltr">' + esc(kind.eq.replace(/;\s*/g, '\n')) + '</pre>' : kind.given ? '<div class="pad-given" dir="' + (kind.rtl ? 'rtl' : 'ltr') + '">' + (kind.rtl ? A.pow(esc(A.num(kind.text))) : A.bidi(A.pow(esc(A.num(kind.text))))) + '</div>' : '';
     if (given) s = Object.assign({}, s, { eq: '?' });
     else if (s.eq && kind.eq.indexOf('?') < 0) s = Object.assign({}, s, { eq: s.eq + ' = ?' });
     else if (kind.rtl) s = Object.assign({}, s, { eq: kind.text });

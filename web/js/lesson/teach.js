@@ -31,7 +31,7 @@
     if (Array.isArray(t)) t = L(t);
     /* a number written against a chemical symbol, 2Mg, keeps its Latin digits, as Arabic chemistry books write it */
     var s = arWords(String(t)); s = A.ar() ? s.replace(/(\d+)(?=[A-Z]|e⁻)|\d/g, function (m, co) { return co || '٠١٢٣٤٥٦٧٨٩'[+m]; }) : s;
-    return A.bidi(esc(s).replace(FR, function (m, a, b) { return /[a-z]/.test(a) && /[a-z]/.test(b) ? m : '<span class="fr"><i>' + a + '</i><i>' + b + '</i></span>'; }));
+    return A.bidi(A.pow(esc(s)).replace(FR, function (m, a, b) { return /[a-z]/.test(a) && /[a-z]/.test(b) ? m : '<span class="fr"><i>' + a + '</i><i>' + b + '</i></span>'; }));
   };
   var math = Teach.math;
 

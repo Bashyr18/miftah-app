@@ -224,7 +224,14 @@
         build(v);
         $('#pp-new', v).onclick = function () { seed = A.seed(); build(v); };
         var lg = $('#pp-lang', v); if (lg) lg.onclick = function () { opts.pool = opts.pool === 'en' ? 'ar' : 'en'; build(v); };
-        var sc = $('#pp-scr', v); if (sc) sc.onclick = function () { if (!res) return; Print.toScreen(res, pid); A.toast(L(['On ' + p.name + '’s home now, to do on screen', 'على صفحة ' + p.name + ' الآن، لتُنجز على الشاشة'])); A.go('parent/' + pid + '/today'); };
+        var sc = $('#pp-scr', v); if (sc) sc.onclick = function () {
+          if (!res) return; var sh = Print.toScreen(res, pid); if (!sh) return; var made = res; res = null; seed = A.seed(); build(v);
+          var step = function (ic, t) { return '<li><span>' + A.icon(ic, 18) + '</span>' + esc(L(t)) + '</li>'; };
+          A.sheet(L(['On ' + p.name + '’s home', 'على صفحة ' + p.name]), '<ol class="ink-sent">' + step('pen', ['Written on screen, saved as they go', 'تُكتب على الشاشة وتُحفظ أولًا بأول']) + step('check', ['Finished, then back to you to mark', 'بعد «انتهيت» تعود إليك للتصحيح']) + step('swap', ['On their phone too, once joined', 'وعلى هاتفه أيضًا بعد الربط']) + '</ol><div class="ink-sent-b"><button class="btn pri big wide" id="scr-now">' + A.icon('pen', 20) + '<span>' + esc(L(['Open it now, here', 'افتحها الآن هنا'])) + '</span></button><button class="btn ghost wide" id="scr-later">' + esc(L(['Later', 'لاحقًا'])) + '</button></div>', function (box) {
+            $('#scr-now', box).onclick = function () { A.closeSheet(); A.S.cur = pid; A.saveNow(); A.go('sheet/' + sh.id); };
+            $('#scr-later', box).onclick = function () { A.closeSheet(); A.go('parent/' + pid + '/today'); };
+          });
+        };
         $('#pp-go', v).onclick = function () { if (!res) return; Print.keep(res, pid); Print.send(res.html, 'Miftah ' + res.title); if (res.q) A.toast(T('It will wait in Today, ready to mark')); else if (res.use === 'do') A.toast(L(['It will wait in Today, to tick when it is done', 'ستنتظر في «اليوم» لتُشير إليها عند إنجازها'])); };
       }
     };
@@ -249,7 +256,7 @@
     }
     var right = sh.q.map(function () { return true; });
     return {
-      html: '<div class="ph h-gold"><a class="backp" href="#/parent/' + pid + '/today">' + A.icon('back', 18) + '<span>' + esc(T('Today')) + '</span></a><h1>' + esc(Print.titleOf(sh)) + '</h1><p>' + esc(T('Tap any they did not get. Be honest: it decides what comes back.')) + ' · ' + esc(code) + '</p></div><div class="wrap mk-wrap' + (onScreen ? ' has-ink' : '') + '" style="margin-top:12px">' + inkH + '<div class="mk-side"><div class="card"><div class="lst">' + sh.q.map(function (q, i) { return '<button class="li mk" data-i="' + i + '"><span class="mk-c on">' + A.icon('check', 18) + '</span><span class="grow"><small class="mk-q">' + A.num(i + 1) + '. ' + esc(String(q.h).replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/\s+/g, ' ').trim().slice(0, 70)) + '</small><b>' + esc(q.a) + '</b></span></button>'; }).join('') + '</div></div><button class="btn pri big wide" id="mk-go" style="margin-top:12px">' + esc(T('Save the marking')) + '</button>' + (onScreen ? '<button class="btn ghost wide" id="mk-again" style="margin-top:6px">' + esc(L(['Not ready to mark: give it back', 'ليست جاهزة للتصحيح: أعِدها'])) + '</button>' : '') + '</div></div>',
+      html: '<div class="ph h-gold"><a class="backp" href="#/parent/' + pid + '/today">' + A.icon('back', 18) + '<span>' + esc(T('Today')) + '</span></a><h1>' + esc(Print.titleOf(sh)) + '</h1><p>' + esc(T('Tap any they did not get. Be honest: it decides what comes back.')) + ' · ' + esc(code) + '</p></div><div class="wrap mk-wrap' + (onScreen ? ' has-ink' : '') + '" style="margin-top:12px">' + inkH + '<div class="mk-side"><div class="card"><div class="lst">' + sh.q.map(function (q, i) { return '<button class="li mk" data-i="' + i + '"><span class="mk-c on">' + A.icon('check', 18) + '</span><span class="grow"><small class="mk-q">' + A.num(i + 1) + '. ' + esc(A.powText(String(q.h)).replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/\s+/g, ' ').trim().slice(0, 70)) + '</small><b>' + esc(q.a) + '</b></span></button>'; }).join('') + '</div></div><button class="btn pri big wide" id="mk-go" style="margin-top:12px">' + esc(T('Save the marking')) + '</button>' + (onScreen ? '<button class="btn ghost wide" id="mk-again" style="margin-top:6px">' + esc(L(['Not ready to mark: give it back', 'ليست جاهزة للتصحيح: أعِدها'])) + '</button>' : '') + '</div></div>',
       mount: function (v) {
         if (onScreen) stop = Ink.mount($('#mk-ink', v), sh, pid, 'parent');
         $$('.mk', v).forEach(function (b) { b.onclick = function () { var i = +b.dataset.i; right[i] = !right[i]; var c = $('.mk-c', b); c.classList.toggle('on', right[i]); c.innerHTML = A.icon(right[i] ? 'check' : 'close', 18); Fx.tap(); }; });

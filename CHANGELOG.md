@@ -4,6 +4,13 @@ The version is set in `version.txt`.
 
 ## 2.0 (code 2), November 2026
 
+**Sheets and paper (update, 13 November)**
+- Printed and saved sheets are white to the edge of the A4. The cream border around PDFs from the computer is gone, and ruled lines and grids now print even when the print window's background setting is off.
+- Room to write: each answer is a real box instead of a thin line, every maths question has squared working space, written answers get 9 mm lines, and sheets with many questions use two columns so no question is squeezed.
+- Powers show as powers (x⁵, not x^5) in lessons, on sheets and in marking.
+- On the computer, printing and saving a PDF no longer make the window flash away. The main button says Print, and Do it on screen offers Open it now, here.
+- A sheet done on a computer screen opens at page width, so the writing is large, with a button for the whole page.
+
 **Miftāḥ for Windows**
 - A native Windows 10 and 11 app (`dist/Miftah.exe`): one file, no installer needed, and it can add itself to Start, the desktop and Settings › Apps without an administrator.
 - Its own design for a big screen: a side rail, a command bar (Ctrl K) that finds any child, subject, lesson or tool, the keyboard everywhere, dialogs in the middle of the screen, and pages that use the whole window.

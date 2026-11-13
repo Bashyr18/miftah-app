@@ -246,10 +246,12 @@
     b.innerHTML = ic('pdf', 18) + '<span>' + esc(L(['Save as PDF', 'احفظ PDF'])) + '</span>';
     b.onclick = function () { Desk._pdf = true; go.click(); };
     go.insertAdjacentElement('afterend', b);
+    /* with its own PDF button beside it, the first button only prints */
+    var gs = go.querySelector('span'); if (gs) gs.textContent = L(['Print', 'اطبع']);
   }
   Desk.onPdf = function (path) {
     if (!path) { A.toast(L(['The PDF could not be saved', 'تعذر حفظ ملف PDF'])); return; }
-    A.sheet(L(['Saved as PDF', 'حُفظ PDF']), '<div class="dk-saved">' + ic('pdf', 34) + '<p>' + esc(path.split(/[\\/]/).pop()) + '</p><small>' + esc(L(['In Documents › Miftah › Printables', 'في المستندات › Miftah › Printables'])) + '</small><div class="dk-row2"><button class="btn pri" id="pdf-open">' + esc(L(['Open it', 'افتحه'])) + '</button><button class="btn ghost" id="pdf-show">' + ic('folder', 18) + '<span>' + esc(L(['Show in folder', 'أظهره في المجلد'])) + '</span></button></div></div>', function (sh) {
+    A.sheet(L(['Saved as PDF', 'حُفظ PDF']), '<div class="dk-saved">' + ic('pdf', 34) + '<p>' + esc(path.split(/[\\/]/).pop()) + '</p><small>' + esc(L(['Documents › Miftah › Printables', 'المستندات › Miftah › Printables'])) + '</small><small class="dk-saved-t">' + A.icon('pen', 14) + esc(L(['Your PDF reader can write on it too', 'يمكنك الكتابة عليه في قارئ PDF أيضًا'])) + '</small><div class="dk-row2"><button class="btn pri" id="pdf-open">' + esc(L(['Open it', 'افتحه'])) + '</button><button class="btn ghost" id="pdf-show">' + ic('folder', 18) + '<span>' + esc(L(['Show in folder', 'أظهره في المجلد'])) + '</span></button></div></div>', function (sh) {
       $('#pdf-open', sh).onclick = function () { B.openPdf(path); A.closeSheet(); };
       $('#pdf-show', sh).onclick = function () { B.reveal(path); A.closeSheet(); };
     });
