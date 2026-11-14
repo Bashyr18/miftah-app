@@ -185,6 +185,59 @@ kbd { display: inline-grid; place-items: center; min-width: 26px; height: 26px; 
 .dl-strip a { color: var(--gold2); border-bottom: 1px solid var(--gold-line); } .dl-strip a:hover { border-color: var(--gold2); }
 @media (max-width: 860px) { .dl-grid { grid-template-columns: minmax(0, 1fr); } }
 @media (max-width: 520px) { .get { flex-direction: column; } .gbtn { width: 100%; min-width: 0; } .dl-art { height: 200px; } }
+
+/* ---------- download counts ---------- */
+:root { --c-and: #ba8a36; --c-win: #4a9ad6; }
+:root[data-theme="light"] { --c-and: #b5853a; --c-win: #1f7fae; }
+.dls { margin-top: clamp(30px, 4vw, 44px); padding: clamp(22px, 3vw, 34px); border-radius: 28px; background: var(--s1); border: 1px solid var(--line2); box-shadow: var(--shadow); }
+.dls[hidden] { display: none; }
+.dls-top { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); gap: clamp(20px, 4vw, 48px); align-items: end; }
+.dls-total h3 { margin: 0; }
+.dls-total b { display: block; margin-top: 8px; font: 400 clamp(56px, 7vw, 84px)/.95 var(--serif); letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.dls-total span { display: block; margin-top: 8px; font: 700 13.5px/1.4 var(--sans); color: var(--t2); }
+.dls-total span em { font-style: normal; color: var(--gold2); }
+.dls-bar { display: flex; gap: 2px; height: 14px; border-radius: 99px; overflow: hidden; background: var(--s3); }
+.dls-bar i { display: block; height: 100%; min-width: 0; transition: flex-grow 1.2s var(--out); }
+.dls-bar i.and { background: var(--c-and); } .dls-bar i.win { background: var(--c-win); }
+.dls-key { list-style: none; margin: 16px 0 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 10px 20px; }
+.dls-key li { display: grid; grid-template-columns: auto 1fr; column-gap: 10px; align-items: baseline; }
+.dls-key li i { width: 10px; height: 10px; border-radius: 3px; transform: translateY(-1px); }
+.dls-key li i.and { background: var(--c-and); } .dls-key li i.win { background: var(--c-win); }
+.dls-key b { font: 700 14px/1.3 var(--sans); }
+.dls-key span { grid-column: 2; font: 600 13px/1.4 var(--sans); color: var(--t2); font-variant-numeric: tabular-nums; }
+.dls-trend { margin-top: clamp(24px, 3vw, 34px); padding-top: clamp(20px, 2.6vw, 28px); border-top: 1px solid var(--line); }
+.dls-th { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+.dls-th b { font: 700 14.5px/1.3 var(--sans); } .dls-th small { font: 600 12.5px/1.3 var(--sans); color: var(--t3); }
+.dls-chart { position: relative; margin-top: 14px; min-height: 120px; }
+.dls-chart svg { display: block; width: 100%; height: auto; overflow: visible; }
+.dls-chart svg:focus-visible { outline: 2px solid var(--gold); outline-offset: 6px; border-radius: 6px; }
+.dls-chart .grid line { stroke: var(--line2); stroke-width: 1; }
+.dls-chart .grid text, .dls-chart .xl text { fill: var(--t3); font: 600 11px var(--sans); font-variant-numeric: tabular-nums; }
+.dls-chart .base { stroke: var(--line2); stroke-width: 1; }
+.dls-chart .b-and { fill: var(--c-and); } .dls-chart .b-win { fill: var(--c-win); }
+.dls-chart .col.on .hl { fill: var(--gold-soft); }
+.dls-chart .hl { fill: transparent; }
+.dls-trend[hidden] { display: none; }
+.dls-tip { position: absolute; z-index: 2; pointer-events: none; min-width: 150px; padding: 10px 12px; border-radius: 12px; background: var(--s2); border: 1px solid var(--line2); box-shadow: 0 14px 30px -14px rgba(0, 0, 0, .55); font: 600 12.5px/1.45 var(--sans); color: var(--t2); transform: translate(-50%, calc(-100% - 10px)); opacity: 0; transition: opacity .15s; }
+.dls-tip.on { opacity: 1; }
+.dls-tip b { display: block; color: var(--t1); font-size: 13px; margin-bottom: 4px; }
+.dls-tip p { margin: 0; display: flex; align-items: center; gap: 7px; } .dls-tip p span { margin-inline-start: auto; color: var(--t1); font-variant-numeric: tabular-nums; }
+.dls-tip i { width: 8px; height: 8px; border-radius: 2px; } .dls-tip i.and { background: var(--c-and); } .dls-tip i.win { background: var(--c-win); }
+.dls-more { margin-top: 22px; border-top: 1px solid var(--line); padding-top: 16px; }
+.dls-more summary { cursor: pointer; font: 700 13.5px/1.4 var(--sans); color: var(--gold2); list-style: none; display: inline-flex; align-items: center; gap: 8px; }
+.dls-more summary::-webkit-details-marker { display: none; }
+.dls-more summary::before { content: "+"; display: grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; border: 1px solid var(--gold-line); font-size: 14px; transition: transform .3s var(--out); }
+.dls-more[open] summary::before { transform: rotate(45deg); }
+.dls-tables { display: grid; align-items: start; grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr)); gap: 18px 28px; margin-top: 14px; }
+.dls-tables table { width: 100%; border-collapse: collapse; font: 600 13px/1.4 var(--sans); color: var(--t2); font-variant-numeric: tabular-nums; }
+.dls-tables caption { text-align: start; font: 700 12px/1.3 var(--sans); letter-spacing: .12em; text-transform: uppercase; color: var(--t3); padding-bottom: 8px; }
+.dls-tables th { text-align: start; font-weight: 700; color: var(--t3); padding: 6px 0; border-bottom: 1px solid var(--line2); }
+.dls-tables td { padding: 6px 0; border-bottom: 1px solid var(--line); }
+.dls-tables th:not(:first-child), .dls-tables td:not(:first-child) { text-align: end; }
+.dls-tables tr.sum td { color: var(--t1); font-weight: 700; border-bottom: 0; }
+.dls-tables .scroll { max-height: 280px; overflow: auto; }
+@media (max-width: 720px) { .dls-top { grid-template-columns: minmax(0, 1fr); align-items: start; } }
+@media (prefers-reduced-motion: reduce) { .dls-bar i { transition: none; } }
 </style>
 </head>
 <body>
@@ -226,7 +279,7 @@ kbd { display: inline-grid; place-items: center; min-width: 26px; height: 26px; 
           <a class="gbtn" href="https://github.com/Bashyr18/miftah-app/releases/latest/download/Miftah.apk" data-dl="apk"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.6 9.48l1.84-3.18a.38.38 0 0 0-.66-.38l-1.86 3.22A11.4 11.4 0 0 0 12 8.2c-1.8 0-3.5.38-4.92.94L5.22 5.92a.38.38 0 0 0-.66.38L6.4 9.48A10.6 10.6 0 0 0 1 18h22a10.6 10.6 0 0 0-5.4-8.52zM7 15.25a1.25 1.25 0 1 1 0-2.5 1.25 1.25 0 0 1 0 2.5zm10 0a1.25 1.25 0 1 1 0-2.5 1.25 1.25 0 0 1 0 2.5z"/></svg><span><small>Download for</small><b>Android</b><em data-size="apk">APK · Android 8 or newer</em></span><svg class="dn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 10.5l5 5 5-5M5 20h14"/></svg></a>
           <a class="gbtn" href="https://github.com/Bashyr18/miftah-app/releases/latest/download/Miftah-Windows.exe" data-dl="exe"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 5.4l7.4-1v7.1H3zM11.4 4.25L21 3v8.5h-9.6zM3 12.5h7.4v7.1L3 18.6zM11.4 12.5H21V21l-9.6-1.3z"/></svg><span><small>Download for</small><b>Windows</b><em data-size="exe">EXE · Windows 10 and 11</em></span><svg class="dn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 10.5l5 5 5-5M5 20h14"/></svg></a>
         </div>
-        <a class="get-more" href="#download">Free, no account · <span data-ver>Version 2.0</span> · How to install <span aria-hidden="true">↓</span></a>
+        <a class="get-more" href="#download">Free, no account · <span data-ver>Version 2.0</span><span data-dlcount hidden></span> · How to install <span aria-hidden="true">↓</span></a>
         <div class="cta">
           <a class="btn pri" href="#contents">Begin the guide <span class="arr" aria-hidden="true">→</span></a>
           <a class="btn tour" id="tourAll" href="#ch-start"><span class="wi" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.4-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z"/></svg></span>Take the guided tour</a>
@@ -270,6 +323,27 @@ kbd { display: inline-grid; place-items: center; min-width: 26px; height: 26px; 
         <a href="https://github.com/Bashyr18/miftah-app/releases/latest" target="_blank" rel="noopener">All files and SHA-256 checksums <span aria-hidden="true">↗</span></a>
         <a href="https://github.com/Bashyr18/miftah-app#build-it-yourself" target="_blank" rel="noopener">Build it yourself <span aria-hidden="true">↗</span></a>
       </div>
+      <div class="dls rv" id="dls" hidden aria-labelledby="dls-h">
+        <div class="dls-top">
+          <div class="dls-total">
+            <h3 class="kicker" id="dls-h">Downloads</h3>
+            <b id="dls-n">0</b>
+            <span id="dls-wk"></span>
+          </div>
+          <div class="dls-split">
+            <div class="dls-bar" id="dls-bar" role="img"></div>
+            <ul class="dls-key" id="dls-key"></ul>
+          </div>
+        </div>
+        <div class="dls-trend">
+          <div class="dls-th"><b>Downloads per day</b><small>Last 30 days</small></div>
+          <div class="dls-chart" id="dls-chart"></div>
+        </div>
+        <details class="dls-more">
+          <summary>The numbers, by version and by day</summary>
+          <div class="dls-tables" id="dls-tables"></div>
+        </details>
+      </div>
     </div>
   </section>
 
@@ -312,16 +386,121 @@ var MARKS = /*MARKS*/{};
 </script>
 <script src="guide.js"></script>
 <script>
+/* Download counts. Two sources, both public and both GitHub's own:
+   - live: the releases API, for the counts this minute (and the file sizes and version on the buttons);
+   - history: downloads.json on the stats branch, one cumulative snapshot a day (tools/download_stats.py), for the trend.
+   Today's bar is the live count minus the last snapshot. If either source fails the other stands alone; if both fail the
+   panel stays hidden and the buttons keep their plain labels. Nothing about a visitor is recorded anywhere. */
 (function () {
+  var REPO = 'Bashyr18/miftah-app', DAYS = 30, SHOW_ON_COVER = 25;
+  var $ = function (s, r) { return (r || document).querySelector(s); };
+  var fmt = function (n) { return Math.round(n).toLocaleString('en-GB'); };
   var mb = function (b) { return Math.round(b / 1048576) + ' MB'; };
-  fetch('https://api.github.com/repos/Bashyr18/miftah-app/releases/latest', { headers: { Accept: 'application/vnd.github+json' } }).then(function (r) { return r.ok ? r.json() : null; }).then(function (rel) {
-    if (!rel || !rel.assets) return;
-    var a = {}; rel.assets.forEach(function (x) { a[x.name] = x; });
-    var v = (rel.tag_name || '').replace(/^v/, '').replace(/\.0$/, '');
-    if (v) document.querySelectorAll('[data-ver]').forEach(function (e) { e.textContent = 'Version ' + v; });
-    var put = function (k, file, label) { var x = a[file]; if (!x) return; document.querySelectorAll('[data-size="' + k + '"]').forEach(function (e) { e.textContent = e.closest('.gbtn') ? label + ' · ' + mb(x.size) : label + ' · ' + mb(x.size); }); };
-    put('apk', 'Miftah.apk', 'APK'); put('exe', 'Miftah-Windows.exe', 'EXE');
-  }).catch(function () { });
+  var plat = function (n) { n = String(n).toLowerCase(); return /\.apk$/.test(n) ? 'android' : /\.exe$/.test(n) ? 'windows' : null; };
+  var iso = function (d) { return d.toISOString().slice(0, 10); };
+  var day = function (s) { return new Date(s + 'T00:00:00Z'); };
+  var nice = function (s, o) { return day(s).toLocaleDateString('en-GB', Object.assign({ timeZone: 'UTC' }, o || { day: 'numeric', month: 'short' })); };
+  var get = function (u, h) { return fetch(u, h ? { headers: h } : undefined).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }); };
+  Promise.all([
+    get('https://api.github.com/repos/' + REPO + '/releases?per_page=100', { Accept: 'application/vnd.github+json' }),
+    get('https://raw.githubusercontent.com/' + REPO + '/stats/downloads.json?v=' + Math.floor(Date.now() / 300000))
+  ]).then(function (res) {
+    var api = Array.isArray(res[0]) ? res[0].filter(function (r) { return !r.draft; }) : null, st = res[1] && res[1].history ? res[1] : null;
+    if (!api && !st) return;
+    /* the buttons: the latest version and its real file sizes */
+    if (api && api.length) {
+      var latest = api.filter(function (r) { return !r.prerelease; })[0] || api[0], a = {};
+      (latest.assets || []).forEach(function (x) { a[x.name] = x; });
+      var v = (latest.tag_name || '').replace(/^v/, '').replace(/\.0$/, '');
+      if (v) document.querySelectorAll('[data-ver]').forEach(function (e) { e.textContent = 'Version ' + v; });
+      [['apk', 'Miftah.apk', 'APK'], ['exe', 'Miftah-Windows.exe', 'EXE']].forEach(function (k) { var x = a[k[1]]; if (x) document.querySelectorAll('[data-size="' + k[0] + '"]').forEach(function (e) { e.textContent = k[2] + ' · ' + mb(x.size); }); });
+    }
+    /* totals and versions: live where possible, never below the last snapshot */
+    var rel = api ? api.map(function (r) { var c = { tag: r.tag_name, name: r.name || r.tag_name, published: (r.published_at || '').slice(0, 10), android: 0, windows: 0 }; (r.assets || []).forEach(function (x) { var p = plat(x.name); if (p) c[p] += x.download_count || 0; }); return c; }) : st.releases || [];
+    var tot = { android: 0, windows: 0 }; rel.forEach(function (r) { tot.android += r.android; tot.windows += r.windows; });
+    var hist = st ? st.history.slice() : [], last = hist[hist.length - 1];
+    if (last) { tot.android = Math.max(tot.android, last.android); tot.windows = Math.max(tot.windows, last.windows); }
+    var today = iso(new Date());
+    if (api) { if (last && last.date === today) hist[hist.length - 1] = { date: today, android: tot.android, windows: tot.windows, live: 1 }; else hist.push({ date: today, android: tot.android, windows: tot.windows, live: 1 }); }
+    var all = tot.android + tot.windows;
+    /* per day: the cumulative count at the end of each day, differenced; days before the first snapshot have no bar */
+    var at = {}; hist.forEach(function (h) { at[h.date] = h; });
+    var first = hist.length ? hist[0].date : today, series = [], prev = null;
+    for (var i = DAYS; i >= 0; i--) {
+      var d = iso(new Date(day(today).getTime() - i * 864e5)), cur = at[d] || prev;
+      if (d < first) { prev = null; series.push({ date: d, none: 1 }); continue; }
+      if (at[d]) cur = at[d];
+      series.push(prev ? { date: d, android: Math.max(0, cur.android - prev.android), windows: Math.max(0, cur.windows - prev.windows), live: !!(cur && cur.live) } : { date: d, none: 1 });
+      prev = cur;
+    }
+    series = series.slice(-DAYS);
+    var known = series.filter(function (x) { return !x.none; });
+    var week = known.slice(-7).reduce(function (s, x) { return s + x.android + x.windows; }, 0);
+
+    /* the cover line, once the number is worth saying */
+    if (all >= SHOW_ON_COVER) document.querySelectorAll('[data-dlcount]').forEach(function (e) { e.textContent = ' · ' + fmt(all) + ' downloads'; e.hidden = false; });
+
+    /* the panel appears with the first download; until then the section is just the two cards */
+    var panel = $('#dls'); if (!panel || all === 0) return;
+    panel.hidden = false;
+    /* the headline */
+    var n = $('#dls-n'), wk = $('#dls-wk');
+    wk.innerHTML = known.length ? '<em>+' + fmt(week) + '</em> in the last ' + Math.min(7, known.length) + (known.length === 1 ? ' day' : ' days') : 'Counting since ' + nice(first, { day: 'numeric', month: 'long', year: 'numeric' });
+    var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var count = function () { if (reduce || all < 10) { n.textContent = fmt(all); return; } var t0 = performance.now(); (function f(t) { var k = Math.min(1, (t - t0) / 1400); k = 1 - Math.pow(1 - k, 3); n.textContent = fmt(all * k); if (k < 1) requestAnimationFrame(f); })(t0); };
+    if ('IntersectionObserver' in window) { var io = new IntersectionObserver(function (e) { if (e[0].isIntersecting) { io.disconnect(); count(); } }, { threshold: .4 }); io.observe(n); } else count();
+    /* Android against Windows: one bar, with names and numbers beside it (never colour alone) */
+    var pa = all ? Math.round(100 * tot.android / all) : 0, pw = all ? 100 - pa : 0;
+    $('#dls-bar').innerHTML = all ? '<i class="and" style="flex-grow:' + tot.android + '"></i><i class="win" style="flex-grow:' + tot.windows + '"></i>' : '';
+    $('#dls-bar').setAttribute('aria-label', all ? 'Android ' + fmt(tot.android) + ' (' + pa + '%), Windows ' + fmt(tot.windows) + ' (' + pw + '%)' : 'No downloads yet');
+    $('#dls-key').innerHTML = '<li><i class="and"></i><b>Android</b><span>' + fmt(tot.android) + (all ? ' · ' + pa + '%' : '') + '</span></li><li><i class="win"></i><b>Windows</b><span>' + fmt(tot.windows) + (all ? ' · ' + pw + '%' : '') + '</span></li>';
+
+    /* per day: stacked bars, Android at the base, a 2px gap, Windows above; a tooltip on hover, arrows from the keyboard */
+    var box = $('#dls-chart');
+    function draw() {
+      var trend = box.closest('.dls-trend'); trend.hidden = known.length < 2; if (trend.hidden) return;
+      var W = Math.max(280, box.clientWidth), H = W < 480 ? 150 : 180, L = 34, R = 6, T = 8, B = 24, pw2 = W - L - R, ph = H - T - B;
+      var max = Math.max(1, Math.max.apply(null, known.map(function (x) { return x.android + x.windows; })));
+      var step = Math.pow(10, Math.floor(Math.log10(max))), top = Math.ceil(max / step) * step; if (top / step > 5) step *= 2; if (max <= 4) { top = 4; step = 1; } top = Math.ceil(max / step) * step;
+      var y = function (v) { return T + ph - ph * v / top; }, cw = pw2 / series.length, bw = Math.max(3, Math.min(22, cw - 3));
+      var bar = function (x, yy, w, h, round) { if (h <= 0) return ''; var r = round ? Math.min(4, w / 2, h) : 0; return 'M' + x + ',' + (yy + h) + 'V' + (yy + r) + (r ? 'Q' + x + ',' + yy + ' ' + (x + r) + ',' + yy : '') + 'H' + (x + w - r) + (r ? 'Q' + (x + w) + ',' + yy + ' ' + (x + w) + ',' + (yy + r) : '') + 'V' + (yy + h) + 'Z'; };
+      var g = '<g class="grid">';
+      for (var v = 0; v <= top; v += step) g += (v ? '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + y(v).toFixed(1) + '" y2="' + y(v).toFixed(1) + '"/>' : '') + '<text x="' + (L - 8) + '" y="' + (y(v) + 4).toFixed(1) + '" text-anchor="end">' + fmt(v) + '</text>';
+      g += '</g><line class="base" x1="' + L + '" x2="' + (W - R) + '" y1="' + (T + ph) + '" y2="' + (T + ph) + '"/>';
+      var cols = '';
+      series.forEach(function (d, i) {
+        var x = L + i * cw + (cw - bw) / 2, hl = '<rect class="hl" x="' + (L + i * cw).toFixed(1) + '" y="' + T + '" width="' + cw.toFixed(1) + '" height="' + ph + '" rx="4"/>';
+        if (d.none) { cols += '<g class="col" data-i="' + i + '">' + hl + '</g>'; return; }
+        var ha = ph * d.android / top, hw = ph * d.windows / top, gap = ha && hw ? 2 : 0;
+        cols += '<g class="col" data-i="' + i + '">' + hl + '<path class="b-and" d="' + bar(x, T + ph - ha, bw, ha, !hw) + '"/><path class="b-win" d="' + bar(x, T + ph - ha - gap - hw, bw, hw, true) + '"/></g>';
+      });
+      var xl = '<g class="xl">', lab = function (i, a) { var d = series[i]; return '<text x="' + (L + i * cw + cw / 2).toFixed(1) + '" y="' + (H - 6) + '" text-anchor="' + a + '">' + (i === series.length - 1 ? 'Today' : nice(d.date)) + '</text>'; };
+      xl += lab(0, 'start') + lab(Math.floor(series.length / 2), 'middle') + lab(series.length - 1, 'end') + '</g>';
+      box.innerHTML = '<svg viewBox="0 0 ' + W + ' ' + H + '" width="' + W + '" height="' + H + '" tabindex="0" role="img" aria-label="Downloads per day for the last ' + DAYS + ' days. Use the arrow keys to read each day.">' + g + cols + xl + '</svg><div class="dls-tip" aria-live="polite"></div>';
+      var svg = $('svg', box), tip = $('.dls-tip', box), on = -1;
+      var show = function (i) {
+        on = i; box.querySelectorAll('.col').forEach(function (c) { c.classList.toggle('on', +c.dataset.i === i); });
+        if (i < 0) { tip.classList.remove('on'); return; }
+        var d = series[i], sx = box.clientWidth / W;
+        tip.innerHTML = '<b>' + (i === series.length - 1 ? 'Today, so far' : nice(d.date, { weekday: 'short', day: 'numeric', month: 'short' })) + '</b>' + (d.none ? '<p>Before counting began</p>' : '<p><i class="and"></i>Android<span>' + fmt(d.android) + '</span></p><p><i class="win"></i>Windows<span>' + fmt(d.windows) + '</span></p>');
+        var left = (L + i * cw + cw / 2) * sx; tip.style.left = Math.max(80, Math.min(box.clientWidth - 80, left)) + 'px'; tip.style.top = (y(d.none ? 0 : d.android + d.windows) * sx) + 'px'; tip.classList.add('on');
+      };
+      svg.addEventListener('pointermove', function (e) { var r = svg.getBoundingClientRect(), i = Math.floor(((e.clientX - r.left) / r.width * W - L) / cw); show(i >= 0 && i < series.length ? i : -1); });
+      svg.addEventListener('pointerleave', function () { show(-1); });
+      svg.addEventListener('blur', function () { show(-1); });
+      svg.addEventListener('keydown', function (e) { if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') { e.preventDefault(); show(Math.max(0, Math.min(series.length - 1, (on < 0 ? series.length : on) + (e.key === 'ArrowLeft' ? -1 : 1)))); } else if (e.key === 'Escape') show(-1); });
+    }
+    draw();
+    var rt; addEventListener('resize', function () { clearTimeout(rt); rt = setTimeout(draw, 150); });
+
+    /* the same numbers as tables: by version, and by day */
+    var row = function (c, cls) { return '<tr' + (cls ? ' class="' + cls + '"' : '') + '>' + c.map(function (x) { return '<td>' + x + '</td>'; }).join('') + '</tr>'; };
+    var t1 = '<table><caption>By version</caption><thead><tr><th>Version</th><th>Android</th><th>Windows</th><th>Total</th></tr></thead><tbody>' +
+      rel.map(function (r) { return row([r.tag + (r.published ? ' <span style="color:var(--t3)">· ' + nice(r.published, { day: 'numeric', month: 'short', year: 'numeric' }) + '</span>' : ''), fmt(r.android), fmt(r.windows), fmt(r.android + r.windows)]); }).join('') +
+      row(['All', fmt(tot.android), fmt(tot.windows), fmt(all)], 'sum') + '</tbody></table>';
+    var t2 = known.length ? '<div class="scroll"><table><caption>By day</caption><thead><tr><th>Day</th><th>Android</th><th>Windows</th></tr></thead><tbody>' + known.slice().reverse().map(function (d) { return row([d.date === today ? 'Today, so far' : nice(d.date, { weekday: 'short', day: 'numeric', month: 'short' }), fmt(d.android), fmt(d.windows)]); }).join('') + '</tbody></table></div>' : '';
+    $('#dls-tables').innerHTML = t1 + t2;
+  });
 })();
 </script>
 </body>

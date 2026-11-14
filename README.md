@@ -6,6 +6,7 @@
 On Android and Windows. Fully offline. No account. Free and open source.
 
 [![Download](https://img.shields.io/github/v/release/Bashyr18/miftah-app?label=download&color=c79c52)](https://github.com/Bashyr18/miftah-app/releases/latest)
+[![Downloads](https://img.shields.io/github/downloads/Bashyr18/miftah-app/total?label=downloads&color=1f7fae)](https://bashyr18.github.io/miftah-app/guide/#download)
 [![Checks](https://github.com/Bashyr18/miftah-app/actions/workflows/check.yml/badge.svg)](https://github.com/Bashyr18/miftah-app/actions/workflows/check.yml)
 [![Licence: MIT](https://img.shields.io/badge/licence-MIT-6b5a3e)](LICENSE)
 
@@ -212,6 +213,10 @@ python -I tools/build_guide.py        # the guide page; new screenshots come fro
 node tools/cdp.js tools/guide-preview.js build/preview   # pictures of the guide itself (serve docs/guide on port 5192 first)
 python -I tools/readme_images.py      # docs/screens/*.webp, composed from the guide's screenshots
 ```
+
+### Download counts
+
+Once a day, `.github/workflows/downloads.yml` saves GitHub's own release download counts to the `stats` branch (`tools/download_stats.py`). The guide shows the total, Android against Windows, each version and downloads per day, from those snapshots and the live counts. Run it by hand from **Actions › download counts › Run workflow**.
 
 ### Try it in a browser
 

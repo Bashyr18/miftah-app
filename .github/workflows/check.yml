@@ -3,6 +3,7 @@
 name: check
 on:
   push:
+    branches-ignore: [stats]   # the daily download counts (downloads.yml) need no checks
   pull_request:
 defaults:
   run:
