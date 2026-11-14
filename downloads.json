@@ -1,0 +1,24 @@
+{
+ "updated": "2026-11-13T21:28:23Z",
+ "total": {
+  "android": 0,
+  "windows": 0,
+  "all": 0
+ },
+ "releases": [
+  {
+   "tag": "v2.0.0",
+   "name": "Miftāḥ 2.0: Android and Windows",
+   "published": "2026-11-13",
+   "android": 0,
+   "windows": 0
+  }
+ ],
+ "history": [
+  {
+   "date": "2026-11-13",
+   "android": 0,
+   "windows": 0
+  }
+ ]
+}
