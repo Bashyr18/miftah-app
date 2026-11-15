@@ -57,7 +57,12 @@ namespace Miftah {
                         var done = new System.Threading.ManualResetEvent(false); Exception err = null; int last = -1;
                         using (var w = new System.Net.WebClient()) {
                             w.Headers[System.Net.HttpRequestHeader.UserAgent] = "Miftah";
-                            w.DownloadProgressChanged += (s, e) => { if (e.ProgressPercentage != last) { last = e.ProgressPercentage; f.Post("window.Upd&&Upd.onProgress(" + (e.ProgressPercentage / 100.0).ToString(System.Globalization.CultureInfo.InvariantCulture) + ")"); } };
+                            /* progress arrives on many threads at once: pass on only a rise, at most every 150 ms, or the window drowns in messages */
+                            var gate = new object(); var lastT = DateTime.MinValue;
+                            w.DownloadProgressChanged += (s, e) => {
+                                lock (gate) { if (e.ProgressPercentage <= last || (e.ProgressPercentage < 100 && (DateTime.UtcNow - lastT).TotalMilliseconds < 150)) return; last = e.ProgressPercentage; lastT = DateTime.UtcNow; }
+                                f.Post("window.Upd&&Upd.onProgress(" + (e.ProgressPercentage / 100.0).ToString(System.Globalization.CultureInfo.InvariantCulture) + ")");
+                            };
                             w.DownloadFileCompleted += (s, e) => { err = e.Error ?? (e.Cancelled ? new Exception("cancelled") : null); done.Set(); };
                             w.DownloadFileAsync(new Uri(url), part);
                             done.WaitOne();
