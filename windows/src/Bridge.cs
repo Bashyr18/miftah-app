@@ -23,6 +23,67 @@ namespace Miftah {
         public void saveState(string json) { Store.SaveState(json); }
         public string loadState() { return Store.LoadState(); }
         public string version() { return Program.Version; }
+
+        /* ---------- updates: only when a grown-up asks (web/js/core/update.js) ----------
+           A check reads version.json from the latest release. Installing downloads the new Miftah.exe beside the family's data,
+           checks its SHA-256 against version.json, then a small script waits for this window to close, copies it over this
+           program file and opens it again. The record is untouched: it lives in its own folder. */
+        const string UpdFrom = "https://github.com/Bashyr18/miftah-app/releases/";
+        static int BuildCode() { return System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.Revision; }
+        public bool updateCheck() {
+            System.Threading.ThreadPool.QueueUserWorkItem(delegate {
+                string res = null;
+                try {
+                    System.Net.ServicePointManager.SecurityProtocol = (System.Net.SecurityProtocolType)3072;
+                    string body;
+                    using (var w = new System.Net.WebClient()) { w.Headers[System.Net.HttpRequestHeader.UserAgent] = "Miftah"; w.Encoding = Encoding.UTF8; body = w.DownloadString(UpdFrom + "latest/download/version.json"); }
+                    if (body != null && body.Length < 65536 && body.TrimStart().StartsWith("{"))
+                        res = "{\"latest\":" + body + ",\"current\":{\"name\":" + Q(Program.Version) + ",\"code\":" + BuildCode() + "}}";
+                } catch { }
+                f.Post("window.Upd&&Upd.onCheck(" + (res == null ? "null" : Q(res)) + ")");
+            });
+            return true;
+        }
+        public bool updateInstall(string url, string sha) {
+            if (url == null || sha == null || !url.StartsWith(UpdFrom) || sha.Length != 64) return false;
+            sha = sha.ToLowerInvariant();
+            var dir = Path.Combine(Store.Root, "update"); Directory.CreateDirectory(dir);
+            var file = Path.Combine(dir, "Miftah.exe"); var part = file + ".part";
+            System.Threading.ThreadPool.QueueUserWorkItem(delegate {
+                try {
+                    if (!(File.Exists(file) && Sha256(file) == sha)) {
+                        if (File.Exists(file)) File.Delete(file);
+                        System.Net.ServicePointManager.SecurityProtocol = (System.Net.SecurityProtocolType)3072;
+                        var done = new System.Threading.ManualResetEvent(false); Exception err = null; int last = -1;
+                        using (var w = new System.Net.WebClient()) {
+                            w.Headers[System.Net.HttpRequestHeader.UserAgent] = "Miftah";
+                            w.DownloadProgressChanged += (s, e) => { if (e.ProgressPercentage != last) { last = e.ProgressPercentage; f.Post("window.Upd&&Upd.onProgress(" + (e.ProgressPercentage / 100.0).ToString(System.Globalization.CultureInfo.InvariantCulture) + ")"); } };
+                            w.DownloadFileCompleted += (s, e) => { err = e.Error ?? (e.Cancelled ? new Exception("cancelled") : null); done.Set(); };
+                            w.DownloadFileAsync(new Uri(url), part);
+                            done.WaitOne();
+                        }
+                        if (err != null) throw err;
+                        if (Sha256(part) != sha) { File.Delete(part); f.Post("window.Upd&&Upd.onDone('checksum')"); return; }
+                        File.Move(part, file);
+                    }
+                    f.Post("window.Upd&&Upd.onDone('ok')");
+                    f.BeginInvoke(new Action(() => Swap(file)));
+                } catch { try { File.Delete(part); } catch { } f.Post("window.Upd&&Upd.onDone('failed')"); }
+            });
+            return true;
+        }
+        static string Sha256(string path) {
+            using (var s = File.OpenRead(path)) using (var h = System.Security.Cryptography.SHA256.Create()) return BitConverter.ToString(h.ComputeHash(s)).Replace("-", "").ToLowerInvariant();
+        }
+        void Swap(string file) {
+            var target = Application.ExecutablePath; var pid = Process.GetCurrentProcess().Id;
+            var cmd = Path.Combine(Path.GetDirectoryName(file), "swap.cmd");
+            /* wait for this Miftah to close, put the new one in its place, open it, and tidy up; ping is the pause (timeout needs a console) */
+            File.WriteAllText(cmd, "@echo off\r\n:w\r\ntasklist /FI \"PID eq " + pid + "\" | find \"" + pid + "\" >nul && (ping -n 2 127.0.0.1 >nul & goto w)\r\n" +
+                "copy /y \"" + file + "\" \"" + target + "\" >nul\r\nstart \"\" \"" + target + "\"\r\ndel \"" + file + "\"\r\ndel \"%~f0\"\r\n", Encoding.ASCII);
+            Process.Start(new ProcessStartInfo("cmd.exe", "/c \"" + cmd + "\"") { CreateNoWindow = true, UseShellExecute = false, WindowStyle = ProcessWindowStyle.Hidden });
+            f.Quit();
+        }
         public void haptic(string k) { }
         public string lastTheme() { return Store.Get("theme", "") as string ?? ""; }
         public void rememberTheme(string t) { if (t == "light" || t == "dark") { Store.Set("theme", t); f.TitleBar(t, false); } }

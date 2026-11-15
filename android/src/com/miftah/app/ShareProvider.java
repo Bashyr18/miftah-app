@@ -10,7 +10,8 @@ import android.provider.OpenableColumns;
 import java.io.File;
 import java.io.FileNotFoundException;
 
-/** Hands what the parent chose to share (the family file, a challenge pack or a card picture) to the app they pick, and nothing else. */
+/** Hands what the parent chose to share (the family file, a challenge pack or a card picture) to the app they pick, and nothing else;
+ *  and a verified update (Miftah-update.apk) to the system installer. */
 public class ShareProvider extends ContentProvider {
     private File file(Uri u) throws FileNotFoundException {
         String n = u.getLastPathSegment();
@@ -20,7 +21,7 @@ public class ShareProvider extends ContentProvider {
         return f;
     }
     @Override public boolean onCreate() { return true; }
-    @Override public String getType(Uri u) { String n = u.getLastPathSegment(); return n != null && n.endsWith(".png") ? "image/png" : "application/zip"; }
+    @Override public String getType(Uri u) { String n = u.getLastPathSegment(); return n == null ? "application/zip" : n.endsWith(".png") ? "image/png" : n.endsWith(".apk") ? "application/vnd.android.package-archive" : "application/zip"; }
     @Override public ParcelFileDescriptor openFile(Uri u, String mode) throws FileNotFoundException { return ParcelFileDescriptor.open(file(u), ParcelFileDescriptor.MODE_READ_ONLY); }
     @Override public Cursor query(Uri u, String[] p, String s, String[] a, String o) {
         MatrixCursor c = new MatrixCursor(new String[]{OpenableColumns.DISPLAY_NAME, OpenableColumns.SIZE});

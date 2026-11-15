@@ -340,6 +340,76 @@ public class MainActivity extends Activity {
         if (web == null) return;
         ui.post(() -> { if (web != null) web.evaluateJavascript("try{" + code + "}catch(e){}", null); });
     }
+    /* ---------- updates ---------- */
+    private static final String UPD_FROM = "https://github.com/Bashyr18/miftah-app/releases/";
+    private static final String UPD_INFO = UPD_FROM + "latest/download/version.json";
+    private final java.util.concurrent.ExecutorService updPool = java.util.concurrent.Executors.newSingleThreadExecutor();
+    private static String jsq(String s) { return s == null ? "null" : org.json.JSONObject.quote(s); }
+    private java.net.HttpURLConnection updOpen(String u) throws java.io.IOException {
+        java.net.HttpURLConnection c = (java.net.HttpURLConnection) new java.net.URL(u).openConnection();
+        c.setConnectTimeout(10000); c.setReadTimeout(60000); c.setRequestProperty("User-Agent", "Miftah"); c.setInstanceFollowRedirects(true);
+        return c;
+    }
+    /** reads version.json from the latest release and says what this build is; the page decides what to show */
+    private void updCheck() {
+        String res = null;
+        try {
+            java.net.HttpURLConnection c = updOpen(UPD_INFO);
+            if (c.getResponseCode() == 200) {
+                java.io.ByteArrayOutputStream bo = new java.io.ByteArrayOutputStream();
+                try (InputStream in = c.getInputStream()) { byte[] b = new byte[8192]; int n; while ((n = in.read(b)) > 0 && bo.size() < 65536) bo.write(b, 0, n); }
+                android.content.pm.PackageInfo pi = getPackageManager().getPackageInfo(getPackageName(), 0);
+                org.json.JSONObject cur = new org.json.JSONObject();
+                cur.put("name", pi.versionName); cur.put("code", Build.VERSION.SDK_INT >= 28 ? pi.getLongVersionCode() : pi.versionCode);
+                org.json.JSONObject o = new org.json.JSONObject(); o.put("latest", new org.json.JSONObject(bo.toString("UTF-8"))); o.put("current", cur);
+                res = o.toString();
+            }
+            c.disconnect();
+        } catch (Exception ignored) { }
+        js("window.Upd&&Upd.onCheck(" + jsq(res) + ")");
+    }
+    private static String sha256(File f) throws Exception {
+        java.security.MessageDigest md = java.security.MessageDigest.getInstance("SHA-256");
+        try (InputStream in = new java.io.FileInputStream(f)) { byte[] b = new byte[65536]; int n; while ((n = in.read(b)) > 0) md.update(b, 0, n); }
+        StringBuilder sb = new StringBuilder(); for (byte x : md.digest()) sb.append(String.format(Locale.US, "%02x", x)); return sb.toString();
+    }
+    /** downloads the new APK, checks its SHA-256, and hands it to the system installer (which also checks the signing key) */
+    private void updInstall(String url, String sha) {
+        File dir = new File(getCacheDir(), "share"); dir.mkdirs();
+        File f = new File(dir, "Miftah-update.apk"), tmp = new File(dir, "Miftah-update.apk.part");
+        try {
+            if (!(f.isFile() && sha.equals(sha256(f)))) {
+                f.delete();
+                java.net.HttpURLConnection c = updOpen(url);
+                if (c.getResponseCode() != 200) throw new java.io.IOException("http " + c.getResponseCode());
+                long total = c.getContentLength(), got = 0; int last = -1;
+                try (InputStream in = c.getInputStream(); FileOutputStream out = new FileOutputStream(tmp)) {
+                    byte[] b = new byte[65536]; int n;
+                    while ((n = in.read(b)) > 0) {
+                        out.write(b, 0, n); got += n;
+                        int pc = total > 0 ? (int) (got * 100 / total) : 0;
+                        if (pc != last) { last = pc; js("window.Upd&&Upd.onProgress(" + (pc / 100.0) + ")"); }
+                    }
+                }
+                c.disconnect();
+                if (!sha.equals(sha256(tmp))) { tmp.delete(); js("window.Upd&&Upd.onDone('checksum')"); return; }
+                if (!tmp.renameTo(f)) throw new java.io.IOException("rename");
+            }
+            ui.post(this::updHandOver);
+        } catch (Exception e) { tmp.delete(); js("window.Upd&&Upd.onDone('failed')"); }
+    }
+    private void updHandOver() {
+        try {
+            if (Build.VERSION.SDK_INT >= 26 && !getPackageManager().canRequestPackageInstalls()) {
+                startActivity(new Intent(android.provider.Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, android.net.Uri.parse("package:" + getPackageName())));
+                js("window.Upd&&Upd.onDone('allow')"); return;
+            }
+            Intent i = new Intent(Intent.ACTION_VIEW).setDataAndType(android.net.Uri.parse("content://com.miftah.app.share/Miftah-update.apk"), "application/vnd.android.package-archive")
+                .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(i);
+            js("window.Upd&&Upd.onDone('ok')");
+        } catch (Exception e) { js("window.Upd&&Upd.onDone('failed')"); }
+    }
     private void toast(String s) { ui.post(() -> Toast.makeText(this, s, Toast.LENGTH_SHORT).show()); }
 
     /* ---------- the device voice ---------- */
@@ -530,6 +600,12 @@ public class MainActivity extends Activity {
                 while ((n = is.read(b)) > 0) bo.write(b, 0, n);
                 return new String(bo.toByteArray(), StandardCharsets.UTF_8);
             } catch (Exception e) { return null; }
+        }
+        /* ---------- updates: only when a grown-up asks (web/js/core/update.js) ---------- */
+        @JavascriptInterface public boolean updateCheck() { updPool.execute(MainActivity.this::updCheck); return true; }
+        @JavascriptInterface public boolean updateInstall(String url, String sha) {
+            if (url == null || sha == null || !url.startsWith(UPD_FROM) || !sha.matches("[0-9a-fA-F]{64}")) return false;
+            updPool.execute(() -> updInstall(url, sha.toLowerCase(Locale.US))); return true;
         }
         @JavascriptInterface public String version() { try { return getPackageManager().getPackageInfo(getPackageName(), 0).versionName; } catch (Exception e) { return "android"; } }
         @JavascriptInterface public void haptic(String k) {

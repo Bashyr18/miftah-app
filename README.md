@@ -15,7 +15,7 @@ On Android and Windows. Fully offline. No account. Free and open source.
 [![The illustrated guide](https://img.shields.io/badge/the%20guide-read%20online-c79c52)](https://bashyr18.github.io/miftah-app/guide/)
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-Bashir%20Badmus-0a66c2?logo=linkedin&logoColor=white)](https://www.linkedin.com/in/bashirbadmus/)
 
-[**Download**](#download) · [**The guide**](#the-illustrated-guide) · [**How to use it**](#how-to-use-it) · [**Build it yourself**](#build-it-yourself) · [**The maker**](#the-maker)
+[**Download**](#download) · [**Watch the demo**](#watch-the-demo) · [**The guide**](#the-illustrated-guide) · [**How to use it**](#how-to-use-it) · [**Build it yourself**](#build-it-yourself) · [**The maker**](#the-maker)
 
 <img src="docs/screens/hero.webp" alt="Miftāḥ on a Windows computer, with the same child's day on a phone in front of it" width="100%">
 
@@ -24,7 +24,8 @@ On Android and Windows. Fully offline. No account. Free and open source.
 ## Contents
 
 - [What it is](#what-it-is)
-- [Download](#download)
+- [Download](#download) · [Installing safely](#installing-safely) · [Updates](#updates)
+- [Watch the demo](#watch-the-demo)
 - [The illustrated guide](#the-illustrated-guide)
 - [A look inside](#a-look-inside)
 - [How to use it](#how-to-use-it)
@@ -40,6 +41,7 @@ Each day a child gets a short, balanced path: Qurʾān first, then Arabic, Livin
 - **Taught, not just tested.** I show you, we do it together, you do it, you explain it.
 - **Religious text from verified sources only.** The Qurʾān is byte for byte from Tanzil, never clipped, and never turned into a game.
 - **Private.** Learning data stays on your devices. Nothing needs an account or the internet.
+- **Paper that fits a hand.** Sheets made fresh each day, with real answer boxes and squared working space, printed or done on screen and marked by a grown-up.
 
 ## Download
 
@@ -49,6 +51,35 @@ Each day a child gets a short, balanced path: Qurʾān first, then Arabic, Livin
 | **Windows** 10 or 11 | [**Download `Miftah-Windows.exe`**](https://github.com/Bashyr18/miftah-app/releases/latest/download/Miftah-Windows.exe) and double-click it. It runs straight away, with no installer, and can add itself to the Start menu later. If Windows says the publisher is unknown, choose **More info › Run anyway**. |
 
 Both read and write the same family record, so a family can use the phone and the computer side by side. Every file, with its checksum, is on the [releases page](https://github.com/Bashyr18/miftah-app/releases/latest).
+
+### Installing safely
+
+Android and Windows ask about any app from outside Google Play or the Microsoft Store, simply because they have not met it yet. Miftāḥ is open source, every update is signed with the same key, and every file has a published SHA-256 checksum.
+
+<table>
+<tr>
+<td width="33%"><img src="docs/guide/shots/install/a2.webp" alt="Android asks before installing from Chrome"></td>
+<td width="33%"><img src="docs/guide/shots/install/a3.webp" alt="Install unknown apps: Allow from this source"></td>
+<td width="33%"><img src="docs/guide/shots/install/a4.webp" alt="Do you want to install this app?"></td>
+</tr>
+<tr>
+<td><b>1 · Your phone asks first</b><br>Tap <b>Settings</b>.</td>
+<td><b>2 · Allow from this source</b><br>Turn it on, then go back.</td>
+<td><b>3 · Install</b><br>If Google Play Protect asks, tap <b>Scan app</b>; it finds nothing.</td>
+</tr>
+</table>
+
+On Windows, if it says **Windows protected your PC**, choose **More info › Run anyway**. Every step, with real screens: [the guide's install section](https://bashyr18.github.io/miftah-app/guide/#download).
+
+### Updates
+
+From version 2.1, updates come from inside the app: **Parent area › Settings** on the phone, **This computer** on Windows. Press **Check for updates**, or turn on a weekly check (off by default). Miftāḥ downloads the new version, checks its SHA-256 against the release, and installs it; the family's record is never touched.
+
+## Watch the demo
+
+<a href="https://github.com/Bashyr18/miftah-app/releases/latest/download/Miftah-demo.mp4"><img src="docs/screens/demo.webp" alt="Watch the 45-second demo of Miftāḥ" width="100%"></a>
+
+Forty-five seconds, every screen real: the day, the lessons, paper, the parents' view, the computer and the phone together. [Watch it (MP4)](https://github.com/Bashyr18/miftah-app/releases/latest/download/Miftah-demo.mp4).
 
 ## The illustrated guide
 

@@ -22,7 +22,7 @@ var CH = [
     spreads: [
       { shots: { d: 'd-home', p: 'p-home' }, h: 'Today, at a glance', drop: true, p: 'Home answers one question: what now? The next step waits in its own card and the day lies in a path beside it. On the computer, the week, the āyah being memorised and every room sit there too.',
         steps: [
-          { b: 'The sky, and a greeting', x: 'As-salāmu ʿalaykum, the child’s name and the Hijri date, over a courtyard that follows the real time of day.', m: { p: 0, d: 3 } },
+          { b: 'The sky, and a greeting', x: 'As-salāmu ʿalaykum, the child’s name, and today in both calendars, Gregorian and Hijri, over a courtyard that follows the real time of day.', m: { p: 0, d: 3 } },
           { b: 'What comes next', x: 'One big card and one big button. A young child never has to choose from a list.', m: { p: 2, d: 4 } },
           { b: 'Today’s path', x: 'Qurʾān first, then a balanced mix of subjects, movement breaks, and things to do away from the screen.', m: { p: 3, d: 5 } },
           { b: 'The day at a glance', x: 'Done today, days in a row and what is new this week, on the banner.', m: { d: 9 } },
@@ -84,16 +84,16 @@ var CH = [
 
   { id: 'paper', kicker: 'Printed, or done on screen', title: 'Paper and pen', dek: 'Sheets made fresh from what the child knows today, on A4 or on the screen, and marked by a grown-up.', thumb: 'p-ink',
     spreads: [
-      { shots: { d: 'd-print', p: 'p-sheet' }, h: 'Paper that fits', drop: true, p: 'Every sheet fills a full A4 page, in English or Arabic, and is logged so practice can be marked afterwards.',
+      { shots: { d: 'd-print', p: 'p-sheet' }, h: 'Paper that fits', drop: true, p: 'Every sheet is a white A4 page to the edge, in English or Arabic. Each answer has a real box, maths has squared paper to work on, and a question never runs into the next. It is logged so practice can be marked afterwards.',
         steps: [
           { b: 'Print Studio', x: 'On the computer: choose a child, then tick several sheets at once.', m: { d: 0 } },
           { b: 'Today’s suggestions', x: 'Suggested sheets come ticked. Tick or untick any other.', m: { d: 1 } },
           { b: 'One document', x: 'Print them all, or save one PDF in Documents › Miftah › Printables.', m: { d: 2 } },
-          { b: 'A true preview', x: 'Exactly the page that will print.', m: { p: 1 } },
-          { b: 'Print, PDF, or on screen', x: 'Print, save a PDF, or send it to the child to do on screen.', m: { p: 0 } } ] },
+          { b: 'A true preview', x: 'Exactly the page that will print: answer boxes, squared working space, and a second page when the questions need the room.', m: { p: 1 } },
+          { b: 'Print, PDF, or on screen', x: 'Print, save a PDF, or Do it on screen, then Open it now to write on it straight away. Back to Miftāḥ always returns from the print view.', m: { p: 0 } } ] },
       { shots: { d: 'd-ink', p: 'p-ink' }, flip: true, h: 'No printer? Do it on screen', p: 'Any practice or writing sheet can go to the child instead of the printer. They write on the real page with a finger, a pen or a mouse, and it saves as they go.',
         steps: [
-          { b: 'The real page', x: 'The sheet that would have printed, paper margins and all, one page at a time.', m: { p: 0, d: 0 } },
+          { b: 'The real page', x: 'The sheet that would have printed, one page at a time. On the computer it opens at page width so the writing is large; the magnifier shows the whole page.', m: { p: 0, d: 0 } },
           { b: 'Pen, colours, rubber, undo', x: 'Three pencil colours, a rubber that lifts whole strokes, and undo. A stylus writes; a resting palm is ignored.', m: { p: 1, d: 1 } },
           { b: 'Finished', x: 'Locks it and sends it to the grown-up. Until then it is theirs to change.', m: { p: 2, d: 2 } } ] },
       { shots: { d: 'd-ink-mark', p: 'p-ink-mark' }, h: 'Marking what they wrote', p: 'A finished sheet waits in your Today. Their page is there, with a red pen for your marks; then tap any question they missed and save. That is the evidence, exactly as on paper.',

@@ -22,9 +22,9 @@ html[dir=rtl].is-desk body.has-rail .toast{left:calc(50% - var(--rail) / 2)}
 html.is-desk body.has-rail .view{padding-bottom:28px}
 
 .rl-top{display:flex;align-items:center;gap:6px;padding:2px 4px 12px;position:relative}
-.rl-brand{display:flex;align-items:center;gap:10px;flex:1;min-width:0;color:var(--t1);text-decoration:none}
+.rl-brand{display:flex;align-items:center;gap:12px;flex:1;min-width:0;color:var(--t1);text-decoration:none}
 .rl-mark{width:36px;height:36px;flex:none;display:grid;place-items:center;border-radius:11px;color:#1a1206;background:linear-gradient(135deg,#f6dda5,#d9b26f 60%,#b78c43);box-shadow:0 8px 18px -10px rgba(183,140,67,.8),inset 0 1px 0 rgba(255,255,255,.6)}
-.rl-word{display:grid;line-height:1.05}.rl-word b{font-size:17px;letter-spacing:.01em}.rl-word small{font:700 15px/1.1 var(--f-ar);color:var(--gold);text-align:start}
+.rl-word{display:grid;row-gap:4px;line-height:1.2;justify-items:start}.rl-word b{font-size:17px;letter-spacing:.01em}.rl-word small{font:700 15px/1.35 var(--f-ar);color:var(--gold);justify-self:start}
 .rl-fold{width:30px;height:30px;display:grid;place-items:center;border-radius:9px;color:var(--t3);transition:background .15s,color .15s,transform .3s var(--out)}
 .rl-fold:hover{background:var(--s3);color:var(--t1)}
 html[dir=rtl] .rl-fold svg{transform:scaleX(-1)}

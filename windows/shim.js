@@ -39,7 +39,7 @@
 
   var names = ['ready', 'saveState', 'loadState', 'version', 'haptic', 'lastTheme', 'rememberTheme', 'setSystemBars', 'speak', 'speakStop', 'micAllowed', 'openAppSettings',
     'voiceList', 'audioKeep', 'audioStats', 'audioClear', 'sync', 'requestNotifications', 'pinWidget', 'exportFile', 'shareFamily', 'shareImage', 'shareChallenge',
-    'exportFamily', 'mediaPickType', 'mediaPick', 'mediaDelete', 'importFile', 'openUrl'];
+    'exportFamily', 'mediaPickType', 'mediaPick', 'mediaDelete', 'importFile', 'openUrl', 'updateCheck', 'updateInstall'];
   var B = {};
   names.forEach(function (n) { B[n] = function () { return call(n, Array.prototype.slice.call(arguments)); }; });
   B.recStart = recStart; B.recStop = recStop;

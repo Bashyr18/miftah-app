@@ -569,6 +569,7 @@
     body += '<section class="card"><h3>' + esc(L(['Your family’s data', 'بيانات عائلتك'])) + '</h3><p class="dk-note">' + esc(L(['Everything stays on this computer, in one folder you can see.', 'يبقى كل شيء على هذا الحاسوب في مجلد واحد تراه.'])) + '</p><button class="dk-path" id="pc-data">' + ic('folder', 18) + '<code>' + esc(i.data || '') + '</code></button>' +
       '<div class="li"><span class="grow"><b>' + esc(L(['Recitations kept', 'التلاوات المحفوظة'])) + '</b><small>' + A.num(au.files || 0) + ' · ' + bytes(au.bytes || 0) + '</small></span></div>' +
       '<div class="li"><span class="grow"><b>' + esc(L(['Printables', 'المطبوعات'])) + '</b><small>' + esc(L(['Documents › Miftah › Printables', 'المستندات › Miftah › Printables'])) + '</small></span><button class="btn ghost sm" id="pc-prints">' + esc(L(['Open', 'افتح'])) + '</button></div></section></div>';
+    if (window.Upd && Upd.can()) body += Upd.card('pc');
     var bk = i.backups || [];
     body += '<section class="card"><h3>' + ic('restore', 18) + ' ' + esc(L(['Backups', 'النسخ الاحتياطية'])) + '</h3><p class="dk-note">' + esc(L(['One copy a day, the last thirty days. Going back joins nothing and loses nothing: today’s record is kept as a backup first.', 'نسخة كل يوم لآخر ثلاثين يومًا. الرجوع لا يُضيّع شيئًا: يُحفظ سجل اليوم نسخةً أولًا.'])) + '</p><div class="dk-bk">' +
       (bk.length ? bk.slice(0, 30).map(function (b, j) { var d = new Date(b.name + 'T12:00:00'); return '<button class="dk-bk-i" data-bk="' + esc(b.name) + '"' + (j === 0 ? ' disabled' : '') + '><b>' + esc(d.toLocaleDateString(A.ar() ? 'ar' : 'en', { weekday: 'short', day: 'numeric', month: 'short' })) + '</b><small>' + (j === 0 ? esc(L(['Today', 'اليوم'])) : bytes(b.bytes)) + '</small></button>'; }).join('') : '<p class="dk-empty">' + esc(L(['The first backup is made today.', 'تُصنع أول نسخة اليوم.'])) + '</p>') + '</div><button class="btn ghost sm" id="pc-bkdir">' + ic('folder', 16) + '<span>' + esc(L(['Show the backups folder', 'أظهر مجلد النسخ'])) + '</span></button></section>';
@@ -577,6 +578,7 @@
       cls: 'dkv', html: page(L(['This computer', 'هذا الحاسوب']), i.machine || '', body, ic('pc', 26)),
       mount: function (v) {
         bindSwitches(v);
+        if (window.Upd) Upd.bind();
         var inst = $('#pc-inst', v); if (inst) inst.onclick = function () { inst.disabled = true; B.install(); };
         var zr = $('#pc-z', v), zo = $('#pc-zo', v);
         zr.oninput = function () { zo.textContent = A.num(zr.value) + '%'; }; zr.onchange = function () { B.deskZoom(zr.value / 100); };

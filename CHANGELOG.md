@@ -2,6 +2,21 @@
 
 The version is set in `version.txt`.
 
+## 2.1 (code 3), November 2026
+
+**Updates inside the app**
+- Parent area › Settings on the phone, This computer on Windows: **Check for updates**, and an optional weekly check, off by default.
+- A new version downloads, its SHA-256 is checked against the release's `version.json`, and then it installs: through Android's own installer (which also insists on the same signing key), or on Windows by swapping the program file once Miftāḥ closes and opening it again. The family's record is never touched.
+- A quiet "Version … is ready" pill on the grown-up screens when something is waiting.
+
+**The guide and the README**
+- Every screenshot captured again from the current apps, in day, night and Arabic.
+- A new install section: why Android and Windows ask first, and every step on real screens.
+- A 45-second demo film (`promo/`), made in code from the app's real screens.
+
+**On the computer**
+- The rail's name and Arabic name have room to breathe.
+
 ## 2.0 (code 2), November 2026
 
 **Dates (update, 13 November)**
