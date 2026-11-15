@@ -47,7 +47,13 @@
   }
   U.bind = bind;
   function paint() {
-    document.querySelectorAll('[data-upd]').forEach(function (el) { var t = document.createElement('div'); t.innerHTML = U.card(el.dataset.upd); el.replaceWith(t.firstChild); });
+    /* only the body is redrawn: the heading stays, so a folded settings section keeps its fold and its open state */
+    document.querySelectorAll('[data-upd]').forEach(function (el) {
+      var t = document.createElement('div'); t.innerHTML = U.card(el.dataset.upd); var n = t.firstChild;
+      Array.prototype.slice.call(el.children).forEach(function (c) { if (c.tagName !== 'H3') c.remove(); });
+      Array.prototype.slice.call(n.children).forEach(function (c) { if (c.tagName !== 'H3') el.appendChild(c); });
+      el.classList.toggle('on', n.classList.contains('on'));
+    });
     bind(); pill();
   }
 
