@@ -17,6 +17,10 @@ The version is set in `version.txt`.
 **On the computer**
 - The rail's name and Arabic name have room to breathe.
 
+**Fixes after release**
+- The Updates card keeps its folded settings section open while it redraws.
+- On Windows, download progress is passed on only as it rises, at most every 150 ms, so the restart no longer waits behind a queue of updates.
+
 ## 2.0 (code 2), November 2026
 
 **Dates (update, 13 November)**
