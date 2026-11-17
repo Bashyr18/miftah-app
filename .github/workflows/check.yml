@@ -50,9 +50,11 @@ jobs:
         with:
           python-version: '3.12'
       - run: pip install pillow
-      - name: build Miftah.exe
+      - name: build Miftah.exe and Miftah-Setup.exe
         run: python -I tools/build_windows.py
       - uses: actions/upload-artifact@v4
         with:
           name: Miftah-Windows
-          path: dist/Miftah.exe
+          path: |
+            dist/Miftah.exe
+            dist/Miftah-Setup.exe
