@@ -11,7 +11,7 @@ On Android and Windows. Fully offline. No account. Free and open source.
 [![Licence: MIT](https://img.shields.io/badge/licence-MIT-6b5a3e)](LICENSE)
 
 [![Download for Android](https://img.shields.io/badge/Android-download%20APK-3ddc84?logo=android&logoColor=white)](https://github.com/Bashyr18/miftah-app/releases/latest/download/Miftah.apk)
-[![Download for Windows](https://img.shields.io/badge/Windows-download%20EXE-0078d4?logo=windows&logoColor=white)](https://github.com/Bashyr18/miftah-app/releases/latest/download/Miftah-Windows.exe)
+[![Download for Windows](https://img.shields.io/badge/Windows-download%20EXE-0078d4?logo=windows&logoColor=white)](https://github.com/Bashyr18/miftah-app/releases/latest/download/Miftah-Setup.exe)
 [![The illustrated guide](https://img.shields.io/badge/the%20guide-read%20online-c79c52)](https://bashyr18.github.io/miftah-app/guide/)
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-Bashir%20Badmus-0a66c2?logo=linkedin&logoColor=white)](https://www.linkedin.com/in/bashirbadmus/)
 
@@ -48,7 +48,7 @@ Each day a child gets a short, balanced path: Qurʾān first, then Arabic, Livin
 | | |
 |---|---|
 | **Android** 8 or newer | [**Download `Miftah.apk`**](https://github.com/Bashyr18/miftah-app/releases/latest/download/Miftah.apk), open it on the phone and allow the install. |
-| **Windows** 10 or 11 | [**Download `Miftah-Windows.exe`**](https://github.com/Bashyr18/miftah-app/releases/latest/download/Miftah-Windows.exe) and double-click it. It runs straight away, with no installer, and can add itself to the Start menu later. If Windows says the publisher is unknown, choose **More info › Run anyway**. |
+| **Windows** 10 or 11 | [**Download `Miftah-Setup.exe`**](https://github.com/Bashyr18/miftah-app/releases/latest/download/Miftah-Setup.exe) and open it. It installs Miftāḥ like any Windows program: its own folder, the Start menu, a desktop shortcut if you want one, and an entry in **Settings › Apps** to remove it. No administrator needed. If Windows says the publisher is unknown, choose **More info › Run anyway**. |
 
 Both read and write the same family record, so a family can use the phone and the computer side by side. Every file, with its checksum, is on the [releases page](https://github.com/Bashyr18/miftah-app/releases/latest).
 

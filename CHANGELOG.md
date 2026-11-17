@@ -2,6 +2,16 @@
 
 The version is set in `version.txt`.
 
+## 2.1.1 (code 4), November 2026
+
+**A real installer for Windows**
+- `Miftah-Setup.exe` installs Miftāḥ like any Windows program: its own folder (`AppData\Local\Programs\Miftah`), the Start menu, a desktop shortcut if wanted, starting with Windows if wanted, and an entry in Settings › Apps that removes it. No administrator needed.
+- The Setup window is Miftāḥ's own: day or night with Windows, and in Arabic on an Arabic Windows.
+- Running Setup again updates or repairs the installed copy, closing it first if it is open. The family's record lives in its own folder and is never touched.
+
+**Fixed**
+- The Install button on This computer failed: Windows' old shortcut tool cannot save a name with ā or ḥ, so the program was copied but no Start menu entry was made. Shortcuts are now made through the Unicode interface, and after installing, the copy that was opened from Downloads hands over to the installed one.
+
 ## 2.1 (code 3), November 2026
 
 **Updates inside the app**

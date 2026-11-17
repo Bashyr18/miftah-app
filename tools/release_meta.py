@@ -34,6 +34,11 @@ for plat, f in files.items():
     out[plat] = {'url': REL + published, 'sha256': sha(p), 'size': os.path.getsize(p)}
     vname = 'Miftah-%s.apk' % v['name'] if plat == 'android' else 'Miftah-%s-Windows.exe' % v['name']
     sums += ['%s  %s' % (out[plat]['sha256'], published), '%s  %s' % (out[plat]['sha256'], vname)]
+# the installer people download: not used by in-app updates (they fetch Miftah-Windows.exe), but listed for checking by hand
+setup = os.path.join(DIST, 'Miftah-Setup.exe')
+if not os.path.exists(setup):
+    raise SystemExit('missing ' + setup + ': run tools/build_windows.py')
+sums += ['%s  %s' % (sha(setup), 'Miftah-Setup.exe'), '%s  %s' % (sha(setup), 'Miftah-%s-Setup.exe' % v['name'])]
 with io.open(os.path.join(DIST, 'version.json'), 'w', encoding='utf8', newline='\n') as fh:
     json.dump(out, fh, ensure_ascii=False, indent=1)
 with io.open(os.path.join(DIST, 'SHA256SUMS.txt'), 'w', encoding='utf8', newline='\n') as fh:

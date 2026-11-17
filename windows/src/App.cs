@@ -1,5 +1,5 @@
 // Miftah for Windows: the same lessons and the same family record as the phone, in a window made for a big screen,
-// a keyboard and a printer. One file to run, no installer needed, no account, and nothing leaves the house
+// a keyboard and a printer. Installed by Miftah-Setup.exe like any program, no account, and nothing leaves the house
 // unless the family pairs a phone on their own Wi-Fi.
 using System;
 using System.Collections.Generic;
@@ -32,9 +32,13 @@ namespace Miftah {
             try { Native.SetProcessDpiAwareness(2); } catch { }
             Store.Init();
             var v = Assembly.GetExecutingAssembly().GetName().Version; Version = v.Major + "." + v.Minor + (v.Build > 0 ? "." + v.Build : "");
-            if (Array.IndexOf(args, "--uninstall") >= 0) { Shell.Uninstall(); return 0; }
+            if (Array.IndexOf(args, "--uninstall") >= 0) { Shell.Uninstall(Array.IndexOf(args, "--quiet") >= 0); return 0; }
             bool first; single = new Mutex(true, "Local\\Miftah.Desktop.v2", out first);
+            /* handed over from another copy (after installing it from This computer): wait for that one to close */
+            if (!first && Array.IndexOf(args, "--handover") >= 0) { try { first = single.WaitOne(15000); } catch (AbandonedMutexException) { first = true; } }
             if (!first) { Hand(args); return 0; }
+            /* an installed copy keeps its line in Settings > Apps true after an in-app update */
+            if (Shell.RunningInstalled()) try { Installer.Register(Version); } catch { }
             try { Unpack(); }
             catch (Exception e) { MessageBox.Show("Miftāḥ could not start.\n\n" + e.Message, "Miftāḥ", MessageBoxButtons.OK, MessageBoxIcon.Error); return 1; }
             return Run(args);
@@ -319,6 +323,7 @@ namespace Miftah {
         /* ---------- arguments: from the command line, a shortcut, or a second launch ---------- */
         void ParseArgs(string[] args) {
             foreach (var a in args) {
+                if (a == "--quit") { Quitting = true; Close(); return; }
                 if (a.StartsWith("--route=")) Route(a.Substring(8));
                 else if (!a.StartsWith("--") && File.Exists(a)) OpenFile(a);
             }
@@ -331,7 +336,7 @@ namespace Miftah {
                             p.WaitForConnection();
                             var ms = new MemoryStream(); p.CopyTo(ms);
                             var args = Encoding.UTF8.GetString(ms.ToArray()).Split('\n');
-                            BeginInvoke(new Action(() => { Bring(); ParseArgs(args); }));
+                            BeginInvoke(new Action(() => { if (Array.IndexOf(args, "--quit") < 0) Bring(); ParseArgs(args); }));
                         }
                     } catch { Thread.Sleep(200); }
                 }

@@ -265,7 +265,17 @@ namespace Miftah {
             Directory.CreateDirectory(p); Shell.Open(p);
         }
         public string backup(string name) { return Store.ReadBackup(name); }
-        public void install() { f.BeginInvoke(new Action(() => { var ok = Shell.Install(); f.Post("window.Desk&&Desk.onInstalled(" + (ok ? "true" : "false") + ")"); })); }
+        public void install() {
+            f.BeginInvoke(new Action(() => {
+                var ok = Shell.Install();
+                f.Post("window.Desk&&Desk.onInstalled(" + (ok ? "true" : "false") + ")");
+                /* the installed copy takes over: it waits for this one to close, then opens on the same page */
+                if (ok && !Shell.RunningInstalled()) {
+                    try { Process.Start(new ProcessStartInfo(Installer.Exe, "--handover --route=desk/pc") { UseShellExecute = false, WorkingDirectory = Installer.Dir }); } catch { return; }
+                    var t = new System.Windows.Forms.Timer { Interval = 1400 }; t.Tick += delegate { t.Stop(); f.Quitting = true; f.Close(); }; t.Start();
+                }
+            }));
+        }
         public void quit() { f.BeginInvoke(new Action(() => f.Quit())); }
         public void unlocked() { f.BeginInvoke(new Action(() => { f.Focus(false); f.Post("window.Desk&&Desk.refresh()"); })); }
         /* the sheet on the page goes straight to a PDF in Documents\Miftah\Printables */

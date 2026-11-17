@@ -5,7 +5,8 @@
 
 Needs: Windows 10 or 11 (.NET Framework 4.8, present on every copy), Python 3.8+, Pillow for the icon,
 and the WebView2 SDK, fetched once from nuget.org into tools/.bin/webview2 (see WEBVIEW2 below).
-The .exe carries everything: the lessons, the WebView2 libraries and the icon. It runs from anywhere and can install itself."""
+dist/Miftah.exe carries everything: the lessons, the WebView2 libraries and the icon (it is also what in-app updates download).
+dist/Miftah-Setup.exe carries Miftah.exe and installs it like any Windows program; it is the file people download."""
 import io, os, re, shutil, subprocess, sys, urllib.request, zipfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -84,6 +85,7 @@ def main():
         args.append('/r:' + os.path.join(fw, r))
     args.append(info)
     args += [os.path.join(WIN, 'src', f) for f in sorted(os.listdir(os.path.join(WIN, 'src'))) if f.endswith('.cs')]
+    args.append(os.path.join(WIN, 'shared', 'Installer.cs'))
     r = subprocess.run(args, capture_output=True, text=True, encoding='utf8', errors='replace')
     out = (r.stdout + r.stderr).strip()
     if out:
@@ -91,6 +93,26 @@ def main():
     if r.returncode:
         sys.exit(r.returncode)
     print('dist/Miftah.exe', name, '(%s)' % full, round(os.path.getsize(exe) / 1048576, 1), 'MB')
+
+    # Miftah-Setup.exe: the installer people download, carrying the app it installs
+    setup = os.path.join(ROOT, 'dist', 'Miftah-Setup.exe')
+    sargs = [csc, '/nologo', '/optimize+', '/target:winexe', '/platform:x64', '/langversion:5', '/codepage:65001', '/utf8output',
+             '/out:' + setup, '/win32icon:' + ico, '/win32manifest:' + os.path.join(WIN, 'setup', 'setup.manifest'),
+             '/resource:' + exe + ',Miftah.exe', '/resource:' + os.path.join(WIN, 'icon.png') + ',icon.png']
+    for r in ('System.dll', 'System.Core.dll', 'System.Drawing.dll', 'System.Windows.Forms.dll'):
+        sargs.append('/r:' + os.path.join(fw, r))
+    sinfo = os.path.join(OUT, 'SetupInfo.cs')
+    with open(sinfo, 'w', encoding='utf8') as f:
+        f.write(open(info, encoding='utf8').read().replace('AssemblyTitle("Miftah")', 'AssemblyTitle("Miftah Setup")')
+                .replace('An Islamic homeschool for children aged 2 to 18', 'Installs Miftah, an Islamic homeschool for children aged 2 to 18'))
+    sargs += [sinfo, os.path.join(WIN, 'setup', 'Setup.cs'), os.path.join(WIN, 'shared', 'Installer.cs')]
+    r = subprocess.run(sargs, capture_output=True, text=True, encoding='utf8', errors='replace')
+    out = (r.stdout + r.stderr).strip()
+    if out:
+        print(out[-6000:])
+    if r.returncode:
+        sys.exit(r.returncode)
+    print('dist/Miftah-Setup.exe', name, round(os.path.getsize(setup) / 1048576, 1), 'MB')
 
 
 if __name__ == '__main__':
