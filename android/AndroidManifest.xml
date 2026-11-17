@@ -30,6 +30,10 @@
         android:enableOnBackInvokedCallback="false"
         android:hardwareAccelerated="true">
 
+        <!-- on a foldable, where the hinge is (read by reflection in MainActivity); optional, so every other device installs it too -->
+        <uses-library android:name="androidx.window.extensions" android:required="false" />
+        <uses-library android:name="androidx.window.sidecar" android:required="false" />
+
         <activity
             android:name=".MainActivity"
             android:exported="true"

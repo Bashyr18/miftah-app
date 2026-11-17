@@ -130,7 +130,8 @@
     r.reveal = null;
     ctx.onReveal = function (f) { r.reveal = f; };
     fn(ctx);
-    if (s.gu) { var gub = document.createElement('button'); gub.className = 'gu'; gub.dataset.a = 'gu-show'; gub.dataset.w = s.gu; gub.textContent = L(['Grown-up: tap to see the word to say', 'للكبير: انقر لترى الكلمة']); var gh = $('.pl-body', r.host); if (gh) gh.insertBefore(gub, gh.firstChild); }
+    var skr = window.C && C.skills[r.o.skill || s.skill]; if (skr && skr.room === 'arabic' && A.hkPaint) A.hkPaint(inner);
+    if (s.gu) { var gub = document.createElement('button'); gub.className = 'gu'; gub.dataset.a = 'gu-show'; gub.dataset.w = s.gu; gub.textContent = L(['Grown-up: tap to see the word to say', 'للكبير: انقر لترى الكلمة']); /* under the answers, inside the step: placed in the lesson body it stood beside them as a tall empty panel */ box.appendChild(gub); }
     var spb = $('.pl-sp', r.host); if (spb) { var spT = s.speakAr || (s.speak ? L(s.speak) : L(s.p)); spb.style.visibility = Voice.can(spT, { key: s.vk }) ? 'visible' : 'hidden'; }
     if (window.Aids) Aids.after(r, foot);
     if (s.hint && !s.noHelp && r.st < 2) { var h = document.createElement('button'); h.className = 'pl-help'; h.dataset.a = 'pl-help'; h.innerHTML = A.icon('help', 22) + '<span>' + esc(T('Help me')) + '</span>'; foot.appendChild(h); }

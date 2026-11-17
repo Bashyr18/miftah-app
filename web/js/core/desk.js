@@ -390,7 +390,7 @@
     }
     add(G, A.icon('print', 20), L(['Print Studio', 'استوديو الطباعة']), L(['Several sheets at once, or one PDF', 'عدة أوراق معًا أو PDF واحد']), function () { grown(function () { A.go('desk/print'); }); }, 'pdf worksheet');
     add(G, ic('phone'), L(['Phone and computer', 'الهاتف والحاسوب']), L(['Pair a phone, sync on Wi-Fi', 'اقرن هاتفًا وزامن عبر الواي فاي']), function () { grown(function () { A.go('desk/link'); }); }, 'sync pair wifi');
-    add(G, ic('pc'), L(['This computer', 'هذا الحاسوب']), L(['Install, backups, start with Windows', 'التثبيت والنسخ الاحتياطية والتشغيل مع ويندوز']), function () { grown(function () { A.go('desk/pc'); }); }, 'settings backup install tray');
+    add(G, ic('pc'), L(['This computer', 'هذا الحاسوب']), L(['Backups, updates, start with Windows', 'النسخ الاحتياطية والتحديثات والتشغيل مع ويندوز']), function () { grown(function () { A.go('desk/pc'); }); }, 'settings backup update tray');
     var D = L(['Actions', 'إجراءات']);
     add(D, A.icon(document.documentElement.dataset.theme === 'dark' ? 'sun' : 'moon', 20), L(['Day or night', 'نهار أو ليل']), kbd('Ctrl') + kbd('Shift') + kbd('L'), function () { var d = $('.dn'); if (d) d.click(); else { A.S.theme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'; A.saveNow(); A.applyTheme(); } }, 'theme dark light');
     add(D, ic('focus'), L(['Focus for a lesson', 'تركيز للدرس']), L(['Only a grown-up can leave', 'لا يخرج منه إلا الكبار']), function () { Desk.focus(true); }, 'lock kiosk');
@@ -560,7 +560,7 @@
     var i = info(), au = {}; try { au = JSON.parse(i.audio || '{}'); } catch (e) { }
     var z = Math.round((i.zoom || 1) * 100);
     var body = '';
-    if (!i.installed || i.portable) body += '<section class="dk-install"><img class="dk-install-art" src="icon.svg" alt="" width="56" height="56"><div class="grow"><h2>' + esc(L(['Make Miftāḥ part of this computer', 'اجعل مفتاح جزءًا من هذا الحاسوب'])) + '</h2><p>' + esc(L(['Adds it to the Start menu, the desktop and Settings › Apps. No administrator needed, and you can remove it like any other program.', 'يضيفه إلى قائمة ابدأ وسطح المكتب والإعدادات › التطبيقات، بلا صلاحيات مدير، ويُزال كأي برنامج.'])) + '</p></div><button class="btn pri" id="pc-inst">' + esc(i.installed ? L(['Update the installed copy', 'حدّث النسخة المثبّتة']) : L(['Install', 'ثبّت'])) + '</button></section>';
+    /* no install card: Miftah-Setup.exe installs Miftah like any Windows program, so this page never asks */
     body += '<div class="dk-grid2"><section class="card"><h3>' + esc(L(['Window', 'النافذة'])) + '</h3>' +
       sw('startup', i.startup, L(['Start with Windows', 'شغّل مع ويندوز']), L(['Quietly, in the tray, ready for the phone and the reminder', 'بهدوء في شريط المهام، جاهزًا للهاتف والتذكير'])) +
       sw('tray', i.tray, L(['Keep in the tray when closed', 'أبقه في شريط المهام عند الإغلاق']), L(['So a paired phone can join its record at any time', 'ليتمكن الهاتف المقترن من الدمج في أي وقت'])) +
@@ -579,7 +579,6 @@
       mount: function (v) {
         bindSwitches(v);
         if (window.Upd) Upd.bind();
-        var inst = $('#pc-inst', v); if (inst) inst.onclick = function () { inst.disabled = true; B.install(); };
         var zr = $('#pc-z', v), zo = $('#pc-zo', v);
         zr.oninput = function () { zo.textContent = A.num(zr.value) + '%'; }; zr.onchange = function () { B.deskZoom(zr.value / 100); };
         $('#pc-full', v).onclick = function () { B.deskSet('full', true); };

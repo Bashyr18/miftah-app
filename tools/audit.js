@@ -36,6 +36,7 @@
     });
     var seen = {}; return out.filter(function (x) { if (seen[x]) return false; seen[x] = 1; return true; });
   }
+  window.__measure = function () { return measure(A.route()); };
   window.__audit = function (routes) {
     var res = {}, i = 0; window.__auditDone = false;
     return new Promise(function (ok) { (function step() {

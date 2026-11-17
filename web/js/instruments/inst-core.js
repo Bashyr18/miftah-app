@@ -151,101 +151,176 @@
     c.onReveal(function () { val = String(s.a); paint(); out.classList.add('right'); $$('.pad button', c.el).forEach(function (x) { x.disabled = true; }); });
   };
 
-  /* ====== tracing: the finger follows the real direction of the pen ====== */
+  /* ====== tracing: the finger follows the real direction of the pen ======
+     The letter is shown as a pen-wide lane with its writing line, so it stays readable (the teeth of sīn never merge).
+     The current stroke has a numbered start, arrows for its direction and, until the child begins, a bead that walks it.
+     The child's own finger leaves chalk, so they see what they drew. Fast strokes are followed point by point, lifting
+     keeps progress, and a small button starts the letter again. The board fills the room it has and redraws itself
+     when the screen turns, folds or unfolds. */
   I.trace = function (c) {
-    var s = c.step, data = window.STROKES[s.set][s.ch];
+    var s = c.step, data = window.STROKES[s.set] && window.STROKES[s.set][s.ch];
     if (!data) { c.done(); return; }
+    var base = window.STROKES.base && window.STROKES.base[s.set] ? window.STROKES.base[s.set][s.ch] : null;
+    var young = A.stage() <= 1;
     var box = document.createElement('div'); box.className = 'tr-box';
-    box.innerHTML = '<canvas></canvas><div class="tr-hint"></div>';
+    box.innerHTML = '<canvas></canvas><button class="tr-again" type="button" aria-label="' + esc(L(['Start the letter again', 'ابدأ الحرف من جديد'])) + '">' +
+      '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 12a7.5 7.5 0 1 0 2.2-5.3L4.5 9"/><path d="M4.5 4.5V9H9"/></svg></button>';
     c.el.appendChild(box);
-    var cv = $('canvas', box), g = cv.getContext('2d');
-    var W = Math.min((c.el.clientWidth || 320) - 16, 420, innerHeight * .46), dpr = Math.min(devicePixelRatio || 1, 2.5);
-    cv.width = W * dpr; cv.height = W * dpr; cv.style.width = W + 'px'; cv.style.height = W + 'px'; g.scale(dpr, dpr);
-    var sc = W / 100;
+    var cv = $('canvas', box), g = cv.getContext('2d'), W = 0, sc = 1;
+    /* as large as the screen allows: the width of the lesson, and the height left above the footer */
+    function fit() {
+      var r = c.el.getBoundingClientRect(), foot = 150;
+      var w = Math.max(220, (c.el.clientWidth || 320) - 24), h = Math.max(220, innerHeight - Math.max(r.top, 90) - foot);
+      var nw = Math.round(Math.min(w, h, young ? 640 : 560));
+      if (nw === W) return;
+      W = nw; sc = W / 100;
+      var dpr = Math.min(devicePixelRatio || 1, 2.5);
+      cv.width = Math.round(W * dpr); cv.height = Math.round(W * dpr); cv.style.width = W + 'px'; cv.style.height = W + 'px';
+      g.setTransform(dpr, 0, 0, dpr, 0, 0);
+      if (strokes) paint();
+    }
+    var strokes = null;
+    fit();
     /* resample each stroke to even points */
-    var strokes = data.map(function (st) {
-      if (st.length === 1) return { dot: st[0], pts: [st[0]], len: 0 };
+    strokes = data.map(function (st) {
+      if (st.length === 1) return { dot: st[0], pts: [st[0]] };
       var pts = [], i;
       for (i = 0; i < st.length - 1; i++) {
-        var a = st[i], b = st[i + 1], d = Math.hypot(b[0] - a[0], b[1] - a[1]), n = Math.max(1, Math.ceil(d / 1.4));
+        var a = st[i], b = st[i + 1], d = Math.hypot(b[0] - a[0], b[1] - a[1]), n = Math.max(1, Math.ceil(d / 1.2));
         for (var k = 0; k < n; k++) pts.push([a[0] + (b[0] - a[0]) * k / n, a[1] + (b[1] - a[1]) * k / n]);
       }
       pts.push(st[st.length - 1]);
       return { pts: pts };
     });
-    var cur = 0, prog = 0, down = false, inkPts = [], tol = s.tol || 11, ghost = s.ghost !== false, t = 0, raf = 0, done = false, sparks = [];
-    var gold = '#f1d59e';
-    var isLight = false; /* the board is dark in every theme */
-    var guide = isLight ? 'rgba(90,70,30,.14)' : 'rgba(241,213,158,.13)';
-    var hl = isLight ? 'rgba(160,110,30,.3)' : 'rgba(241,213,158,.28)';
-    function path(p, upto) { g.beginPath(); for (var i = 0; i <= Math.min(upto, p.length - 1); i++) { var q = p[i]; if (i) g.lineTo(q[0] * sc, q[1] * sc); else g.moveTo(q[0] * sc, q[1] * sc); } }
-    function draw() {
+    var cur = 0, prog = 0, down = false, tol = s.tol || (young ? 12 : 9.5), ghost = s.ghost !== false, t = 0, raf = 0, done = false;
+    var sparks = [], chalk = [], lastP = null, off = 0, still = A.reduced();
+    var gold = '#f1d59e', lane = 'rgba(241,213,158,.12)', laneEdge = 'rgba(241,213,158,.2)', mid = 'rgba(241,213,158,.34)';
+    function path(p, from, upto) { g.beginPath(); for (var i = from; i <= Math.min(upto, p.length - 1); i++) { var q = p[i]; if (i > from) g.lineTo(q[0] * sc, q[1] * sc); else g.moveTo(q[0] * sc, q[1] * sc); } }
+    /* a chevron every so often along the stroke, pointing the way the pen goes */
+    function arrows(p, from) {
+      var step = 22, i;
+      g.strokeStyle = 'rgba(255,244,214,.75)'; g.lineWidth = Math.max(1.6, .9 * sc); g.lineCap = 'round';
+      for (i = from + step; i < p.length - 4; i += step) {
+        var a = p[i - 2], b = p[i + 2], ang = Math.atan2(b[1] - a[1], b[0] - a[0]), x = p[i][0] * sc, y = p[i][1] * sc, r = 2.1 * sc;
+        g.beginPath(); g.moveTo(x - r * Math.cos(ang - .55), y - r * Math.sin(ang - .55)); g.lineTo(x, y); g.lineTo(x - r * Math.cos(ang + .55), y - r * Math.sin(ang + .55)); g.stroke();
+      }
+    }
+    function diamond(q, r) { var x = q[0] * sc, y = q[1] * sc, d = r * sc; g.beginPath(); g.moveTo(x, y - d); g.lineTo(x + d * .92, y); g.lineTo(x, y + d); g.lineTo(x - d * .92, y); g.closePath(); }
+    function startMark(q, n) {
+      var x = q[0] * sc, y = q[1] * sc, r = Math.max(9, 3.4 * sc), pulse = still ? 0 : .5 + .5 * Math.sin(t * 5);
+      g.beginPath(); g.arc(x, y, r + 3 + pulse * 3, 0, 7); g.strokeStyle = 'rgba(241,213,158,' + (.35 + .3 * pulse) + ')'; g.lineWidth = 2; g.stroke();
+      g.beginPath(); g.arc(x, y, r, 0, 7); g.fillStyle = gold; g.fill();
+      if (n) { g.fillStyle = '#2a1d08'; g.font = '700 ' + Math.round(r * 1.15) + 'px Quicksand, system-ui, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(String(n), x, y + .5); }
+    }
+    /* resizing a canvas clears it: the board is painted again at once, never left blank until the next frame */
+    function draw() { paint(); raf = requestAnimationFrame(draw); }
+    function paint() {
       t += .016;
       g.clearRect(0, 0, W, W);
       g.lineCap = g.lineJoin = 'round';
+      /* the writing line, as on a ruled page */
+      if (base != null && base > 8 && base < 96) {
+        g.setLineDash([2.2 * sc, 2.2 * sc]); g.beginPath(); g.moveTo(4 * sc, base * sc); g.lineTo(96 * sc, base * sc);
+        g.strokeStyle = 'rgba(241,213,158,.22)'; g.lineWidth = 1.2; g.stroke(); g.setLineDash([]);
+      }
       strokes.forEach(function (st, i) {
         if (st.dot) {
-          g.beginPath(); g.arc(st.dot[0] * sc, st.dot[1] * sc, 6.4 * sc, 0, 7);
-          g.fillStyle = i < cur ? gold : (ghost ? guide : 'transparent'); g.fill();
+          /* a dot is the square tip of a reed pen, turned on its corner: as in the letter, not a round blob */
+          diamond(st.dot, 4.2);
+          if (i < cur) { g.fillStyle = gold; g.shadowColor = gold; g.shadowBlur = 8; g.fill(); g.shadowBlur = 0; } else if (ghost) { g.fillStyle = lane; g.fill(); g.strokeStyle = laneEdge; g.lineWidth = 1.2; g.stroke(); }
           return;
         }
-        if (ghost) { path(st.pts, 1e9); g.strokeStyle = guide; g.lineWidth = 13 * sc; g.stroke(); }
-        if (i < cur) { path(st.pts, 1e9); g.strokeStyle = gold; g.lineWidth = 8.4 * sc; g.shadowColor = gold; g.shadowBlur = 12; g.stroke(); g.shadowBlur = 0; }
+        if (ghost && i >= cur) {
+          path(st.pts, 0, 1e9); g.strokeStyle = laneEdge; g.lineWidth = 7.6 * sc; g.stroke();
+          path(st.pts, 0, 1e9); g.strokeStyle = 'rgba(23,33,32,.92)'; g.lineWidth = 7.6 * sc - 2.4; g.stroke();
+          path(st.pts, 0, 1e9); g.strokeStyle = lane; g.lineWidth = 7.6 * sc - 2.4; g.stroke();
+          if (i > cur) { path(st.pts, 0, 1e9); g.setLineDash([.4 * sc, 2.6 * sc]); g.strokeStyle = mid; g.lineWidth = Math.max(1.4, .7 * sc); g.stroke(); g.setLineDash([]); }
+        }
+        if (i < cur) { path(st.pts, 0, 1e9); g.strokeStyle = gold; g.lineWidth = 5.6 * sc; g.shadowColor = gold; g.shadowBlur = 10; g.stroke(); g.shadowBlur = 0; }
       });
       var st = strokes[cur];
       if (st && !done) {
-        if (st.dot) {
-          var pu = 8 * sc * (1 + .18 * Math.sin(t * 6));
-          g.beginPath(); g.arc(st.dot[0] * sc, st.dot[1] * sc, pu, 0, 7); g.strokeStyle = gold; g.lineWidth = 3; g.stroke();
-        } else {
-          if (prog > 0) { path(st.pts, prog); g.strokeStyle = gold; g.lineWidth = 8.4 * sc; g.shadowColor = gold; g.shadowBlur = 14; g.stroke(); g.shadowBlur = 0; }
-          /* the guide bead travels the path to show direction, until the child begins */
-          if (!down && prog === 0) {
-            var j = Math.floor((t % 2) / 2 * (st.pts.length - 1)), q = st.pts[j];
-            path(st.pts, j); g.strokeStyle = hl; g.lineWidth = 6 * sc; g.stroke();
-            g.beginPath(); g.arc(q[0] * sc, q[1] * sc, 3.6 * sc, 0, 7); g.fillStyle = gold; g.fill();
+        if (st.dot) { for (var dj = cur; dj < strokes.length && strokes[dj].dot; dj++) startMark(strokes[dj].dot, 0); }
+        else {
+          if (prog > 0) { path(st.pts, 0, prog); g.strokeStyle = gold; g.lineWidth = 5.6 * sc; g.shadowColor = gold; g.shadowBlur = 12; g.stroke(); g.shadowBlur = 0; }
+          if (ghost || prog > 0) arrows(st.pts, prog);
+          /* until the child begins, a bead walks the stroke to show the way */
+          if (!down && prog === 0 && !still) {
+            var j = Math.floor((t % 2.2) / 2.2 * (st.pts.length - 1)), q = st.pts[j];
+            path(st.pts, 0, j); g.strokeStyle = 'rgba(241,213,158,.45)'; g.lineWidth = 3.4 * sc; g.stroke();
+            g.beginPath(); g.arc(q[0] * sc, q[1] * sc, 2.2 * sc, 0, 7); g.fillStyle = '#fff4d6'; g.fill();
           }
-          var head = st.pts[Math.min(prog, st.pts.length - 1)];
-          g.beginPath(); g.arc(head[0] * sc, head[1] * sc, (prog ? 6.4 : 7.6 + 1.5 * Math.sin(t * 5)) * sc, 0, 7); g.fillStyle = isLight ? '#fff8e6' : '#fff4d6'; g.fill(); g.lineWidth = 3; g.strokeStyle = gold; g.stroke();
+          if (prog === 0) startMark(st.pts[0], strokes.length > 1 ? cur + 1 : 0);
+          else { var h = st.pts[Math.min(prog, st.pts.length - 1)]; g.beginPath(); g.arc(h[0] * sc, h[1] * sc, Math.max(7, 2.8 * sc), 0, 7); g.fillStyle = '#fff4d6'; g.fill(); g.lineWidth = 2.5; g.strokeStyle = gold; g.stroke(); }
         }
       }
+      /* the child's own chalk, fading */
+      var now = Date.now();
+      chalk = chalk.filter(function (seg) { return now - seg.at < 1400; });
+      chalk.forEach(function (seg) { var a = 1 - (now - seg.at) / 1400; g.beginPath(); g.moveTo(seg.a[0] * sc, seg.a[1] * sc); g.lineTo(seg.b[0] * sc, seg.b[1] * sc); g.strokeStyle = 'rgba(255,255,255,' + (.55 * a) + ')'; g.lineWidth = 2.6 * sc * (.6 + .4 * a); g.stroke(); });
       sparks = sparks.filter(function (p) { return p.l > 0; });
       sparks.forEach(function (p) { p.x += p.vx; p.y += p.vy; p.l -= .04; g.globalAlpha = Math.max(0, p.l); g.fillStyle = '#ffe9b8'; g.fillRect(p.x, p.y, 2.4, 2.4); g.globalAlpha = 1; });
-      raf = requestAnimationFrame(draw);
     }
-    raf = requestAnimationFrame(draw);
-    c.setCleanup(function () { cancelAnimationFrame(raf); });
+    paint(); raf = requestAnimationFrame(draw);
+    /* turning, folding or unfolding the screen: the board takes its new size; the work so far is kept */
+    var ro = window.ResizeObserver ? new ResizeObserver(function () { fit(); }) : null;
+    if (ro) ro.observe(c.el); else addEventListener('resize', fit);
+    c.setCleanup(function () { cancelAnimationFrame(raf); if (ro) ro.disconnect(); else removeEventListener('resize', fit); });
     function pos(e) { var r = cv.getBoundingClientRect(); return [(e.clientX - r.left) / sc, (e.clientY - r.top) / sc]; }
     function nextStroke() {
-      cur++; prog = 0; Fx.tap();
-      if (cur >= strokes.length) { done = true; Fx.bloomAt(cv, null, true); c.ok(cv, { delay: 900 }); }
+      cur++; prog = 0; off = 0; Fx.tap(); A.N.haptic('tick');
+      if (cur >= strokes.length) { done = true; box.classList.add('done'); Fx.bloomAt(cv, null, true); c.ok(cv, { delay: 900 }); }
     }
-    function move(p) {
+    /* follow one point: the pen moves forward along the stroke, never backwards, and only while the finger stays near it */
+    function follow(p) {
       var st = strokes[cur]; if (!st || st.dot) return;
-      var best = -1, bd = 1e9;
-      for (var i = prog; i < Math.min(prog + 24, st.pts.length); i++) { var q = st.pts[i], d = Math.hypot(q[0] - p[0], q[1] - p[1]); if (d < bd) { bd = d; best = i; } }
+      var best = -1, bd = 1e9, reach = Math.min(st.pts.length, prog + 40);
+      for (var i = prog; i < reach; i++) { var q = st.pts[i], d = Math.hypot(q[0] - p[0], q[1] - p[1]); if (d < bd) { bd = d; best = i; } }
       if (bd <= tol) {
+        off = 0;
         if (best > prog) {
           prog = best;
-          var h = st.pts[prog]; if (Math.random() < .5) sparks.push({ x: h[0] * sc, y: h[1] * sc, vx: (Math.random() - .5) * 2.4, vy: (Math.random() - .5) * 2.4, l: 1 });
+          var h = st.pts[prog]; if (!still && Math.random() < .4) sparks.push({ x: h[0] * sc, y: h[1] * sc, vx: (Math.random() - .5) * 2.4, vy: (Math.random() - .5) * 2.4, l: 1 });
         }
-        if (prog >= st.pts.length - 2) { down = false; nextStroke(); }
-      }
+        if (prog >= st.pts.length - 3) { down = false; nextStroke(); }
+      } else if (++off === 14) { Fx.soft(); }
+    }
+    function moveTo(p) {
+      if (lastP) {
+        chalk.push({ a: lastP, b: p, at: Date.now() });
+        /* a quick stroke jumps far between two events: walk the gap in small steps so nothing is skipped */
+        var d = Math.hypot(p[0] - lastP[0], p[1] - lastP[1]), n = Math.min(30, Math.ceil(d / 1.5));
+        for (var k = 1; k <= n && down; k++) follow([lastP[0] + (p[0] - lastP[0]) * k / n, lastP[1] + (p[1] - lastP[1]) * k / n]);
+      } else follow(p);
+      lastP = p;
     }
     cv.addEventListener('pointerdown', function (e) {
       e.preventDefault(); if (done) return;
       try { cv.setPointerCapture(e.pointerId); } catch (x) { }
       var st = strokes[cur]; if (!st) return;
-      var p = pos(e);
-      if (st.dot) { if (Math.hypot(st.dot[0] - p[0], st.dot[1] - p[1]) < 16) nextStroke(); else Fx.shake(box); return; }
-      down = true;
+      var p = pos(e); lastP = null;
+      if (st.dot) {
+        /* the dots of a letter can go on in any order: the nearest one still waiting, within a finger's width */
+        var best = -1, bd = young ? 17 : 14;
+        for (var j = cur; j < strokes.length && strokes[j].dot; j++) { var dd = Math.hypot(strokes[j].dot[0] - p[0], strokes[j].dot[1] - p[1]); if (dd < bd) { bd = dd; best = j; } }
+        if (best < 0) { Fx.shake(box); return; }
+        if (best !== cur) { var tmp = strokes[cur]; strokes[cur] = strokes[best]; strokes[best] = tmp; }
+        nextStroke(); return;
+      }
       var head = st.pts[Math.min(prog, st.pts.length - 1)];
-      if (Math.hypot(head[0] - p[0], head[1] - p[1]) > 18) { down = false; Fx.soft(); }
+      if (Math.hypot(head[0] - p[0], head[1] - p[1]) > (young ? 20 : 16)) { Fx.soft(); return; }
+      down = true; moveTo(p);
     });
-    cv.addEventListener('pointermove', function (e) { if (down) { e.preventDefault(); move(pos(e)); } });
-    var up = function () { if (!down) return; down = false; var st = strokes[cur]; if (st && !st.dot && prog > 0 && prog < st.pts.length * .9) { /* lifting early keeps the progress: small hands stop and start */ } };
+    cv.addEventListener('pointermove', function (e) {
+      if (!down) return; e.preventDefault();
+      var list = e.getCoalescedEvents ? e.getCoalescedEvents() : null;
+      (list && list.length ? list : [e]).forEach(function (ev) { if (down) moveTo(pos(ev)); });
+    });
+    /* lifting early keeps the progress: small hands stop and start */
+    var up = function () { down = false; lastP = null; };
     cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
     cv.style.touchAction = 'none';
+    $('.tr-again', box).onclick = function () { if (done) return; cur = 0; prog = 0; down = false; lastP = null; chalk = []; Fx.tap(); };
   };
 
   /* a real-world deed. A person confirms it: the app does not pretend to see it. */

@@ -108,15 +108,23 @@
   /* the number line: hop to the answer */
   I.line = function (c) {
     var s = c.step, max = s.max || 10, from = s.from, to = s.to;
-    var ticks = ''; for (var i = 0; i <= max; i++) ticks += '<button class="nl-t' + (i === from ? ' at' : '') + '" data-v="' + i + '" style="left:' + (i / max * 100) + '%"><b>' + N(i) + '</b></button>';
-    c.el.innerHTML = '<div class="nl-eq" dir="ltr">' + N(from) + ' ' + (s.op || (to >= from ? '+' : '−')) + ' ' + N(Math.abs(to - from)) + ' = ?</div><div class="nl' + (max > 12 ? ' dense' : '') + '" dir="ltr"><div class="nl-rail"></div>' + ticks + '<div class="nl-tok" style="left:' + (from / max * 100) + '%">' + A.art('key', 30) + '</div></div>';
+    /* a long line on a narrow screen: show ten steps around the question, with room on both sides of the start and the answer,
+       so every number stays big enough to read and to touch. The faded ends say the line goes on. */
+    var lo = 0, hi = max, narrow = (c.el.clientWidth || innerWidth) < 560;
+    if (max > 12 && narrow) {
+      var a0 = Math.min(from, to), b0 = Math.max(from, to), span = b0 - a0 <= 7 ? 10 : 12;
+      if (b0 - a0 + 3 <= span) { lo = Math.max(0, Math.min(a0 - 2 - ((from + to) % 2), max - span)); hi = lo + span; }
+    }
+    var at = function (v) { return ((v - lo) / (hi - lo) * 100) + '%'; };
+    var ticks = ''; for (var i = lo; i <= hi; i++) ticks += '<button class="nl-t' + (i === from ? ' at' : '') + '" data-v="' + i + '" style="left:' + at(i) + '"><b>' + N(i) + '</b></button>';
+    c.el.innerHTML = '<div class="nl-eq" dir="ltr">' + N(from) + ' ' + (s.op || (to >= from ? '+' : '−')) + ' ' + N(Math.abs(to - from)) + ' = ?</div><div class="nl' + (hi - lo > 12 ? ' dense' : '') + (lo > 0 ? ' cut-l' : '') + (hi < max ? ' cut-r' : '') + '" dir="ltr"><div class="nl-rail"></div>' + ticks + '<div class="nl-tok" style="left:' + at(from) + '">' + A.art('key', 30) + '</div></div>';
     var tok = $('.nl-tok', c.el);
     function hopTo(v, cb) {
       var cur = from, dir = v > from ? 1 : -1, i = 0, steps = Math.abs(v - from);
       function one() {
         if (i++ >= steps) { cb(); return; }
         cur += dir;
-        var a = tok.style.left; var b = (cur / max * 100) + '%';
+        var a = tok.style.left; var b = at(cur);
         tok.style.left = b; Fx.tap();
         if (!A.reduced()) tok.animate([{ left: a, transform: 'translate(-50%,0)' }, { transform: 'translate(-50%,-26px)', offset: .5 }, { left: b, transform: 'translate(-50%,0)' }], { duration: 240, easing: 'ease-in-out' });
         setTimeout(one, 260);
@@ -135,12 +143,12 @@
           else {
             var goesWrongWay = (to > from) !== (v > from);
             c.bad(goesWrongWay ? 'sub-add' : 'add-count', b);
-            setTimeout(function () { tok.style.left = (from / max * 100) + '%'; busy = false; }, 500);
+            setTimeout(function () { tok.style.left = at(from); busy = false; }, 500);
           }
         });
       };
     });
-    c.onReveal(function () { tok.style.left = (to / max * 100) + '%'; var r = $('.nl-t[data-v="' + to + '"]', c.el); if (r) r.classList.add('right'); busy = true; });
+    c.onReveal(function () { tok.style.left = at(to); var r = $('.nl-t[data-v="' + to + '"]', c.el); if (r) r.classList.add('right'); busy = true; });
   };
 
   /* base-ten blocks: bundling made visible */
@@ -173,6 +181,13 @@
     var out = $('.ar-out', c.el), cells = $$('.ar-c', c.el);
     function paint() { cells.forEach(function (b) { b.classList.toggle('on', +b.dataset.r <= sel[0] && +b.dataset.c <= sel[1]); }); out.textContent = N(sel[0]) + ' × ' + N(sel[1]) + ' = ' + N(sel[0] * sel[1]); }
     cells.forEach(function (b) { b.onclick = function () { sel = [+b.dataset.r, +b.dataset.c]; Fx.tap(); paint(); }; });
+    /* a finger can also slide to the corner: the rectangle follows it, which is easier than hitting one small cell */
+    var grid = $('.ar-grid', c.el), dragging = false;
+    function under(e) { var el = document.elementFromPoint(e.clientX, e.clientY); return el && el.closest && el.closest('.ar-c'); }
+    grid.style.touchAction = 'none';
+    grid.addEventListener('pointerdown', function (e) { dragging = true; try { grid.setPointerCapture(e.pointerId); } catch (x) { } var b = under(e); if (b) { sel = [+b.dataset.r, +b.dataset.c]; paint(); } });
+    grid.addEventListener('pointermove', function (e) { if (!dragging) return; var b = under(e); if (b && (sel[0] !== +b.dataset.r || sel[1] !== +b.dataset.c)) { sel = [+b.dataset.r, +b.dataset.c]; Fx.tap(); paint(); } });
+    var stop = function () { dragging = false; }; grid.addEventListener('pointerup', stop); grid.addEventListener('pointercancel', stop);
     paint();
     $('.tf-go button', c.el).onclick = function () {
       if (sel[0] === s.r && sel[1] === s.c) c.ok(out);

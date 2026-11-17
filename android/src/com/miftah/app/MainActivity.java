@@ -124,6 +124,8 @@ public class MainActivity extends Activity {
         s.setSupportMultipleWindows(false);
         s.setJavaScriptCanOpenWindowsAutomatically(false);
         s.setTextZoom(Math.round(Math.max(1f, Math.min(1.25f, getResources().getConfiguration().fontScale)) * 100));
+        s.setUseWideViewPort(true);    /* the page's viewport is honoured: on a tablet it lays out a little smaller and is shown larger (js/core/form.js) */
+        s.setLoadWithOverviewMode(false);
         s.setSupportZoom(false);
         s.setBuiltInZoomControls(false);
         s.setGeolocationEnabled(false);
@@ -154,7 +156,7 @@ public class MainActivity extends Activity {
             @Override
             public void onPageFinished(WebView v, String url) {
                 loaded = true;
-                pushInsets();
+                pushInsets(); pushScreen();
                 if (pendingRoute != null) { js("__native.onRoute(" + JSONObject.quote(pendingRoute) + ")"); pendingRoute = null; }
                 if (pendingImport != null) { final Uri pi = pendingImport; pendingImport = null; new Thread(() -> readImport(pi, true)).start(); }
             }
@@ -163,6 +165,8 @@ public class MainActivity extends Activity {
             @Override public void onPermissionRequest(PermissionRequest r) { r.deny(); }
         });
         root.setOnApplyWindowInsetsListener((v, ins) -> { lastInsets = ins; pushInsets(); return ins; });
+        root.addOnLayoutChangeListener((v, l, t, r, b, ol, ot, or, ob) -> { if (r - l != or - ol || b - t != ob - ot) pushScreen(); });
+        watchFold();
 
         String route = routeOf(getIntent());
         if (saved == null) web.loadUrl(URL + (route != null ? route : ""));
@@ -232,6 +236,68 @@ public class MainActivity extends Activity {
         }
         root.setPadding(0, 0, 0, ime > 0 ? ime : 0);
         if (loaded) js("__native.onInsets(" + Math.round(top / dp) + "," + (ime > 0 ? 0 : Math.round(bottom / dp)) + ")");
+    }
+    /* ---------- the screen's shape: its size in dp, and on a foldable where the hinge is and how far it is open ----------
+       The hinge comes from the device's own window extensions (androidx.window.extensions, a shared library on foldables,
+       declared optional in the manifest), read by reflection so the app needs no extra library and runs the same elsewhere. */
+    private String foldJson = "null";
+    private Object foldComponent, foldListener;
+    private void pushScreen() {
+        if (web == null || !loaded) return;
+        float dp = getResources().getDisplayMetrics().density;
+        int w = Math.round(web.getWidth() / dp), h = Math.round(web.getHeight() / dp);
+        if (w <= 0 || h <= 0) return;
+        js("window.__native.onScreen&&__native.onScreen(" + w + "," + h + "," + JSONObject.quote(foldJson) + ")");
+    }
+    private void watchFold() {
+        try {
+            Object ext = Class.forName("androidx.window.extensions.WindowExtensionsProvider").getMethod("getWindowExtensions").invoke(null);
+            Object comp = ext.getClass().getMethod("getWindowLayoutComponent").invoke(ext);
+            for (java.lang.reflect.Method m : comp.getClass().getMethods()) {
+                if (!m.getName().equals("addWindowLayoutInfoListener") || m.getParameterTypes().length != 2) continue;
+                Class<?> first = m.getParameterTypes()[0], cb = m.getParameterTypes()[1];
+                if (!first.isAssignableFrom(Activity.class) || !cb.isInterface()) continue;
+                Object listener = java.lang.reflect.Proxy.newProxyInstance(cb.getClassLoader(), new Class<?>[]{cb}, (proxy, method, args) -> {
+                    if ("accept".equals(method.getName()) && args != null && args.length == 1) { onFold(args[0]); return null; }
+                    if ("hashCode".equals(method.getName())) return System.identityHashCode(proxy);
+                    if ("equals".equals(method.getName())) return proxy == args[0];
+                    if ("toString".equals(method.getName())) return "MiftahFold";
+                    return null;
+                });
+                m.invoke(comp, this, listener);
+                foldComponent = comp; foldListener = listener;
+                return;
+            }
+        } catch (Throwable e) { /* not a foldable, or extensions not offered: the page works from its size alone */ }
+    }
+    private void onFold(Object info) {
+        String out = "null";
+        try {
+            java.util.List<?> feats = (java.util.List<?>) info.getClass().getMethod("getDisplayFeatures").invoke(info);
+            float dp = getResources().getDisplayMetrics().density;
+            int[] at = new int[2]; if (web != null) web.getLocationInWindow(at);
+            for (Object f : feats) {
+                if (!f.getClass().getName().endsWith("FoldingFeature")) continue;
+                android.graphics.Rect b = (android.graphics.Rect) f.getClass().getMethod("getBounds").invoke(f);
+                int state = (Integer) f.getClass().getMethod("getState").invoke(f);
+                boolean vertical = b.height() > b.width();
+                JSONObject o = new JSONObject();
+                o.put("state", state); o.put("vertical", vertical);
+                o.put("l", Math.round((b.left - at[0]) / dp)); o.put("r", Math.round((b.right - at[0]) / dp));
+                o.put("t", Math.round((b.top - at[1]) / dp)); o.put("b", Math.round((b.bottom - at[1]) / dp));
+                out = o.toString(); break;
+            }
+        } catch (Throwable e) { out = "null"; }
+        final String j = out;
+        ui.post(() -> { foldJson = j; pushScreen(); });
+    }
+    private void unwatchFold() {
+        if (foldComponent == null) return;
+        try {
+            for (java.lang.reflect.Method m : foldComponent.getClass().getMethods())
+                if (m.getName().equals("removeWindowLayoutInfoListener") && m.getParameterTypes().length == 1 && m.getParameterTypes()[0].isInstance(foldListener)) { m.invoke(foldComponent, foldListener); break; }
+        } catch (Throwable e) { }
+        foldComponent = null; foldListener = null;
     }
     private boolean isNight() { return (getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES; }
 
@@ -327,7 +393,7 @@ public class MainActivity extends Activity {
     @Override protected void onResume() { super.onResume(); if (loaded) js("__native.onResume&&__native.onResume()"); }
     @Override protected void onPause() { stopRecording(); if (web != null) js("window.Voice&&Voice.stop()"); super.onPause(); }
     @Override protected void onSaveInstanceState(Bundle out) { super.onSaveInstanceState(out); if (web != null) web.saveState(out); }
-    @Override protected void onDestroy() { stopRecording(); if (tts != null) { tts.shutdown(); tts = null; } if (web != null) { web.destroy(); web = null; } super.onDestroy(); }
+    @Override protected void onDestroy() { unwatchFold(); stopRecording(); if (tts != null) { tts.shutdown(); tts = null; } if (web != null) { web.destroy(); web = null; } super.onDestroy(); }
 
     @Override
     @SuppressWarnings("deprecation")

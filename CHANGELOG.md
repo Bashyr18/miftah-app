@@ -9,6 +9,35 @@ The version is set in `version.txt`.
 - The Setup window is Miftāḥ's own: day or night with Windows, and in Arabic on an Arabic Windows.
 - Running Setup again updates or repairs the installed copy, closing it first if it is open. The family's record lives in its own folder and is never touched.
 
+**Tablets and foldables**
+- On a tablet, everything is shown a size larger, touch targets included, and the learner's sections move to a rail at the side.
+- Grown-up pages lay their cards in two columns. My keys puts the lanterns beside the keys. The older learners' home puts today's plan beside their tools, and long lists spread into two columns.
+- A tablet or a foldable on its side shows the question beside the work in a lesson.
+- A foldable half open like a book never puts anything on the hinge: the question on one side, the work on the other. Half open like a laptop, the question stands on the upper half and the work lies on the lower one.
+- Turning, folding and unfolding keep a lesson where it was; the writing board resizes itself.
+
+**Writing letters**
+- The tracing board is drawn as a pen-wide lane on a writing line, so a letter stays readable: the teeth of sīn no longer merge into one shape.
+- Each stroke has a numbered start and arrows for its direction, and the child's own finger leaves chalk.
+- Fast strokes are followed point by point. A button starts the letter again. The board fills the room it has.
+- Dots are drawn as a reed pen leaves them, a small diamond, on the board and on printed sheets. A letter's dots can be placed in any order, each with a finger-wide target.
+- In Arabic lessons the vowel marks (fatḥah, kasrah, ḍammah, sukūn, shaddah, tanwīn) are shown in their own colour, so the mark stands apart from its letter. A mark on its own sits large on a dotted circle, with its name under it. The Qurʾān's text is never recoloured.
+- Jīm, ḥāʾ, khāʾ, sīn, shīn, ṣād, ḍād, ʿayn and ghayn were traced again by hand over the letterform: they had broken into slivers a child could not follow. Letters written in one movement (fāʾ, qāf, mīm, wāw) are one stroke.
+
+**Sound**
+- Recitations of sūrahs 2 to 77 played nothing: the file name was read as one number. They play again, on the phone and the computer.
+- 670 more real recordings of words are included, among them Arabic letters. A letter's name plays its recording where there is one; where there is none yet, the lesson asks a grown-up to say it instead of promising a sound.
+
+**Lessons**
+- Every step of every lesson (11,024 of them) was drawn and checked on a phone and a tablet.
+- A number line to 20 on a phone shows ten numbers around the question, each big enough to touch.
+- A question a grown-up reads aloud no longer puts its grown-up button beside the answers as a tall empty panel: it is a small button under them.
+- Arrays can be dragged out with one finger. Thin letters (l, i) have a full-size button.
+
+**The installer**
+- A new Setup window: the night sky with the key on one side, the choices as clear rows with icons on the other, three steps along the top, and Close or Open Miftāḥ at the end.
+- This computer no longer offers to install: Setup does that, as with any Windows program.
+
 **Fixed**
 - The Install button on This computer failed: Windows' old shortcut tool cannot save a name with ā or ḥ, so the program was copied but no Start menu entry was made. Shortcuts are now made through the Unicode interface, and after installing, the copy that was opened from Downloads hands over to the installed one.
 

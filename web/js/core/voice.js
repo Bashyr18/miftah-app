@@ -12,7 +12,8 @@
   V.url = function (dir, file) {
     if (window.MIFTAH_WEB_AUDIO) return V.web[dir] + file;
     /* inside the app: adhkār and al-Ḥuṣarī's Juzʾ ʿAmma ship with it. Other recordings are fetched once by the app, from their source, and kept. */
-    var s = parseInt(file, 10);
+    /* the sūrah is the first three digits: '002001.mp3' is al-Baqarah, not verse 2001 of anything (reading it whole sent 2 to 77 to files that do not exist) */
+    var s = parseInt(String(file).slice(0, 3), 10);
     if (dir === 'd' || (dir === 'h' && (s === 1 || s >= 78))) return 'audio/' + dir + '/' + file.replace('.mp3', '.ogg');
     return A.N.has() ? 'audio/' + dir + '/' + file : V.web[dir] + file;
   };
@@ -67,14 +68,16 @@
   /* speech is only ever a real person: a parent's recording first, then a real recording of that word, otherwise silence. There is no synthetic voice in this app. */
   var probing = null;
   V.real = function (text) { if (!window.SPEECH) return null; var w = String(text).trim().replace(/[.,!?;:،؟“”"]/g, ''); if (!/[؀-ۿ]/.test(w)) w = w.toLowerCase(); return window.SPEECH[w] != null ? 'audio/s/' + window.SPEECH[w] + '.ogg' : null; };
-  V.can = function (text, opts) { if (!text) return false; opts = opts || {}; return !!have[opts.key || V.keyOf(text)] || !!V.real(text); };
+  /* a letter's name (بَاء) is recorded under the letter itself (ب): lessons pass the letter in their key, ar_ب */
+  function realOf(text, opts) { var r = V.real(text); if (!r && opts && /^ar_.$/.test(opts.key || '')) r = V.real(opts.key.slice(3)); return r; }
+  V.can = function (text, opts) { if (!text) return false; opts = opts || {}; return !!have[opts.key || V.keyOf(text)] || !!realOf(text, opts); };
   V.say = function (text, opts) {
     opts = opts || {};
     if (!text) return Promise.resolve(false);
     var key = opts.key || V.keyOf(text);
     if (probing) { probing.text = text; probing.ok = V.can(text, opts); return Promise.resolve(false); }
     if (have[key]) return V.play('voice/' + key + '.m4a');
-    var real = V.real(text); if (real) return V.play(real);
+    var real = realOf(text, opts); if (real) return V.play(real);
     return Promise.resolve(false);
   };
   /* a question built on hearing, with nothing real to hear: a grown-up becomes the voice */

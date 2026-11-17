@@ -10,6 +10,8 @@
     c.el.innerHTML = '<button class="lt-big" data-s="1" lang="ar" dir="rtl">' + d.ch + '</button><div class="lt-name">' + esc(d.en) + ' · <span class="ar" lang="ar">' + d.name + '</span></div>' +
       '<div class="forms">' + forms.map(function (f) { return '<span>' + f[0] + '<small>' + esc(T(f[1])) + '</small></span>'; }).join('') + '</div>' + (d.tip ? '<p class="sc-t">' + esc(L(d.tip)) + '</p>' : '');
     var sp = function () { Voice.say(d.name, { lang: 'ar', key: 'ar_' + d.ch }); };
+    /* no recording of this name yet (a parent can add one in My voice): the screen asks for a grown-up instead of promising a sound */
+    if (!Voice.can(d.name, { key: 'ar_' + d.ch })) { var pr = document.querySelector('.pl-prompt .pl-p'); if (pr && /hear|اسمع/i.test(pr.textContent)) pr.textContent = L(['Touch it. A grown-up says its name with you.', 'المسه. يقول أحد الكبار اسمه معك.']); }
     $('.lt-big', c.el).onclick = function () { sp(); Fx.pop($('.lt-big', c.el)); };
     setTimeout(sp, 900);
     c.done();
@@ -18,11 +20,11 @@
   /* letter + vowel = sound */
   I.blend = function (c) {
     var s = c.step, marks = s.marks || [['َ', 'fatḥah', 'a'], ['ِ', 'kasrah', 'i'], ['ُ', 'ḍammah', 'u']], cur = 0, lt = 0, ls = s.letters;
-    c.el.innerHTML = '<div class="blend-out ar" lang="ar" dir="rtl"></div><div class="bl-row" dir="rtl" data-l>' + ls.map(function (x, i) { return '<button class="tile" data-i="' + i + '" lang="ar">' + x + '</button>'; }).join('') + '</div><div class="bl-row">' + marks.map(function (m, i) { return '<button class="tile" data-m="' + i + '" lang="ar">ـ' + m[0] + '</button>'; }).join('') + '</div>';
+    c.el.innerHTML = '<div class="blend-out ar" lang="ar" dir="rtl"></div><div class="bl-row" dir="rtl" data-l>' + ls.map(function (x, i) { return '<button class="tile" data-i="' + i + '" lang="ar">' + x + '</button>'; }).join('') + '</div><div class="bl-row">' + marks.map(function (m, i) { return '<button class="tile mk" data-m="' + i + '" lang="ar" aria-label="' + esc(m[1]) + '"><b class="mk-g">' + A.hk('◌' + m[0]) + '</b><small>' + esc(m[1]) + '</small></button>'; }).join('') + '</div>';
     var out = $('.blend-out', c.el);
     function paint(say) {
       var v = ls[lt] + marks[cur][0];
-      out.textContent = v;
+      out.innerHTML = A.hk(v);
       $$('[data-i]', c.el).forEach(function (b) { b.classList.toggle('on', +b.dataset.i === lt); });
       $$('[data-m]', c.el).forEach(function (b) { b.classList.toggle('on', +b.dataset.m === cur); });
       Fx.pop(out);

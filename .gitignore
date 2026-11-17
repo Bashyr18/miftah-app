@@ -26,3 +26,4 @@ Thumbs.db
 # the demo film's frames and sound while it is made
 promo/.work/
 promo/apk-build.log
+__pycache__/

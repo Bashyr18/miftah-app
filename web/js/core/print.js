@@ -73,7 +73,8 @@
     var data = (window.STROKES[set] || {})[ch]; if (!data) return '<svg viewBox="0 0 100 100"></svg>';
     var s = '<svg viewBox="-4 -4 108 108">';
     data.forEach(function (st, i) {
-      if (st.length === 1) { s += style === 'blank' ? '' : '<circle cx="' + st[0][0] + '" cy="' + st[0][1] + '" r="5.500" fill="' + (style === 'guide' ? '#b9ad96' : 'none') + '" stroke="#b9ad96" stroke-width="1"/>'; return; }
+      /* a dot as the reed pen leaves it: a small diamond, as on the writing board */
+      if (st.length === 1) { var x = st[0][0], y = st[0][1], r = 5; s += style === 'blank' ? '' : '<path d="M' + x + ' ' + (y - r) + 'L' + (x + r * .92).toFixed(1) + ' ' + y + 'L' + x + ' ' + (y + r) + 'L' + (x - r * .92).toFixed(1) + ' ' + y + 'Z" fill="' + (style === 'guide' ? '#b9ad96' : 'none') + '" stroke="#b9ad96" stroke-width="1"/>'; return; }
       var d = st.map(function (q, j) { return (j ? 'L' : 'M') + q[0].toFixed(1) + ' ' + q[1].toFixed(1); }).join('');
       if (style === 'guide') {
         s += '<path d="' + d + '" fill="none" stroke="#d9cfb8" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/><path d="' + d + '" fill="none" stroke="#8a7a5c" stroke-width="1.100" stroke-dasharray="3 3"/>';

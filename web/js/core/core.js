@@ -4,6 +4,27 @@
   var A = window.A = {};
   A.$ = function (s, r) { return (r || document).querySelector(s); };
   A.$$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
+  /* the vowel marks (ḥarakāt, sukūn, shaddah, tanwīn, dagger alif) in their own colour, so a child learning to read sees the mark
+     apart from the letter. Only for learning Arabic: never applied to the Qurʾān's text. */
+  var HK = /[ً-ْٰ]/;
+  /* the text is drawn twice: whole in the marks' colour, then the bare letters exactly on top in the letters' own colour,
+     so only the marks show in their colour (a browser draws a mark in its letter's colour even inside its own span).
+     The bare copy is a pseudo-element, so the text a script reads is unchanged. */
+  A.hk = function (text) {
+    text = String(text == null ? '' : text); if (!HK.test(text)) return A.esc(text);
+    return '<span class="hkw" data-b="' + A.esc(text.replace(/[ً-ْٰ]/g, '')) + '"><span class="hkf">' + A.esc(text) + '</span></span>';
+  };
+  A.hkPaint = function (root) {
+    if (!root) return;
+    var w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null), list = [], n;
+    while ((n = w.nextNode())) {
+      if (!HK.test(n.nodeValue)) continue;
+      var el = n.parentElement; if (!el || el.closest('.quran,.ayah,.hkw,svg,textarea,input,[data-no-hk]')) continue;
+      if (!el.closest('[lang=ar],.ar,.tile,.blend-out,.lt-big')) continue;
+      list.push(n);
+    }
+    list.forEach(function (t) { var span = document.createElement('span'); span.innerHTML = A.hk(t.nodeValue); var f = document.createDocumentFragment(); while (span.firstChild) f.appendChild(span.firstChild); t.parentNode.replaceChild(f, t); });
+  };
   A.esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
 
   /* ---------- time (overridable in tests) ---------- */

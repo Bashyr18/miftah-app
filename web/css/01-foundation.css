@@ -447,6 +447,7 @@ html[dir=rtl] .msr{align-self:flex-end}
 /* tracing */
 .tr-box{position:relative;margin:0 auto;border-radius:var(--r-lg);background:var(--s1);border:1.5px solid var(--line2);box-shadow:var(--hi);padding:6px;width:max-content;max-width:100%;touch-action:none}
 .tr-box canvas{display:block;touch-action:none}
+.tr-again{position:absolute;top:16px;inset-inline-end:16px;width:40px;height:40px;border-radius:12px;display:grid;place-items:center;color:#f1d59e;background:rgba(255,244,214,.08);border:1px solid rgba(241,213,158,.22);transition:background .15s,opacity .3s}.tr-again:active{background:rgba(255,244,214,.18)}.tr-box.done .tr-again{opacity:0;pointer-events:none}
 
 /* missions */
 .ms{display:grid;justify-items:center;gap:11px;text-align:center}
@@ -536,6 +537,8 @@ html[lang=ar] .tx-l{letter-spacing:0}
 
 /* Arabic and language */
 .lt-big{font-family:var(--f-ar);font-size:clamp(90px,28vw,150px);line-height:1.2;text-align:center;color:var(--h);font-weight:400}
+/* a thin letter (l, i, j) still gets a big target */
+.lt-big{min-width:min(150px,50vw);display:block;margin-inline:auto}
 .lt-name{text-align:center;font-size:24px;font-weight:700}
 .forms{display:flex;justify-content:center;gap:8px;direction:rtl}
 .forms span{display:grid;justify-items:center;padding:7px 11px;border-radius:var(--r-sm);background:var(--s1);border:1px solid var(--line);font-family:var(--f-ar);font-size:34px;line-height:1.4;min-width:62px}
@@ -686,6 +689,11 @@ html[lang=ar] .nur-sec b{letter-spacing:0}
 .nl-t b{margin-top:16px}
 .nl.dense .nl-t::before{height:10px;width:1.500px}
 .nl.dense .nl-t:nth-child(5n+2)::before{height:17px;width:2.500px}
+/* a window onto a longer line: the rail fades out at a cut end, and each number takes the whole gap as its target */
+.nl.cut-l .nl-rail{-webkit-mask:linear-gradient(90deg,transparent,#000 34px);mask:linear-gradient(90deg,transparent,#000 34px)}
+.nl.cut-r .nl-rail{-webkit-mask:linear-gradient(270deg,transparent,#000 34px);mask:linear-gradient(270deg,transparent,#000 34px)}
+.nl.cut-l.cut-r .nl-rail{-webkit-mask:linear-gradient(90deg,transparent,#000 34px,#000 calc(100% - 34px),transparent);mask:linear-gradient(90deg,transparent,#000 34px,#000 calc(100% - 34px),transparent)}
+.nl:not(.dense) .nl-t{width:max(34px,calc((100% + 0px) / 11))}
 /* blocks with volume: a lit top, a shaded side */
 .bl-area{background:var(--wood);box-shadow:var(--wood-edge)}
 .bl-o{width:14px;height:14px;border-radius:2px;background:linear-gradient(135deg,#ffc98f,#ea8236 55%,#b65a15);box-shadow:inset 1px 1px 0 rgba(255,255,255,.55),inset -1px -1px 0 rgba(90,40,4,.5),0 3px 3px rgba(0,0,0,.45)}

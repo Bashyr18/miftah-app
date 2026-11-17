@@ -1,0 +1,111 @@
+/* ===== big screens and foldables (classes set by js/core/form.js) =====
+   The phone layout is the base. A foldable's inner screen and a tablet keep the same pieces and give them room:
+   the bottom bar becomes a rail at the side, grown-up pages lay their cards in two columns, lists spread out,
+   and a lesson grows. A foldable half open like a book puts the question on one side and the work on the other;
+   half open like a laptop, the question stands on the upper half and the work lies on the lower one.
+   The computer has its own layout (07-desk.css): nothing here applies inside it. */
+
+/* ---------- medium: a foldable's inner screen, a small tablet upright ---------- */
+html.f-medium:not(.is-desk) .wrap,html.f-expanded:not(.is-desk) .wrap{max-width:none;padding-inline:clamp(20px,4vw,40px)}
+html.f-medium:not(.is-desk) .ph,html.f-expanded:not(.is-desk) .ph{padding-inline:clamp(20px,4vw,40px)}
+/* grown-up pages made of cards: two columns, each card whole in one of them */
+html.f-medium:not(.is-desk) body[data-view=parent] .wrap:not(:has(> :not(.card))),
+html.f-expanded:not(.is-desk) body[data-view=parent] .wrap:not(:has(> :not(.card))){columns:2;column-gap:18px}
+html.f-medium:not(.is-desk) body[data-view=parent] .wrap:not(:has(> :not(.card))) > .card,
+html.f-expanded:not(.is-desk) body[data-view=parent] .wrap:not(:has(> :not(.card))) > .card{break-inside:avoid;display:block;margin:0 0 18px}
+/* the tab row of a child's page sits in one line when there is room */
+html.f-medium:not(.is-desk) .tabs,html.f-expanded:not(.is-desk) .tabs{padding-inline:clamp(20px,4vw,40px)}
+/* long lists of lessons or tools: two columns of rows */
+html.f-medium:not(.is-desk) .card > .lst,html.f-expanded:not(.is-desk) .card > .lst{columns:2;column-gap:24px}
+html.f-medium:not(.is-desk) .card > .lst > *,html.f-expanded:not(.is-desk) .card > .lst > *{break-inside:avoid}
+
+/* ---------- expanded: a tablet, a foldable's inner screen on its side ---------- */
+@media (min-width:840px){
+  /* the learner's sections: a rail at the side instead of a bar along the bottom */
+  html:not(.is-desk) .view > .nav{left:auto;right:auto;inset-inline-start:calc(14px + env(safe-area-inset-left,0px));top:50%;bottom:auto;transform:translateY(-50%);grid-auto-flow:row;grid-auto-rows:auto;grid-auto-columns:auto;width:92px;padding:8px;gap:6px;border-radius:28px}
+  html:not(.is-desk) .view > .nav::before{display:none}
+  html:not(.is-desk) .view > .nav a{flex-direction:column;height:auto;min-height:68px;padding:10px 4px 8px;gap:5px;font-size:12.5px;border-radius:20px;white-space:normal;text-align:center;line-height:1.15}
+  html:not(.is-desk) .view > .nav a .ic{width:24px;height:24px}
+  /* room for the rail: the content moves over, the sky and page headers still run edge to edge under the status bar */
+  html:not(.is-desk) body:has(.view > .nav) .view > :not(.nav):not(.sky):not(.ph):not(.th){margin-inline-start:118px}
+  html:not(.is-desk) body:has(.view > .nav) .view > .sky .hello,html:not(.is-desk) body:has(.view > .nav) .view > .ph > *{margin-inline-start:118px}
+  html:not(.is-desk) body:has(.view > .nav) .view > .th{padding-inline-start:118px}
+  html:not(.is-desk) body:has(.view > .nav) .view{padding-bottom:24px}
+  /* today: the path and the next door side by side, centred, not stretched */
+  html:not(.is-desk) .pathbox{max-width:1180px;margin-inline:auto;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:clamp(24px,3vw,44px)}
+  html:not(.is-desk) .sky{height:clamp(220px,34vh,320px)}
+  /* my keys: the numbers across the top, the lamps beside the keys */
+  html:not(.is-desk) body[data-view=keys] .wrap{max-width:1180px;margin-inline:auto;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);gap:20px;align-items:start}
+  html:not(.is-desk) body[data-view=keys] .wrap > .kstats,html:not(.is-desk) body[data-view=keys] .wrap > .empty,html:not(.is-desk) body[data-view=keys] .wrap > .sec-h{grid-column:1/-1}
+  html:not(.is-desk) body[data-view=keys] .wrap > .unit{grid-column:2}
+  html:not(.is-desk) body[data-view=keys] .wrap > :has(.lamp-rows){grid-column:1;grid-row:2 / span 20;position:sticky;top:16px}
+  /* grown-up pages: wider, the dashboard's two columns become three where it has them */
+  html:not(.is-desk) .dwrap{max-width:1180px}
+  html:not(.is-desk) body[data-view=parent] .wrap{max-width:1180px;margin-inline:auto}
+  html:not(.is-desk) .kpis{grid-template-columns:repeat(4,minmax(0,1fr))}
+  /* a lesson: the question and the work grow with the screen */
+  html:not(.is-desk) .pl-p{font-size:clamp(26px,2.6vw,34px)}
+  html:not(.is-desk) .step{max-width:min(860px,92vw)}
+  html:not(.is-desk) .pl-head,html:not(.is-desk) .pl-foot,html:not(.is-desk) .pl-msg{max-width:min(920px,92vw)}
+}
+/* a tablet on its side, or a foldable's inner screen on its side: the question beside the work, like the phone on its side */
+@media (min-width:840px) and (orientation:landscape) and (max-height:900px){
+  html:not(.is-desk):not(.fold-table) .pl{display:grid;grid-template-columns:minmax(0,38%) minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto auto;column-gap:clamp(20px,3vw,48px)}
+  html:not(.is-desk):not(.fold-table) .pl-top{grid-column:1/-1}
+  html:not(.is-desk):not(.fold-table) .pl-head{grid-column:1;grid-row:2;align-self:center;text-align:start;margin-inline:0;padding-inline-start:clamp(16px,3vw,40px)}
+  html:not(.is-desk):not(.fold-table) .pl-head .pl-p{text-align:start}
+  html:not(.is-desk):not(.fold-table) .pl-body{grid-column:2;grid-row:2 / span 2;align-self:center}
+  html:not(.is-desk):not(.fold-table) .pl-msg{grid-column:1;grid-row:3;padding-inline-start:clamp(16px,3vw,40px)}
+  html:not(.is-desk):not(.fold-table) .pl-foot{grid-column:1/-1;grid-row:4;max-width:none}
+}
+
+/* ---------- a foldable half open like a book: never put anything across the hinge ---------- */
+html.fold-book:not(.is-desk) .pl{display:grid!important;grid-template-columns:calc(var(--hinge-a) - 20px) calc(var(--hinge-b) - var(--hinge-a) + 40px) minmax(0,1fr)!important;grid-template-rows:auto minmax(0,1fr) auto auto!important;column-gap:0!important}
+html.fold-book:not(.is-desk) .pl-top{grid-column:1/-1}
+html.fold-book:not(.is-desk) .pl-head{grid-column:1;grid-row:2;align-self:center;padding-inline:20px}
+html.fold-book:not(.is-desk) .pl-msg{grid-column:1;grid-row:3;padding-inline:20px}
+html.fold-book:not(.is-desk) .pl-body{grid-column:3;grid-row:2 / span 2;align-self:center;padding-inline:16px calc(24px + env(safe-area-inset-right,0px))}
+html.fold-book:not(.is-desk) .pl-foot{grid-column:3;grid-row:4;max-width:none}
+html.fold-book:not(.is-desk) .pathbox{display:grid;grid-template-columns:calc(var(--hinge-a) - 40px) calc(var(--hinge-b) - var(--hinge-a) + 40px) minmax(0,1fr);gap:0;max-width:none;padding-inline:20px}
+html.fold-book:not(.is-desk) .pathbox > .home-a{grid-column:1}
+html.fold-book:not(.is-desk) .pathbox > .home-b{grid-column:3}
+/* any page of cards: two columns, one on each side of the hinge */
+html.fold-book:not(.is-desk) .wrap{columns:2;column-gap:calc(var(--hinge-b) - var(--hinge-a) + 40px);max-width:none}
+html.fold-book:not(.is-desk) .wrap > *{break-inside:avoid}
+
+/* ---------- a foldable half open like a laptop: the question stands up, the work lies on the table ---------- */
+html.fold-table:not(.is-desk) .pl{display:grid!important;grid-template-rows:auto calc(var(--hinge-a) - 64px) calc(var(--hinge-b) - var(--hinge-a) + 12px) minmax(0,1fr) auto!important;grid-template-columns:minmax(0,1fr)!important;height:100dvh}
+html.fold-table:not(.is-desk) .pl-top{grid-row:1}
+html.fold-table:not(.is-desk) .pl-head{grid-row:2;align-self:center}
+html.fold-table:not(.is-desk) .pl-msg{grid-row:2;align-self:end}
+html.fold-table:not(.is-desk) .pl-body{grid-row:4;overflow:auto;align-self:start}
+html.fold-table:not(.is-desk) .pl-foot{grid-row:5}
+/* a video or a recitation on the upper half, its controls below */
+html.fold-table:not(.is-desk) .sky{height:calc(var(--hinge-a) - 8px)}
+
+/* ---------- the older learners' pages (12 and over): the same, in their quieter style ---------- */
+@media (min-width:840px){
+  html:not(.is-desk) .th,html:not(.is-desk) .tw{max-width:1180px}
+  /* their home: the next lesson across the top, today's plan beside the tools */
+  html:not(.is-desk) body[data-view=home] .tw:has(> .tnext){display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);column-gap:28px;align-items:start}
+  html:not(.is-desk) body[data-view=home] .tw > *{grid-column:1}
+  html:not(.is-desk) body[data-view=home] .tw > .tnext{grid-column:1/-1}
+  html:not(.is-desk) body[data-view=home] .tw > .tsec ~ .tsec,html:not(.is-desk) body[data-view=home] .tw > .tsec ~ .tsec ~ *{grid-column:2}
+  html:not(.is-desk) body[data-view=home] .tw > .tsec ~ .tsec{grid-row:2}
+  /* long lists (subjects, the Lab): two columns of rows */
+  html:not(.is-desk) .tw > .tl{columns:2;column-gap:28px}
+  html:not(.is-desk) .tw > .tl > *{break-inside:avoid}
+  html:not(.is-desk) body[data-view=home] .tw > .tl{columns:1}
+  /* study: the three doors across, the cards in two columns */
+  html:not(.is-desk) .tw.sw{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start}
+  html:not(.is-desk) .tw.sw > :not(.card){grid-column:1/-1}
+  html:not(.is-desk) .tw.sw > .card{margin:0}
+}
+
+/* ---------- a foldable's inner screen held upright: nearly square, so the sky gives room to the day ---------- */
+@media (min-width:600px) and (max-width:839px){
+  html:not(.is-desk) .sky{height:clamp(200px,30vh,280px)}
+  html:not(.is-desk) .pathbox{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px;padding:18px clamp(18px,3.5vw,32px) 0;align-items:start}
+  html:not(.is-desk) .home-b{margin-top:0}
+  html:not(.is-desk) body:has(.view > .nav) .view{padding-bottom:96px}
+}
