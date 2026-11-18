@@ -2,7 +2,7 @@
    discovery, a wrong code refused, pairing with the right code, a file each way, and joining records.
      MIFTAH_LINK_LOCAL=1 MIFTAH_DEBUG_PORT=9444 dist/Miftah.exe     (then turn on "Let my phone find this computer")
      node tools/link-test.js <six-digit code> [host]
-   The phone side in the app is android/src/com/miftah/app/Link.java; the computer side is windows/src/Link.cs. */
+   The phone side in the app is android/src/com/miftah/app/Link.java; the computer side is windows/app/src/link.rs. */
 const net = require('net'), dgram = require('dgram'), crypto = require('crypto');
 const [code, host = '127.0.0.1'] = process.argv.slice(2);
 const TCP = 47731, UDP = 47732, DEV = 'testphone' + crypto.randomBytes(4).toString('hex');

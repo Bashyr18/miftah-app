@@ -224,13 +224,13 @@ Back up the key offline. An app on the Play Store can only ever be updated with 
 
 ### Windows
 
-On Windows 10 or 11, with Python 3.8+ and Pillow:
+On Windows 10 or 11, with [Rust](https://rustup.rs) (the stable MSVC toolchain), Python 3.8+ and Pillow:
 
 ```bash
-python -I tools/build_windows.py      # bundles web/ and compiles dist/Miftah.exe with the C# compiler built into Windows
+python -I tools/build_windows.py      # bundles web/, then builds dist/Miftah.exe and dist/Miftah-Setup.exe
 ```
 
-The first run fetches the WebView2 SDK from nuget.org into `tools/.bin/`. No Visual Studio or .NET SDK is needed. CI builds the same file on every push.
+The program is Rust (`windows/`): the first run fetches its crates from crates.io, pinned by `windows/Cargo.lock`. WebView2's loader is linked in, so each program is one file. CI builds the same files on every push.
 
 ### The guide
 

@@ -2,5 +2,6 @@
  ["Thinking: verbal, number and pattern reasoning for ages 5 to 11", "التفكير: استدلال لفظي وعددي ونمطي من ٥ إلى ١١"],
  ["Fast learners get more, go deeper, and leap over what they know", "المتعلّم السريع ينال أكثر ويتعمّق ويقفز فوق ما يعرفه"],
  ["Follow the Madinah books or Bayna Yadayk, lesson by lesson", "اتّبع كتب المدينة أو العربية بين يديك درسًا درسًا"],
- ["Worked examples and answers to check in every lesson", "أمثلة محلولة وإجابات للتحقق في كل درس"]
+ ["Worked examples and answers to check in every lesson", "أمثلة محلولة وإجابات للتحقق في كل درس"],
+ ["The Windows app is rebuilt in Rust, with the same record and phone pairing", "أُعيد بناء تطبيق ويندوز بلغة Rust، بالسجل نفسه والاقتران بالهاتف نفسه"]
 ]

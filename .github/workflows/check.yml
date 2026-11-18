@@ -35,7 +35,7 @@ jobs:
       - name: the Android and Windows bridges match
         run: node tools/bridge-check.js
 
-  # The Windows app needs nothing but Windows itself: the C# compiler ships with .NET Framework 4.8.
+  # The Windows app is Rust: the runner already has rustup's stable MSVC toolchain and the Windows SDK.
   windows:
     runs-on: windows-latest
     timeout-minutes: 20
@@ -50,6 +50,12 @@ jobs:
         with:
           python-version: '3.12'
       - run: pip install pillow
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            windows/target
+          key: cargo-${{ hashFiles('windows/Cargo.lock') }}
       - name: build Miftah.exe and Miftah-Setup.exe
         run: python -I tools/build_windows.py
       - uses: actions/upload-artifact@v4

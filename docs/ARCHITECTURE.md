@@ -15,7 +15,7 @@ One web core and two thin native shells, with no framework: Android (`android/`)
 | `web/css` | Numbered in cascade order: foundation, ages and controls, parent, student, lesson aids, finish, desk (the computer only) |
 | `android/` | Native shell: serves assets, microphone, audio cache, files, sharing |
 | `tools/` | Builds and checks |
-| `windows/` | Native shell for Windows 10 and 11: C# on .NET Framework 4.8 with Edge WebView2. `src/App.cs` (window, serving, files), `Bridge.cs` (the bridge), `Store.cs` (data folder, backups, family file), `Link.cs` (phone pairing and sync), `Shell.cs` (install, title bar, start with Windows); `shim.js` adapts the page |
+| `windows/` | Native shell for Windows 10 and 11, in Rust with Edge WebView2 (the `windows` and `webview2-com` crates). `app/src/main.rs` (window, tray, single instance), `web.rs` (WebView2, serving the lessons, dropped files), `bridge.rs` (the bridge), `store.rs` (data folder, backups, family file), `link.rs` (phone pairing and sync), `net.rs` (recitations and updates); `setup/` is Miftah-Setup.exe, its window drawn by `setup/src/page.html`; `common/` holds what both share, including `installer.rs`; `shim.js` adapts the page and sends its bridge calls to `bridge.rs` |
 | `docs/guide/` | The illustrated user guide: `guide.src.html`, `guide.js` and `guide-base.css`, built by `tools/build_guide.py` from screenshots taken by `tools/guide-shots.js` |
 
 ## Adding things
@@ -34,7 +34,7 @@ One web core and two thin native shells, with no framework: Android (`android/`)
 
 The page talks to its native shell through one bridge, `window.AndroidBridge`, whose methods are the same on both devices: `tools/bridge-check.js` fails the tests if the Windows app is missing one the Android app has. On Windows, `windows/shim.js` builds that object from the WebView2 host object and adds `DeskBridge` for what only a computer does (install, tray, backups, PDF, pairing). `web/js/core/desk.js` and `web/css/07-desk.css` are the computer's interface (rail, command bar, keyboard, Print Studio, Phone and computer, This computer); they do nothing unless `MIFTAH_DESKTOP` is set.
 
-- **Phone and computer on the home Wi-Fi:** the computer listens (TCP 47731, discovery on UDP 47732); the phone finds it and pairs with six digits. Every message is AES-256-CBC with HMAC-SHA256 under a key made at pairing. Records are joined by the page's own `A.Sync.merge`, the same function a family file uses, so nothing is ever overwritten. Phone side: `android/src/com/miftah/app/Link.java`; computer side: `windows/src/Link.cs`; protocol test: `tools/link-test.js`.
+- **Phone and computer on the home Wi-Fi:** the computer listens (TCP 47731, discovery on UDP 47732); the phone finds it and pairs with six digits. Every message is AES-256-CBC with HMAC-SHA256 under a key made at pairing. Records are joined by the page's own `A.Sync.merge`, the same function a family file uses, so nothing is ever overwritten. Phone side: `android/src/com/miftah/app/Link.java`; computer side: `windows/app/src/link.rs`; protocol test: `tools/link-test.js`.
 - **Sheets on screen:** `web/js/views/v-ink.js`. A sheet sent on screen is logged by `Print.keep` with `scr`; the child's strokes live in the sheet's `ink`, per page, in thousandths of the page width; `sub` marks it finished; the parent's red marks are `mk`; marking goes through `Print.mark` exactly as for paper. Test: `tools/ink-test.js`.
 
 ## Rules the code keeps

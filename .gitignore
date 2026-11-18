@@ -27,3 +27,4 @@ Thumbs.db
 promo/.work/
 promo/apk-build.log
 __pycache__/
+windows/target/

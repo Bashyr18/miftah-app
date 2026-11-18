@@ -42,6 +42,12 @@ The version is set in `version.txt`.
 - On the computer: no network address or folder path on show; Show the folder instead.
 - Fixed: some settings were lost at every start (the weekly update check, group challenges, card names).
 
+### Windows, rebuilt in Rust
+- Miftah.exe and Miftah-Setup.exe are now Rust programs (windows/), replacing the C# ones. The lessons, the family's record, its folder and its file formats are unchanged, so an update finds everything where it was; phone pairing speaks the same protocol, so paired phones keep working.
+- One file each, with nothing unpacked beside it but the lessons; no .NET.
+- The installer keeps its look, now drawn as a page: the night sky, three steps, the two choices, light and dark, English and Arabic. Enter installs straight away.
+- An in-app update moves the running program aside and puts the new one in its place, with no helper script.
+
 ## 2.1.1 (code 4), November 2026
 
 **A real installer for Windows**

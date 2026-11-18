@@ -4,12 +4,12 @@
 const fs = require('fs'), path = require('path');
 const R = path.join(__dirname, '..');
 const java = fs.readFileSync(path.join(R, 'android/src/com/miftah/app/MainActivity.java'), 'utf8');
-const cs = fs.readFileSync(path.join(R, 'windows/src/Bridge.cs'), 'utf8');
+const rs = fs.readFileSync(path.join(R, 'windows/app/src/bridge.rs'), 'utf8');
 const shim = fs.readFileSync(path.join(R, 'windows/shim.js'), 'utf8');
 const android = [...java.matchAll(/@JavascriptInterface\s+public\s+\S+\s+(\w+)\s*\(/g)].map(m => m[1]);
-const windows = new Set([...cs.matchAll(/public\s+(?!class|Bridge\b)[\w<>,\s]+?\s(\w+)\s*\(/g)].map(m => m[1]).concat([...shim.matchAll(/B\.(\w+)\s*=/g)].map(m => m[1])));
+const windows = new Set([...rs.matchAll(/"(\w+)"(?=\s*(?:\||=>))/g)].map(m => m[1]).concat([...shim.matchAll(/B\.(\w+)\s*=/g)].map(m => m[1])));
 const PHONE_ONLY = {
-  lanInfo: 'the phone looks for the computer; the computer is the one that answers (windows/src/Link.cs)',
+  lanInfo: 'the phone looks for the computer; the computer is the one that answers (windows/app/src/link.rs)',
   lanFind: 'as above', lanProbe: 'as above', lanPair: 'as above', lanSync: 'as above', lanForget: 'as above'
 };
 const missing = android.filter(m => !windows.has(m) && !PHONE_ONLY[m]);

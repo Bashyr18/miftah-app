@@ -3,15 +3,25 @@
 (function () {
   'use strict';
   /* the app's own page only: not a simulation or a video inside it, which have no bridge */
-  if (location.origin !== 'https://miftah.example' || window.top !== window) return;
-  var H = null; try { H = chrome.webview.hostObjects.sync.miftah; } catch (e) { H = null; }
-  if (!H) return;
+  if (location.origin !== 'https://miftah.example' || window.top !== window || !(window.chrome && chrome.webview)) return;
   window.MIFTAH_DESKTOP = true;
   /* the document may not exist yet at this point */
   var mark = function () { document.documentElement.classList.add('is-desk'); };
   if (document.documentElement) mark(); else document.addEventListener('readystatechange', mark, { once: true });
   try { localStorage.removeItem('miftah.v1'); } catch (e) { }
-  function call(fn, args) { try { return H[fn].apply(H, args || []); } catch (e) { console.warn('bridge ' + fn, e); return undefined; } }
+  /* every call goes to the program (windows/app/src/bridge.rs) as one small request and waits for its answer, as the phone's does */
+  function call(fn, args) {
+    try {
+      var x = new XMLHttpRequest();
+      x.open('POST', '/__bridge/' + fn, false);
+      x.setRequestHeader('X-Miftah', '1');
+      x.setRequestHeader('Content-Type', 'application/json');
+      x.send(JSON.stringify(args || []));
+      if (x.status !== 200) return undefined;
+      var o = JSON.parse(x.responseText);
+      return 'r' in o ? o.r : undefined;
+    } catch (e) { console.warn('bridge ' + fn, e); return undefined; }
+  }
   var native = function () { return window.__native || {}; };
 
   /* recording: the browser's own recorder, AAC in an MP4 box like the phone's, handed to the app when it stops */
@@ -40,8 +50,11 @@
   var names = ['ready', 'saveState', 'loadState', 'version', 'haptic', 'lastTheme', 'rememberTheme', 'setSystemBars', 'speak', 'speakStop', 'micAllowed', 'openAppSettings',
     'voiceList', 'audioKeep', 'audioStats', 'audioClear', 'sync', 'requestNotifications', 'pinWidget', 'exportFile', 'shareFamily', 'shareImage', 'shareChallenge',
     'exportFamily', 'mediaPickType', 'mediaPick', 'mediaDelete', 'importFile', 'openUrl', 'updateCheck', 'updateInstall'];
-  var B = {};
-  names.forEach(function (n) { B[n] = function () { return call(n, Array.prototype.slice.call(arguments)); }; });
+  /* what only a computer can do (web/js/core/desk.js) */
+  var desk = ['voiceSave', 'deskInfo', 'deskSet', 'deskZoom', 'pairCode', 'pairEnd', 'forgetPhone', 'rename', 'titleBar', 'openFolder', 'backup',
+    'install', 'quit', 'unlocked', 'savePdf', 'reveal', 'openPdf'];
+  var B = {}, D = {};
+  names.concat(desk).forEach(function (n) { D[n] = B[n] = function () { return call(n, Array.prototype.slice.call(arguments)); }; });
   B.recStart = recStart; B.recStop = recStop;
   /* the page lays the sheet out, then Windows' print window takes it (with Save as PDF); Desk can ask for a PDF straight to Documents instead */
   B.printPage = function (name) {
@@ -56,7 +69,7 @@
     return true;
   };
   window.AndroidBridge = B;
-  window.DeskBridge = H;
+  window.DeskBridge = D;
 
   /* files dropped anywhere on the window: a family file joins, a photo or video goes to the media library */
   function stop(e) { if (e.dataTransfer && Array.prototype.indexOf.call(e.dataTransfer.types || [], 'Files') >= 0) { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; (document.documentElement && document.documentElement.classList.add('dropping')); } }
