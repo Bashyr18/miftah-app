@@ -21,7 +21,21 @@ The version is set in `version.txt`.
 - Enter a lesson's words, rules and sentences from your own copy, or paste a whole book a teacher shared. Each becomes a full lesson: the words, the rule, practice both ways, the book's sentences with a word missing, and review.
 - A child can follow the book as their Arabic path. Books travel between phone and computer.
 
+**Today, again**
+- When today's path is done, Today, again starts another round: every lesson and key from today as revision, then practice in today's subjects. Past the day's screen time, a grown-up says yes and the day is extended by what the round needs.
+- Rounds are counted: the child sees Round 2, the parent sees it on Today, and every answer is logged as revision.
+
+**The first years**
+- Helpers in a lesson are round picture buttons for children who do not read yet; answers are bigger tiles with more room; a wrong answer fades instead of shaking.
+- The door opens in silence: its made-up sound never sounded like real wood and metal.
+
+**Arabic on screen**
+- Vowel marks are drawn by the font with their letters again; an attempt to colour them had moved some marks off their letters (a sukūn over the wrong letter).
+- Arabic inside English text is set in the Arabic font everywhere (35 vowelled words were falling back to another font), and a short run such as a list of letters is never split across lines.
+
 **Polish**
+- Every sheet has a title that stays, a close button, and a body that scrolls with proper margins (Credits and licences ran off the bottom and could not be closed).
+- Grown-up tabs show their full names on a phone; folded cards are only as tall as their title; printable actions sit on one line each; older learners no longer see a subject with nothing at their age.
 - Credits are one row on How Miftāḥ teaches, opening a sheet with names, licences and links, instead of raw web addresses and licence lists.
 - Row text no longer spills over the next row on grown-up pages, and the More tab is never cut off.
 - Sheet codes show only when two sheets share a title; empty subjects and placeholder dashes are gone; Knows these is a quiet pill; an empty Media page has one add button.

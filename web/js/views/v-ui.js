@@ -44,9 +44,9 @@
   var DOW = { en: ['S', 'M', 'T', 'W', 'T', 'F', 'S'], ar: ['أح', 'إث', 'ثل', 'أر', 'خم', 'جم', 'سب'] };
   function iso(y, m, d) { return y + '-' + ('0' + (m + 1)).slice(-2) + '-' + ('0' + d).slice(-2); }
   function enhanceDate(inp) {
-    var label = function () { if (!inp.value) return L(['Choose a date', 'اختر تاريخًا']); var q = inp.value.split('-'), l = A.ar() ? 'ar' : 'en'; return A.num(+q[2]) + ' ' + MON[l][+q[1] - 1] + ' ' + A.num(q[0]); };
+    var label = function () { if (!inp.value) return L(['Choose a date', 'اختر تاريخًا']); var q = inp.value.split('-'), l = A.ar() ? 'ar-u-nu-arab' : 'en'; return A.num(+q[2]) + ' ' + MON[l][+q[1] - 1] + ' ' + A.num(q[0]); };
     wrapControl(inp, label, function (after) {
-      var now = A.now(), base = inp.value ? inp.value.split('-') : null, y = base ? +base[0] : now.getFullYear(), m = base ? +base[1] - 1 : now.getMonth(), l = A.ar() ? 'ar' : 'en';
+      var now = A.now(), base = inp.value ? inp.value.split('-') : null, y = base ? +base[0] : now.getFullYear(), m = base ? +base[1] - 1 : now.getMonth(), l = A.ar() ? 'ar-u-nu-arab' : 'en';
       A.sheet(L(['Choose a date', 'اختر تاريخًا']), '<div class="cal"></div>', function (sh) {
         var host = A.$('.cal', sh);
         (function draw() {

@@ -23,7 +23,7 @@
     if (m < 1) return L(['just now', 'الآن']);
     if (m < 60) return A.num(m) + ' ' + L(['min ago', 'د مضت']);
     var h = Math.round(m / 60); if (h < 24) return A.num(h) + ' ' + L(['h ago', 'س مضت']);
-    return new Date(ms).toLocaleDateString(A.ar() ? 'ar' : 'en', { day: 'numeric', month: 'short' });
+    return new Date(ms).toLocaleDateString(A.ar() ? 'ar-u-nu-arab' : 'en', { day: 'numeric', month: 'short' });
   }
   /* a few drawings the phone app never needed */
   var IC = {
@@ -164,7 +164,7 @@
     var rooms = (C.order || Object.keys(C.rooms)).filter(function (r) { return C.rooms[r] && !(p.off || {})[r] && C.rooms[r].units.some(function (u) { return u.band == null || u.band <= st; }); });
     var ha = $('.view .home-a'), qc = quranCard(p); if (ha && qc) ha.insertAdjacentHTML('beforeend', qc);
     var html = '<aside class="dk-hx"><section class="dk-hx-c"><h3>' + esc(L(['Your week', 'أسبوعك'])) + '<small>' + (streak > 1 ? esc(A.num(streak) + ' ' + L(['days in a row', 'أيام متتالية'])) : '') + '</small></h3><div class="dk-week">' + days.map(function (x) {
-      return '<div class="dk-wd' + (x.today ? ' on' : '') + '"><i><em style="height:' + (x.m ? Math.max(8, Math.round(100 * x.m / top)) : 0) + '%"></em></i><b>' + esc(x.d.toLocaleDateString(A.ar() ? 'ar' : 'en', { weekday: 'narrow' })) + '</b><small>' + (x.m ? A.num(x.m) : '') + '</small></div>';
+      return '<div class="dk-wd' + (x.today ? ' on' : '') + '"><i><em style="height:' + (x.m ? Math.max(8, Math.round(100 * x.m / top)) : 0) + '%"></em></i><b>' + esc(x.d.toLocaleDateString(A.ar() ? 'ar-u-nu-arab' : 'en', { weekday: 'narrow' })) + '</b><small>' + (x.m ? A.num(x.m) : '') + '</small></div>';
     }).join('') + '</div>' + (fresh ? '<p class="dk-hx-n"><b>' + A.num(fresh) + '</b> ' + esc(L(['new skills learned this week', 'مهارات جديدة هذا الأسبوع'])) + '</p>' : '') + '</section>' +
       '<section class="dk-hx-c"><h3>' + esc(L(['Rooms', 'الغرف'])) + '</h3><div class="dk-rooms">' + rooms.map(function (r) {
         var rm = C.rooms[r], all = 0, met = 0; rm.units.forEach(function (u) { if (u.band != null && u.band > st) return; u.skills.forEach(function (s2) { all++; if (M.met(s2.id, p.id)) met++; }); });
@@ -190,7 +190,7 @@
     var bars = days.map(function (dd, di) {
       var x0 = pad + di * gw + (gw - bw * kids.length) / 2;
       return kids.map(function (k, ki) { var v = mins[ki][di], h = v ? Math.max(3, (H - 34) * v / top) : 0; return '<rect class="h-' + esc(k.hue || 'gold') + '" x="' + (x0 + ki * bw).toFixed(1) + '" y="' + (H - 22 - h).toFixed(1) + '" width="' + (bw - 3).toFixed(1) + '" height="' + h.toFixed(1) + '" rx="3"><title>' + esc(k.name) + ' · ' + v + ' min</title></rect>'; }).join('') +
-        '<text x="' + (pad + di * gw + gw / 2).toFixed(1) + '" y="' + (H - 4) + '" text-anchor="middle">' + esc(dd.toLocaleDateString(A.ar() ? 'ar' : 'en', { weekday: 'short' })) + '</text>';
+        '<text x="' + (pad + di * gw + gw / 2).toFixed(1) + '" y="' + (H - 4) + '" text-anchor="middle">' + esc(dd.toLocaleDateString(A.ar() ? 'ar-u-nu-arab' : 'en', { weekday: 'short' })) + '</text>';
     }).join('');
     var grid = [0, .5, 1].map(function (f) { var y = (H - 22 - (H - 34) * f).toFixed(1); return '<line x1="' + pad + '" x2="' + W + '" y1="' + y + '" y2="' + y + '"/><text class="ax" x="0" y="' + (+y + 4) + '">' + A.num(Math.round(top * f)) + '</text>'; }).join('');
     var waiting = [];
@@ -572,7 +572,7 @@
     if (window.Upd && Upd.can()) body += Upd.card('pc');
     var bk = i.backups || [];
     body += '<section class="card"><h3>' + ic('restore', 18) + ' ' + esc(L(['Backups', 'النسخ الاحتياطية'])) + '</h3><p class="dk-note">' + esc(L(['One copy a day, the last thirty days. Going back joins nothing and loses nothing: today’s record is kept as a backup first.', 'نسخة كل يوم لآخر ثلاثين يومًا. الرجوع لا يُضيّع شيئًا: يُحفظ سجل اليوم نسخةً أولًا.'])) + '</p><div class="dk-bk">' +
-      (bk.length ? bk.slice(0, 30).map(function (b, j) { var d = new Date(b.name + 'T12:00:00'); return '<button class="dk-bk-i" data-bk="' + esc(b.name) + '"' + (j === 0 ? ' disabled' : '') + '><b>' + esc(d.toLocaleDateString(A.ar() ? 'ar' : 'en', { weekday: 'short', day: 'numeric', month: 'short' })) + '</b><small>' + (j === 0 ? esc(L(['Today', 'اليوم'])) : bytes(b.bytes)) + '</small></button>'; }).join('') : '<p class="dk-empty">' + esc(L(['The first backup is made today.', 'تُصنع أول نسخة اليوم.'])) + '</p>') + '</div><button class="btn ghost sm" id="pc-bkdir">' + ic('folder', 16) + '<span>' + esc(L(['Show the backups folder', 'أظهر مجلد النسخ'])) + '</span></button></section>';
+      (bk.length ? bk.slice(0, 30).map(function (b, j) { var d = new Date(b.name + 'T12:00:00'); return '<button class="dk-bk-i" data-bk="' + esc(b.name) + '"' + (j === 0 ? ' disabled' : '') + '><b>' + esc(d.toLocaleDateString(A.ar() ? 'ar-u-nu-arab' : 'en', { weekday: 'short', day: 'numeric', month: 'short' })) + '</b><small>' + (j === 0 ? esc(L(['Today', 'اليوم'])) : bytes(b.bytes)) + '</small></button>'; }).join('') : '<p class="dk-empty">' + esc(L(['The first backup is made today.', 'تُصنع أول نسخة اليوم.'])) + '</p>') + '</div><button class="btn ghost sm" id="pc-bkdir">' + ic('folder', 16) + '<span>' + esc(L(['Show the backups folder', 'أظهر مجلد النسخ'])) + '</span></button></section>';
     body += '<p class="dk-ver">Miftāḥ ' + esc(i.version || '') + ' · Windows · ' + esc(L(['Open source, MIT licence', 'مفتوح المصدر، رخصة MIT'])) + '</p>';
     return {
       cls: 'dkv', html: page(L(['This computer', 'هذا الحاسوب']), i.machine || '', body, ic('pc', 26)),
@@ -593,7 +593,7 @@
   function restore(name) {
     var txt = B.backup(name); var o; try { o = JSON.parse(txt); } catch (e) { o = null; }
     if (!o || !Array.isArray(o.profiles)) { A.toast(L(['That backup could not be read', 'تعذّرت قراءة النسخة'])); return; }
-    var d = new Date(name + 'T12:00:00').toLocaleDateString(A.ar() ? 'ar' : 'en', { weekday: 'long', day: 'numeric', month: 'long' });
+    var d = new Date(name + 'T12:00:00').toLocaleDateString(A.ar() ? 'ar-u-nu-arab' : 'en', { weekday: 'long', day: 'numeric', month: 'long' });
     A.sheet(L(['Go back to', 'ارجع إلى']) + ' ' + d, '<p class="dk-note">' + esc(L(['The record returns to how it was that day. Everything after it is set aside, not lost: today is saved as a backup first.', 'يعود السجل كما كان ذلك اليوم. ما بعده يُحفظ جانبًا ولا يضيع: يُحفظ اليوم نسخةً أولًا.'])) + '</p><div class="dk-row2"><button class="btn pri" id="bk-go">' + esc(L(['Go back', 'ارجع'])) + '</button><button class="btn ghost" id="bk-no">' + esc(L(['Keep today', 'أبقِ اليوم'])) + '</button></div>', function (sh) {
       $('#bk-no', sh).onclick = A.closeSheet;
       $('#bk-go', sh).onclick = function () {

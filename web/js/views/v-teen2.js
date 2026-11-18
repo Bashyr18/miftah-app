@@ -8,7 +8,7 @@
   function nav(on) { var t = function (k, ic, a) { return '<a href="#/' + k + '" class="' + (on === k ? 'on' : '') + '">' + A.icon(ic, 21) + '<span>' + esc(L(a)) + '</span></a>'; }; return '<nav class="nav" aria-label="' + esc(L(['Sections', 'الأقسام'])) + '">' + t('home', 'path', ['Today', 'اليوم']) + t('rooms', 'rooms', ['Subjects', 'المواد']) + t('study', 'book', ['Study', 'الدراسة']) + t('keys', 'keys', ['Record', 'السجل']) + '</nav>'; }
   function head(title, sub, back) { return '<header class="th"><div class="grow">' + (back ? '<a class="backp" href="#/' + back[0] + '">' + A.icon('back', 18) + '<span>' + esc(L(back[1])) + '</span></a>' : '') + '<h1>' + esc(title) + '</h1>' + (sub ? '<p>' + esc(sub) + '</p>' : '') + '</div></header>'; }
   function daysTo(iso) { return Math.ceil((new Date(iso + 'T23:59:00').getTime() - A.now().getTime()) / DAY); }
-  function fmtDay(iso) { return new Date(iso + 'T12:00:00').toLocaleDateString(A.ar() ? 'ar' : 'en', { day: 'numeric', month: 'short', year: 'numeric' }); }
+  function fmtDay(iso) { return new Date(iso + 'T12:00:00').toLocaleDateString(A.ar() ? 'ar-u-nu-arab' : 'en', { day: 'numeric', month: 'short', year: 'numeric' }); }
   function words(t) { return (t || '').trim().split(/\s+/).filter(Boolean).length; }
   function forgedIn(room) { var d = A.D(), out = []; C.rooms[room].units.forEach(function (u) { u.skills.forEach(function (s) { if (d.keys[s.id] && d.keys[s.id].forged && s.review) out.push(s); }); }); return out; }
   function flashDue() { var c = A.D().cards || [], t = A.now().getTime(); return c.filter(function (x) { return (x.next || 0) <= t; }); }
@@ -103,7 +103,7 @@
     v.mount = function (el) {
       m0(el); var p0 = $('#t-w-p', el); if (p0) p0.oninput = function () { w.plan = p0.value; A.save(); };
       var x = $('#t-w-x', el); if (x) twoTap(x, function () { gone = true; A.D().work.splice(+id, 1); A.saveNow(); A.go('write'); });
-      var vb = $('#t-w-v', el); if (vb) vb.onclick = function () { A.picker(L(['Versions', 'النسخ']), w.versions.map(function (q, i) { return { v: String(i), t: new Date(q.t).toLocaleDateString(A.ar() ? 'ar' : 'en', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' }) + ' · ' + N(words(q.text)) + ' ' + L(['words', 'كلمة']) }; }).reverse(), '', function (i) { var q = w.versions[+i]; w.versions.push({ t: A.now().getTime(), text: w.text }); w.text = q.text; A.saveNow(); gone = true; A.rerender(); }); };
+      var vb = $('#t-w-v', el); if (vb) vb.onclick = function () { A.picker(L(['Versions', 'النسخ']), w.versions.map(function (q, i) { return { v: String(i), t: new Date(q.t).toLocaleDateString(A.ar() ? 'ar-u-nu-arab' : 'en', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' }) + ' · ' + N(words(q.text)) + ' ' + L(['words', 'كلمة']) }; }).reverse(), '', function (i) { var q = w.versions[+i]; w.versions.push({ t: A.now().getTime(), text: w.text }); w.text = q.text; A.saveNow(); gone = true; A.rerender(); }); };
     };
     return v;
   };
@@ -148,7 +148,7 @@
     }).join('');
     var pp = d.papers || [], pAvg = pp.length ? Math.round(pp.slice(-10).reduce(function (s, x) { return s + x.p; }, 0) / Math.min(10, pp.length)) : null, certs = d.certs || [], h = Hifz.state();
     var kp = function (v, t) { return '<div class="kpi kpi-n"><b>' + v + '</b><small>' + esc(L(t)) + '</small></div>'; };
-    var dd = function (t) { return new Date(t).toLocaleDateString(A.ar() ? 'ar' : 'en', { day: 'numeric', month: 'short' }); };
+    var dd = function (t) { return new Date(t).toLocaleDateString(A.ar() ? 'ar-u-nu-arab' : 'en', { day: 'numeric', month: 'short' }); };
     var recent = pp.slice(-5).reverse().map(function (x) { return '<div class="ev2"><span class="grow"><b>' + esc(L(C.rooms[x.r].name)) + '</b><small>' + dd(x.t) + '</small></span><span class="cnt">' + N(x.p) + '%</span></div>'; }).join('');
     var cs = certs.map(function (c) { return '<button class="ev2 wide" data-a="c-cert" data-r="' + c.r + '" data-y="' + c.y + '">' + A.icon('star', 18) + '<span class="grow"><b>' + esc(L(C.rooms[c.r].name)) + ' · ' + esc(L(C.yearName(c.y))) + '</b><small>' + N(c.p) + '%</small></span>' + A.icon('print', 18) + '</button>'; }).join('');
     return { html: head(L(['Record', 'السجل'])) + '<div class="tw sw"><div class="kpis">' + kp(N(tot), ['Mastered', 'أُتقن']) + kp(tot ? N(Math.round(strSum / tot * 100)) + '%' : '–', ['Remembered', 'محفوظ']) + kp(pAvg == null ? '–' : N(pAvg) + '%', ['Papers', 'الاختبارات']) + kp(N(Object.keys(h.u).length), ['Āyāt', 'آيات']) + '</div><div class="card"><h3>' + esc(L(['Subjects', 'المواد'])) + '</h3>' + rows + '</div>' + (cs ? '<div class="card"><h3>' + esc(L(['Certificates', 'الشهادات'])) + '</h3>' + cs + '</div>' : '') + (recent ? '<div class="card"><h3>' + esc(L(['Recent papers', 'آخر الاختبارات'])) + '</h3>' + recent + '</div>' : '') + '<button class="btn sec wide" style="margin-top:12px" data-a="t-transcript">' + A.icon('print', 18) + '<span>' + esc(L(['Transcript', 'كشف الدرجات'])) + '</span></button></div>' + nav('keys') };

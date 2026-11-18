@@ -123,7 +123,7 @@
       hero = '<div class="hero h-' + inf.hue + '"><div class="hero-arch">' + A.art(inf.art, 76) + '</div><div class="hero-t"><small>' + esc(T(doneN ? 'Next' : 'First today')) + ' · ' + esc(T('About')) + ' ' + minutes(Plan.est(pl.stops[nx], st)) + '</small><h2>' + esc(L(inf.title)) + '</h2><p>' + esc(L(inf.sub)) + '</p></div><button class="btn pri big wide" data-a="go-stop" data-i="' + nx + '">' + esc(T('Open the door')) + A.icon('next', 22).replace('class="ic"', 'class="ic ic-flip"') + '</button></div>';
     } else if (pl.stops.length) {
       var more = st > 0 && !Plan.over() && Plan.moreDoor();
-      hero = '<div class="hero done"><div class="pathdone">' + A.art('key', 104, 'float') + '<h2>' + esc(T('Today’s path is walked')) + '</h2><p>' + esc(T(st === 0 ? 'Now go and play. The best learning is out there with you.' : 'Well done. Now go and play, help at home, and come back tomorrow.')) + '</p>' + (more ? '<button class="btn sec" data-a="one-more">' + esc(T('One more door')) + '</button>' : '') + '</div></div>';
+      hero = '<div class="hero done"><div class="pathdone">' + A.art('key', 104, 'float') + '<h2>' + esc(T('Today’s path is walked')) + '</h2><p>' + esc(T(st === 0 ? 'Now go and play. The best learning is out there with you.' : 'Well done. Now go and play, help at home, and come back tomorrow.')) + '</p>' + '<div class="again-r">' + (more ? '<button class="btn sec" data-a="one-more">' + esc(T('One more door')) + '</button>' : '') + (st > 0 ? '<button class="btn sec" data-a="go-again">' + A.icon('refresh', 18) + '<span>' + esc(L(['Today, again', 'اليوم مرة أخرى'])) + '</span></button>' : '') + '</div></div></div>';
     }
     var prom = Flow.promiseToShow(), promH = prom ? '<button class="promise" data-a="promise-seen" data-id="' + prom.id + '">' + A.art('star', 44) + '<span><small>' + esc(T('You earned what your family promised')) + '</small><b>' + esc(prom.what) + '</b></span></button>' : '';
     var waiting = Flow.inbox().filter(function (x) { return x.kind !== 'stuck'; }).length;
@@ -134,7 +134,7 @@
     return {
       cls: 'court', darkBars: true,
       html: '<div class="sky" id="sky"><div class="hello"><small>' + esc(T('As-salāmu ʿalaykum')) + '</small><h1>' + esc(p.name) + '</h1>' + '<small class="hello-d dates">' + Voice.dateLine(true) + '</small>' + '</div><div class="topbtns">' + A.dn(1) + '<a class="tbtn avatar h-' + (p.hue || 'gold') + '" href="#/who" aria-label="' + esc(T('Change child')) + '" style="--a:var(--h2)">' + esc(p.name.charAt(0).toUpperCase()) + '</a><a class="tbtn" href="#/parent" aria-label="' + esc(T('Parents')) + '">' + A.icon('gear', 22) + (waiting ? '<i class="tdot"></i>' : '') + '</a></div></div>' +
-        '<div class="pathbox"><div class="home-a">' + promH + hero + prog + '</div><div class="home-b"><div class="sec-h"><h2>' + esc(T('Today’s path')) + '</h2></div><div class="path">' + stops + '</div></div></div>' + NAVBAR('home'),
+        '<div class="pathbox"><div class="home-a">' + promH + hero + prog + '</div><div class="home-b"><div class="sec-h"><h2>' + esc(T('Today’s path')) + '</h2>' + (Plan.round() > 1 ? '<span class="round-t">' + esc(L(['Round ' + Plan.round(), 'الجولة ' + A.num(Plan.round())])) + '</span>' : '') + '</div><div class="path">' + stops + '</div></div></div>' + NAVBAR('home'),
       mount: function () {
         var box = $('#sky'); if (!box) return; stop = A.Sky.mount(box);
         var past = false; onScr = function () { var now = (window.scrollY || 0) > box.clientHeight - 80; if (now !== past) { past = now; var vw = box.parentNode; if (vw) vw.classList.toggle('past', now); A.N.call('setSystemBars', now && document.documentElement.dataset.theme === 'light'); } };
@@ -153,6 +153,11 @@
     if (Plan.over()) { A.go('rest'); return; }
     if (s.t === 'move') { A.go('stop/' + i); return; }
     Fx.door(stopInfo(s).hue, 'stop/' + i);
+  };
+  /* a second round of today: revision of what was learned, practice in the same subjects. Past the day's screen time, a grown-up decides. */
+  A.acts['go-again'] = function () {
+    var run = function () { var n = Plan.again(); if (!n) { A.toast(L(['Nothing from today to go over yet', 'لا شيء من اليوم للمراجعة بعد'])); return; } A.toast(L(['Round ' + n + ': going over today', 'الجولة ' + A.num(n) + ': مراجعة اليوم'])); A.rerender(); };
+    if (Plan.over()) A.askGrown(run); else run();
   };
   A.acts['go-resume'] = function () { var to = resumeRoute(), r = A.resumeOf(); if (!to) return; if (Plan.over()) { A.go('rest'); return; } Fx.door(C.rooms[C.skill(r.skill).room].hue, to); };
   A.acts['one-more'] = function () {

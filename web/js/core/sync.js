@@ -124,7 +124,7 @@
   }
   function lanBlock() {
     var i = Sync.lan(); if (!i) return '';
-    if (i.paired) return '<div class="sy-lan" id="sy-lan"><div class="li sy-pc on">' + A.icon('grown', 22) + '<span class="grow"><b>' + esc(i.name) + '</b><small>' + esc(L(['Joins by itself at home', 'يندمج وحده في البيت'])) + (i.last ? ' · ' + esc(new Date(i.last).toLocaleString(A.ar() ? 'ar' : 'en', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })) : '') + '</small></span></div><button class="btn pri wide" id="sy-now">' + esc(L(['Join with my computer now', 'ادمج مع حاسوبي الآن'])) + '</button><button class="btn ghost sm" id="sy-forget">' + esc(L(['Forget this computer', 'انسَ هذا الحاسوب'])) + '</button></div>';
+    if (i.paired) return '<div class="sy-lan" id="sy-lan"><div class="li sy-pc on">' + A.icon('grown', 22) + '<span class="grow"><b>' + esc(i.name) + '</b><small>' + esc(L(['Joins by itself at home', 'يندمج وحده في البيت'])) + (i.last ? ' · ' + esc(new Date(i.last).toLocaleString(A.ar() ? 'ar-u-nu-arab' : 'en', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })) : '') + '</small></span></div><button class="btn pri wide" id="sy-now">' + esc(L(['Join with my computer now', 'ادمج مع حاسوبي الآن'])) + '</button><button class="btn ghost sm" id="sy-forget">' + esc(L(['Forget this computer', 'انسَ هذا الحاسوب'])) + '</button></div>';
     return '<div class="sy-lan" id="sy-lan"><button class="btn pri wide" id="sy-find">' + esc(L(['Find my computer', 'ابحث عن حاسوبي'])) + '</button><small class="sy-st" id="sy-st">' + esc(L(['Miftāḥ for Windows, on the same Wi-Fi', 'مفتاح لويندوز على الشبكة نفسها'])) + '</small><div id="sy-found"></div><button class="sy-manual" id="sy-man">' + esc(L(['Type its address instead', 'اكتب عنوانه بدلًا من ذلك'])) + '</button></div>';
   }
   function bindLan(sh) {
@@ -144,7 +144,7 @@
 
   /* ---------- the sheet ---------- */
   Sync.open = function () {
-    var last = A.S.lastSync, when = last ? new Date(last).toLocaleDateString(A.ar() ? 'ar' : 'en', { day: 'numeric', month: 'short' }) : '';
+    var last = A.S.lastSync, when = last ? new Date(last).toLocaleDateString(A.ar() ? 'ar-u-nu-arab' : 'en', { day: 'numeric', month: 'short' }) : '';
     A.sheet(L(['Your other device', 'جهازك الآخر']), '<div class="sy">' + (B() ? '<h4 class="sy-h">' + esc(L(['My computer', 'حاسوبي'])) + '</h4>' + lanBlock() + '<h4 class="sy-h">' + esc(L(['Or with a file', 'أو بملف'])) + '</h4>' : '') + '<button class="btn pri wide" id="sy-out">' + esc(L(['Send to my other device', 'أرسل إلى جهازي الآخر'])) + '</button><ol class="sy-how"><li>' + esc(L(['Choose Quick Share, Bluetooth or WhatsApp', 'اختر المشاركة السريعة أو البلوتوث أو واتساب'])) + '</li><li>' + esc(L(['On the other device, open the file with Miftāḥ', 'في الجهاز الآخر افتح الملف بتطبيق مفتاح'])) + '</li></ol><button class="btn ghost wide" id="sy-in">' + esc(L(['Open a file I have', 'افتح ملفًا لدي'])) + '</button>' + (when ? '<small class="sy-last">' + esc(L(['Last joined', 'آخر دمج'])) + ' · ' + esc(when) + '</small>' : '') + '</div>', function (sh) {
       bindLan(sh);
       $('#sy-out', sh).onclick = function () {

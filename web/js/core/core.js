@@ -7,24 +7,30 @@
   /* the vowel marks (ḥarakāt, sukūn, shaddah, tanwīn, dagger alif) in their own colour, so a child learning to read sees the mark
      apart from the letter. Only for learning Arabic: never applied to the Qurʾān's text. */
   var HK = /[ً-ْٰ]/;
-  /* the text is drawn twice: whole in the marks' colour, then the bare letters exactly on top in the letters' own colour,
-     so only the marks show in their colour (a browser draws a mark in its letter's colour even inside its own span).
-     The bare copy is a pseudo-element, so the text a script reads is unchanged. */
-  A.hk = function (text) {
-    text = String(text == null ? '' : text); if (!HK.test(text)) return A.esc(text);
-    return '<span class="hkw" data-b="' + A.esc(text.replace(/[ً-ْٰ]/g, '')) + '"><span class="hkf">' + A.esc(text) + '</span></span>';
-  };
-  A.hkPaint = function (root) {
+  /* vowel marks are drawn by the font with their letters, never recoloured: a word drawn twice (with and without its marks) to
+     colour them shifted the marks, because the font spaces letters a little differently when they carry marks */
+  A.hk = function (text) { return A.esc(text); };
+  A.hkPaint = function () { };
+  /* Arabic inside a line set in the Latin font is put in the Arabic font, so its marks sit where the Arabic font places them
+     (a fallback font drew some vowels off their letters) and it reads at the same size as the words around it */
+  var ARUN = /[؀-ۿݐ-ݿﭐ-﷿ﹰ-﻿][؀-ۿݐ-ݿﭐ-﷿ﹰ-﻿\sً-ْٰـ،؛؟]*/g;
+  A.arWrap = function (root) {
     if (!root) return;
     var w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null), list = [], n;
     while ((n = w.nextNode())) {
-      if (!HK.test(n.nodeValue)) continue;
-      var el = n.parentElement; if (!el || el.closest('.quran,.ayah,.hkw,svg,textarea,input,[data-no-hk]')) continue;
-      if (!el.closest('[lang=ar],.ar,.tile,.blend-out,.lt-big')) continue;
+      if (!/[؀-ۿ]/.test(n.nodeValue)) continue;
+      var el = n.parentElement; if (!el || el.closest('.ar,[lang=ar],.quran,.ayah,.ar-run,svg,textarea,input,script,style')) continue;
+      if (/Amiri|Plex Arabic|Naskh|Uthman|Hafs/i.test(getComputedStyle(el).fontFamily.split(',')[0])) continue;
       list.push(n);
     }
-    list.forEach(function (t) { var span = document.createElement('span'); span.innerHTML = A.hk(t.nodeValue); var f = document.createDocumentFragment(); while (span.firstChild) f.appendChild(span.firstChild); t.parentNode.replaceChild(f, t); });
+    list.forEach(function (t) {
+      var v = t.nodeValue, f = document.createDocumentFragment(), last = 0; ARUN.lastIndex = 0; var m;
+      while ((m = ARUN.exec(v))) { var run = m[0].replace(/\s+$/, ''); if (!run) continue; if (m.index > last) f.appendChild(document.createTextNode(v.slice(last, m.index))); var sp = document.createElement('span'); sp.className = 'ar-run' + (run.length <= 28 ? ' ar-short' : ''); sp.lang = 'ar'; sp.dir = 'rtl'; sp.textContent = run; f.appendChild(sp); last = m.index + run.length; }
+      if (last < v.length) f.appendChild(document.createTextNode(v.slice(last)));
+      t.parentNode.replaceChild(f, t);
+    });
   };
+
   A.esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
 
   /* ---------- time (overridable in tests) ---------- */
@@ -184,6 +190,8 @@
       el.innerHTML = '<div class="view' + (same ? ' still' : inVT ? '' : ' enter') + (v.cls ? ' ' + v.cls : '') + '">' + (v.html || '') + '</div>';
       A.$('.view', el).scrollTop = vy; el.scrollTop = ey; window.scrollTo(0, y); if (!same) document.body.classList.remove('scrolled');
       if (v.mount) v.mount(A.$('.view', el));
+      /* Arabic inside English lines, on every screen: its own font, and a short run (a word, a few letters) never split across lines */
+      if (A.arWrap) { try { A.arWrap(A.$('.view', el)); } catch (e) { } }
       if (same) { A.$('.view', el).scrollTop = vy; el.scrollTop = ey; window.scrollTo(0, y); }
     } catch (e) {
       console.error(e);

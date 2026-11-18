@@ -45,7 +45,8 @@
   A.V.rooms = function (a, r) {
     if (!isTeen()) return baseRooms(a, r);
     var pid = A.P().id;
-    var rows = C.order.filter(function (id) { return id !== 'quran'; }).map(function (id) {
+    /* a subject with nothing at their age (Thinking ends at eleven) is not listed */
+    var rows = C.order.filter(function (id) { return id !== 'quran' && roomStats(C.rooms[id], pid).all > 0; }).map(function (id) {
       var R = C.rooms[id], s = roomStats(R, pid), nx = C.next(id);
       return '<a class="ti" href="#/room/' + id + '"><span class="grow"><b>' + esc(L(R.name)) + '</b><small>' + esc(nx ? L(nx.title) : L(['All done for now', 'اكتمل الآن'])) + '</small><div class="tbar"><i style="width:' + (s.all ? Math.round(s.met / s.all * 100) : 0) + '%"></i></div></span><span class="num">' + N(s.met) + '/' + N(s.all) + '</span></a>';
     }).join('');

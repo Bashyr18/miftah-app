@@ -236,6 +236,29 @@
     return day;
   };
   /* the same lesson finished from a room counts on today's path too */
+  /* today, again: every lesson and key from today's path comes back as revision, with practice in today's subjects. The round is
+     added to today's path and counted (d.rounds), and its answers are logged like any review, so revision keeps keys bright.
+     The minutes it needs are added to the day, so the screen-time limit does not cut it short. */
+  Plan.again = function (pid) {
+    var p = A.profile(pid); if (!p) return 0;
+    var pl = Plan.today(pid), d = A.D(pid), k = A.day(), ids = [], rooms = [];
+    pl.stops.forEach(function (s) {
+      if (s.t === 'lesson' && s.s && C.skill(s.s) && C.skill(s.s).review && ids.indexOf(s.s) < 0) { ids.push(s.s); if (rooms.indexOf(C.skill(s.s).room) < 0) rooms.push(C.skill(s.s).room); }
+      if (s.t === 'review') (s.items || []).forEach(function (x) { if (C.skill(x) && C.skill(x).review && ids.indexOf(x) < 0) ids.push(x); });
+      if (s.t === 'practice' && s.room && rooms.indexOf(s.room) < 0) rooms.push(s.room);
+    });
+    if (!ids.length) { Object.keys(d.keys || {}).forEach(function (x) { var sk = C.skill(x); if (sk && sk.review && d.keys[x].forged && ids.length < 8) ids.push(x); }); }
+    if (!ids.length) return 0;
+    d.rounds = d.rounds || {}; var round = (d.rounds[k] || 1) + 1; d.rounds[k] = round;
+    var add = [{ t: 'review', items: ids, done: false, round: round }];
+    rooms.slice(0, 2).forEach(function (r) { if (C.rooms[r] && r !== 'quran') add.push({ t: 'practice', room: r, done: false, round: round }); });
+    add.forEach(function (s) { pl.stops.push(s); });
+    var st = A.stage(p), mins = add.reduce(function (n, s) { return n + Plan.est(s, st); }, 0);
+    if (Plan.over(pid) || Plan.used(pid) + mins * 60000 > Plan.limit(p) * 60000) Plan.extend(Math.ceil(mins), pid);
+    A.saveNow();
+    return round;
+  };
+  Plan.round = function (pid) { var d = A.D(pid); return (d.rounds && d.rounds[A.day()]) || 1; };
   Plan.completeSkill = function (id, pid) { var pl = Plan.today(pid), hit = false; pl.stops.forEach(function (s) { if (s.t === 'lesson' && s.s === id && !s.done) { s.done = true; hit = true; } }); if (hit) A.saveNow(); return hit; };
 
   /* ---------- looking ahead: what the coming days will probably hold ---------- */

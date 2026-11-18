@@ -17,7 +17,7 @@
     return { list: list, mins: Math.round(ms / 60000), rooms: Object.keys(rooms).length };
   };
   function who(p, showName) { var y = A.stage(p) === 0 ? L(['Early years', 'الطفولة المبكرة']) : L(C.yearName(Flow.yearOf(p))); return showName ? p.name + ' · ' + y : L(['A learner in ', 'متعلم في ']) + y; }
-  function range() { var o = { day: 'numeric', month: 'short' }, loc = A.ar() ? 'ar' : 'en', a = new Date(A.now().getTime() - 6 * DAY).toLocaleDateString(loc, o), b = new Date(A.now()).toLocaleDateString(loc, o); return A.num(a + ' – ' + b); }
+  function range() { var o = { day: 'numeric', month: 'short' }, loc = A.ar() ? 'ar-u-nu-arab' : 'en', a = new Date(A.now().getTime() - 6 * DAY).toLocaleDateString(loc, o), b = new Date(A.now()).toLocaleDateString(loc, o); return A.num(a + ' – ' + b); }
   function hueOf(room) { var e = document.createElement('i'); e.className = 'h-' + ((C.rooms[room] || {}).hue || 'gold'); e.style.display = 'none'; document.body.appendChild(e); var v = getComputedStyle(e).getPropertyValue('--h2').trim() || '#d9b26f'; e.remove(); return v; }
 
   /* ---------- drawing a card ---------- */

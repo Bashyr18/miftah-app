@@ -110,7 +110,7 @@
   };
   function head(title, sub, back, label) { return '<div class="ph h-gold"><a class="backp" href="#/' + back + '">' + A.icon('back', 18) + '<span>' + esc(label) + '</span></a><h1>' + esc(title) + '</h1>' + (sub ? '<p>' + esc(sub) + '</p>' : '') + '</div>'; }
   function hrs(ms) { var m = Math.round(ms / 60000); if (m < 60) return A.num(m) + ' ' + T('min'); return A.num(Math.floor(m / 60)) + ' ' + T('h') + ' ' + A.num(m % 60) + ' ' + T('min'); }
-  function week(pid) { var d = A.D(pid), out = [], now = A.now(); for (var i = 6; i >= 0; i--) { var x = new Date(now.getTime() - i * 864e5), k = A.day(x); out.push({ k: k, ms: dayMs(d, k), l: x.toLocaleDateString(A.ar() ? 'ar' : 'en', { weekday: 'narrow' }) }); } return out; }
+  function week(pid) { var d = A.D(pid), out = [], now = A.now(); for (var i = 6; i >= 0; i--) { var x = new Date(now.getTime() - i * 864e5), k = A.day(x); out.push({ k: k, ms: dayMs(d, k), l: x.toLocaleDateString(A.ar() ? 'ar-u-nu-arab' : 'en', { weekday: 'narrow' }) }); } return out; }
 
   function addChild() {
     return { html: '<div class="ph h-gold"><a class="backp" href="#/parent">' + A.icon('back', 18) + '<span>' + esc(T('Parents')) + '</span></a></div><div class="wrap" id="af" style="display:grid;gap:14px;justify-items:center;padding-top:10px"></div>', mount: function (v) { A.V.__form($('#af', v), null, function (p) { A.placeDefault(p); A.saveNow(); A.go('parent'); }); } };
@@ -154,10 +154,10 @@
     var pl = Plan.today(p.id), wk = week(p.id), mx = Math.max.apply(null, wk.map(function (x) { return x.ms; }).concat([60000])), d = A.D(p.id);
     var due = M.due(p.id).length, st = A.stage(p);
     var hz = st > 0 ? Hifz.state(p.id) : null, pend = d.pending || [];
-    var conf = pend.length ? '<div class="card pending"><h3>' + esc(T('Did this really happen?')) + '</h3><p class="ref" style="text-align:start;margin-bottom:8px">' + esc(T('They said they did these. Only a grown-up can confirm a deed.')) + '</p><div class="lst">' + pend.map(function (x) { return '<div class="li"><span class="grow"><b>' + esc(L(x.title)) + '</b><small>' + esc(new Date(x.t).toLocaleDateString(A.ar() ? 'ar' : 'en', { day: 'numeric', month: 'short' })) + '</small></span><span class="li-acts"><button class="btn sm sec" data-conf="1" data-id="' + x.id + '">' + esc(T('Yes')) + '</button><button class="btn sm ghost" data-conf="0" data-id="' + x.id + '">' + esc(T('Not yet')) + '</button></span></div>'; }).join('') + '</div></div>' : '';
+    var conf = pend.length ? '<div class="card pending"><h3>' + esc(T('Did this really happen?')) + '</h3><p class="ref" style="text-align:start;margin-bottom:8px">' + esc(T('They said they did these. Only a grown-up can confirm a deed.')) + '</p><div class="lst">' + pend.map(function (x) { return '<div class="li"><span class="grow"><b>' + esc(L(x.title)) + '</b><small>' + esc(new Date(x.t).toLocaleDateString(A.ar() ? 'ar-u-nu-arab' : 'en', { day: 'numeric', month: 'short' })) + '</small></span><span class="li-acts"><button class="btn sm sec" data-conf="1" data-id="' + x.id + '">' + esc(T('Yes')) + '</button><button class="btn sm ghost" data-conf="0" data-id="' + x.id + '">' + esc(T('Not yet')) + '</button></span></div>'; }).join('') + '</div></div>' : '';
     var used = Math.round(Plan.used(p.id) / 60000);
     var sheets = (d.sheets || []).filter(Print.waiting), promises = (p.promises || []).filter(function (x) { return x.fired && !x.kept; });
-    var sday = function (t) { return new Date(t).toLocaleDateString(A.ar() ? 'ar' : 'en', { day: 'numeric', month: 'short' }); };
+    var sday = function (t) { return new Date(t).toLocaleDateString(A.ar() ? 'ar-u-nu-arab' : 'en', { day: 'numeric', month: 'short' }); };
     /* the code printed on a sheet tells two copies apart: shown only when two waiting sheets share a title */
     var dupT = {}; sheets.forEach(function (x) { var k = Print.titleOf(x); dupT[k] = (dupT[k] || 0) + 1; });
     var codeOf = function (x) { return dupT[Print.titleOf(x)] > 1 ? ' · ' + esc(x.id) : ''; };
@@ -188,7 +188,7 @@
   /* ===== the plan: what the engine expects, and why ===== */
   function tPlan(p) {
     if (A.stage(p) === 0) return { html: '<div class="card"><p style="color:var(--t2);line-height:1.5">' + esc(T('Little Steps has no plan to follow: two short things a day, led by you, mostly real play.')) + '</p></div>' };
-    var days = Flow.preview(p.id, 7), pr = Flow.prep(p.id), lang = A.ar() ? 'ar' : 'en', pace = Flow.pace(p.id);
+    var days = Flow.preview(p.id, 7), pr = Flow.prep(p.id), lang = A.ar() ? 'ar-u-nu-arab' : 'en', pace = Flow.pace(p.id);
     var rows = days.map(function (d) { return '<div class="li"><span class="pl-day">' + esc(d.date.toLocaleDateString(lang, { weekday: 'short' })) + '</span><span class="grow">' + (d.kind === 'rest' ? '<small>' + esc(T('Rest: the Qurʾān and something real')) + '</small>' : d.kind === 'light' ? '<small>' + esc(L(['Review and make: no new lessons', 'مراجعة وصنع، بلا دروس جديدة'])) + '</small>' : d.lessons.length ? d.lessons.map(function (s) { return '<b class="h-' + C.rooms[s.room].hue + '"><i class="rdot"></i>' + esc(L(s.title)) + '</b>'; }).join('') : '<small>' + esc(L(['Every open lesson is done', 'أنجز كل الدروس المتاحة'])) + '</small>') + '</span></div>'; }).join('');
     var fore = C.order.filter(function (r) { return r !== 'quran' && !(p.off || {})[r] && Flow.forecast(r, p.id).total > 0; }).map(function (r) { var f = Flow.forecast(r, p.id), R = C.rooms[r], pct = f.total ? Math.round((f.total - f.left) / f.total * 100) : 0; return '<div class="fore h-' + R.hue + '"><div class="fore-h"><b>' + esc(L(R.name)) + '</b><small>' + (f.left === 0 ? esc(T('Done at this stage')) : f.weeks ? esc(T('About')) + ' ' + A.num(f.weeks) + ' ' + esc(T('weeks left')) : '') + '</small></div><span class="portal-p" style="width:100%;max-width:none"><i style="width:' + pct + '%"></i></span><small class="fore-n">' + A.num(f.total - f.left) + ' / ' + A.num(f.total) + '</small></div>'; }).join('');
     var need = pr.need.length ? '<div class="card"><h3>' + esc(T('To have ready for tomorrow')) + '</h3><div class="lst">' + pr.need.map(function (x) { return '<div class="li">' + A.art(x.m.art, 34) + '<span class="grow"><b>' + esc(L(x.m.materials)) + '</b><small>' + esc(L(x.m.t)) + '</small></span></div>'; }).join('') + '</div></div>' : '';
@@ -204,7 +204,7 @@
     var dupL = {}; log.forEach(function (x) { var k = Print.titleOf(x); dupL[k] = (dupL[k] || 0) + 1; });
     var logH = log.length ? '<div class="card"><h3>' + esc(L(['Printed', 'ما طُبع'])) + '</h3><div class="lst">' + log.map(function (x) {
       var wait = Print.waiting(x), href = x.q && wait ? '#/parent/' + p.id + '/mark/' + x.id : Print.KINDS[x.kind] && x.seed ? '#/parent/' + p.id + '/sheet/' + x.kind + '/' + x.seed : '';
-      return (href ? '<a class="li" href="' + href + '">' : '<div class="li">') + A.icon('print', 20) + '<span class="grow"><b>' + esc(Print.titleOf(x)) + '</b><small>' + esc(new Date(x.t).toLocaleDateString(A.ar() ? 'ar' : 'en', { day: 'numeric', month: 'short' })) + (dupL[Print.titleOf(x)] > 1 ? ' · ' + esc(x.id) : '') + (x.n > 1 ? ' · ' + A.num(x.n) + '×' : '') + '</small></span><span class="sh-st' + (wait ? ' on' : '') + '">' + esc(Print.status(x)) + '</span>' + (href ? '</a>' : '</div>');
+      return (href ? '<a class="li" href="' + href + '">' : '<div class="li">') + A.icon('print', 20) + '<span class="grow"><b>' + esc(Print.titleOf(x)) + '</b><small>' + esc(new Date(x.t).toLocaleDateString(A.ar() ? 'ar-u-nu-arab' : 'en', { day: 'numeric', month: 'short' })) + (dupL[Print.titleOf(x)] > 1 ? ' · ' + esc(x.id) : '') + (x.n > 1 ? ' · ' + A.num(x.n) + '×' : '') + '</small></span><span class="sh-st' + (wait ? ' on' : '') + '">' + esc(Print.status(x)) + '</span>' + (href ? '</a>' : '</div>');
     }).join('') + '</div><p class="ref" style="margin-top:8px;text-align:start">' + esc(L(['Tap one to print the same version again, or to mark it.', 'المس واحدة لتطبع النسخة نفسها مرة أخرى أو لتصحّحها.'])) + '</p></div>' : '';
     return { html: '<div class="card"><p style="color:var(--t2);line-height:1.5;font-size:14.500px">' + esc(T('Every sheet is made fresh from what this child knows today. Practice sheets can be marked here afterwards, and count as real work.')) + '</p></div>' + sugH + logH + Print.GROUPS.map(function (g) { return byG[g[0]] ? '<div class="card"><h3>' + esc(T(g[1])) + '</h3><div class="lst">' + byG[g[0]].map(row).join('') + '</div></div>' : ''; }).join('') };
   }
@@ -320,7 +320,7 @@
   function skillSheet(pid, sid) {
     var sk = C.skill(sid), k = M.key(sid, pid), d = A.D(pid);
     var n = k ? k.n : { recognition: 0, recall: 0, production: 0, observed: 0 }, placed = !!d.placed[sid];
-    var last = k && k.lastOk ? new Date(k.lastOk).toLocaleDateString(A.ar() ? 'ar' : 'en') : T('Not yet');
+    var last = k && k.lastOk ? new Date(k.lastOk).toLocaleDateString(A.ar() ? 'ar-u-nu-arab' : 'en') : T('Not yet');
     var why = [];
     if (k && k.forged && !k.proven) { if (!k.delayed) why.push(T('Needs recall a day or more later')); if (n.production + n.observed < 1) why.push(T('Needs something produced or seen in real life')); }
     A.sheet(L(sk.title), '<p style="color:var(--t2);margin-bottom:10px">' + esc(A.stateText(sid, true)) + '</p><div class="lst"><div class="li"><span class="grow"><b>' + esc(T('Recognised')) + '</b></span>' + A.num(n.recognition) + '</div><div class="li"><span class="grow"><b>' + esc(T('Recalled')) + '</b></span>' + A.num(n.recall) + '</div><div class="li"><span class="grow"><b>' + esc(T('Produced')) + '</b></span>' + A.num(n.production) + '</div><div class="li"><span class="grow"><b>' + esc(T('Seen in real life')) + '</b></span>' + A.num(n.observed) + '</div><div class="li"><span class="grow"><b>' + esc(T('Remembered after a delay')) + '</b></span>' + A.num(k ? k.delayed : 0) + '</div><div class="li"><span class="grow"><b>' + esc(T('Last success')) + '</b></span>' + esc(last) + '</div></div>' + (why.length ? '<p class="ref" style="margin:10px 0;text-align:start">' + esc(why.join(' · ')) + '</p>' : '') + timelineHtml(sid, pid) + '<div style="display:grid;gap:8px;margin-top:12px"><button class="btn pri" id="sk-next">' + esc((d.pin || []).indexOf(sid) >= 0 ? T('Coming up next') : T('Teach this next')) + '</button><button class="btn sec" id="sk-teach">' + esc(T('Open this lesson')) + '</button><button class="btn ghost" id="sk-place">' + esc(placed ? T('Remove “already knows this”') : T('Mark: already knows this')) + '</button></div>', function (el) {
@@ -333,7 +333,7 @@
     var rows = M.timeline(sid, pid).slice(0, 12); if (!rows.length) return '';
     return '<h3 style="font-size:15px;margin:14px 0 6px">' + esc(T('When')) + '</h3><div class="evl">' + rows.map(function (x) {
       var bits = []; if (x.forge) bits.push(L(['Lesson mastered', 'أتقن الدرس'])); if (x.seen) bits.push(T('Seen in real life')); if (x.ok) bits.push(A.num(x.ok) + ' ' + T('alone')); if (x.help) bits.push(A.num(x.help) + ' ' + T('with a hint')); if (x.miss) bits.push(A.num(x.miss) + ' ' + T('not yet')); if (x.rv) bits.push(T('Came back'));
-      return '<div class="evl-r"><i></i><b>' + esc(new Date(x.day + 'T12:00:00').toLocaleDateString(A.ar() ? 'ar' : 'en', { month: 'short', day: 'numeric' })) + '</b><span>' + esc(bits.join(' · ')) + '</span></div>';
+      return '<div class="evl-r"><i></i><b>' + esc(new Date(x.day + 'T12:00:00').toLocaleDateString(A.ar() ? 'ar-u-nu-arab' : 'en', { month: 'short', day: 'numeric' })) + '</b><span>' + esc(bits.join(' · ')) + '</span></div>';
     }).join('') + '</div>';
   }
   function tTalk(p) {
@@ -358,8 +358,8 @@
     var recs = d.recs ? Object.keys(d.recs) : [];
     return {
       html: '<div class="card"><h3>' + esc(T('Attendance')) + '</h3><p style="color:var(--t2);line-height:1.5">' + esc(T('Days')) + ': ' + A.num(days.length) + ' · ' + esc(T('Total')) + ': ' + hrs(tot) + '</p>' + calendar(d) + '<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap"><button class="btn sec sm" data-a="print-rep" data-p="' + p.id + '">' + A.icon('print', 18) + '<span>' + esc(T('Print a report')) + '</span></button></div></div>' +
-        (recs.length ? '<div class="card"><h3>' + esc(T('Recitations to hear')) + '</h3><div class="lst">' + recs.map(function (k) { var pa = k.split(':'); return '<button class="li" data-a="play-rec" data-k="rec_' + p.id + '_' + pa[0] + '_' + pa[1] + '">' + A.icon('play', 20) + '<span class="grow"><b>' + esc(A.surahName(pa[0])) + ' ' + A.num(pa[1]) + '</b><small>' + esc(new Date(d.recs[k]).toLocaleDateString(A.ar() ? 'ar' : 'en')) + '</small></span></button>'; }).join('') + '</div></div>' : '') +
-        '<div class="card"><h3>' + esc(T('Observations and deeds')) + '</h3>' + (ob.length ? '<div class="lst">' + ob.map(function (o) { return '<div class="li"><span class="grow"><b>' + esc(o.title) + '</b><small>' + esc(new Date(o.t).toLocaleDateString(A.ar() ? 'ar' : 'en')) + (o.value ? ' · ' + esc(o.value) : '') + '</small></span></div>'; }).join('') + '</div>' : '<p style="color:var(--t2)">' + esc(T('Nothing yet.')) + '</p>') + '</div>'
+        (recs.length ? '<div class="card"><h3>' + esc(T('Recitations to hear')) + '</h3><div class="lst">' + recs.map(function (k) { var pa = k.split(':'); return '<button class="li" data-a="play-rec" data-k="rec_' + p.id + '_' + pa[0] + '_' + pa[1] + '">' + A.icon('play', 20) + '<span class="grow"><b>' + esc(A.surahName(pa[0])) + ' ' + A.num(pa[1]) + '</b><small>' + esc(new Date(d.recs[k]).toLocaleDateString(A.ar() ? 'ar-u-nu-arab' : 'en')) + '</small></span></button>'; }).join('') + '</div></div>' : '') +
+        '<div class="card"><h3>' + esc(T('Observations and deeds')) + '</h3>' + (ob.length ? '<div class="lst">' + ob.map(function (o) { return '<div class="li"><span class="grow"><b>' + esc(o.title) + '</b><small>' + esc(new Date(o.t).toLocaleDateString(A.ar() ? 'ar-u-nu-arab' : 'en')) + (o.value ? ' · ' + esc(o.value) : '') + '</small></span></div>'; }).join('') + '</div>' : '<p style="color:var(--t2)">' + esc(T('Nothing yet.')) + '</p>') + '</div>'
     };
   }
   A.acts['play-rec'] = function (t) { Voice.play('voice/' + t.dataset.k + '.m4a'); };
@@ -391,7 +391,7 @@
   }
 
   var WD = [0, 1, 2, 3, 4, 5, 6];
-  function wdName(i) { return new Date(2023, 0, 1 + i).toLocaleDateString(A.ar() ? 'ar' : 'en', { weekday: 'short' }); }
+  function wdName(i) { return new Date(2023, 0, 1 + i).toLocaleDateString(A.ar() ? 'ar-u-nu-arab' : 'en', { weekday: 'short' }); }
   function setupPlan(p) {
     var days = p.days || WD, light = p.light == null ? 5 : p.light, pace = p.pace || 'steady', focus = p.focus || {};
     return '<div class="card"><h3>' + esc(T('School days')) + '</h3><div class="wk7">' + WD.map(function (i) { return '<button class="seg ' + (days.indexOf(i) >= 0 ? 'on' : '') + '" data-day="' + i + '">' + esc(wdName(i)) + '</button>'; }).join('') + '</div><p class="ref" style="margin:8px 0;text-align:start">' + esc(T('On other days: only the Qurʾān and something real.')) + '</p><h3 style="margin-top:10px">' + esc(T('The remembering day')) + '</h3><div class="wk7">' + WD.map(function (i) { return '<button class="seg ' + (light === i ? 'on' : '') + '" data-light="' + i + '">' + esc(wdName(i)) + '</button>'; }).join('') + '</div><p class="ref" style="margin-top:8px;text-align:start">' + esc(L(['No new lessons that day: review, making and movement. Strong learning needs one.', 'بلا دروس جديدة ذلك اليوم: مراجعة وصنع وحركة. يحتاجه التعلم القوي.'])) + '</p></div>' +
@@ -508,7 +508,10 @@
   A.sheet = function (title, html, mount) {
     A.closeSheet();
     var bg = document.createElement('div'); bg.className = 'sheetbg'; var sh = document.createElement('div'); sh.className = 'sheet';
-    sh.innerHTML = '<h2>' + esc(title) + '</h2>' + html;
+    /* a header that stays, with a way to close; the content scrolls under it */
+    sh.setAttribute('role', 'dialog'); sh.setAttribute('aria-modal', 'true');
+    sh.innerHTML = '<div class="sheet-h"><h2>' + esc(title) + '</h2><button class="sheet-x" type="button" aria-label="' + esc(A.L(['Close', 'إغلاق'])) + '">' + A.icon('close', 20) + '</button></div><div class="sheet-b">' + html + '</div>';
+    sh.querySelector('.sheet-x').onclick = function () { A.closeSheet(); };
     document.body.appendChild(bg); document.body.appendChild(sh);
     sheetEl = [bg, sh]; bg.onclick = A.closeSheet;
     requestAnimationFrame(function () { bg.classList.add('on'); sh.classList.add('on'); });

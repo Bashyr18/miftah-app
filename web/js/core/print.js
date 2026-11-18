@@ -15,7 +15,7 @@
   var PG = '%%PG%%';
   function foot(ctx) {
     var k = K[ctx.kind] || {}, hint = k.use === 'mark' ? L(['Afterwards, mark it in Miftāḥ: Parents, Today', 'بعد ذلك صحّحها في مفتاح: الوالدان، اليوم']) : k.use === 'do' ? L(['When it is done, tick it in Miftāḥ: Parents, Today', 'عند إنجازها أشِر إليها في مفتاح: الوالدان، اليوم']) : '';
-    return '<footer class="pp-f"><span>' + esc(L(['Miftāḥ', 'مفتاح'])) + ' · ' + esc(ctx.code) + ' · ' + esc(A.now().toLocaleDateString(A.ar() ? 'ar' : 'en', { day: 'numeric', month: 'short', year: 'numeric' })) + '</span><span>' + esc(hint) + '</span><span>' + PG + '</span></footer>';
+    return '<footer class="pp-f"><span>' + esc(L(['Miftāḥ', 'مفتاح'])) + ' · ' + esc(ctx.code) + ' · ' + esc(A.now().toLocaleDateString(A.ar() ? 'ar-u-nu-arab' : 'en', { day: 'numeric', month: 'short', year: 'numeric' })) + '</span><span>' + esc(hint) + '</span><span>' + PG + '</span></footer>';
   }
   function page(ctx, title, note, body, o) {
     o = o || {};
@@ -288,7 +288,7 @@
   }, { stage: 0 });
   kind('chart-prayer', 'deen', ['Prayer chart', 'جدول الصلاة'], ['A week of the five prayers, to tick together', 'أسبوع من الصلوات الخمس لتعلّماها معًا'], function (c) {
     var P = [['Fajr', 'الفجر'], ['Ẓuhr', 'الظهر'], ['ʿAṣr', 'العصر'], ['Maghrib', 'المغرب'], ['ʿIshāʾ', 'العشاء']], days = [], now = A.now();
-    for (var i = 0; i < 7; i++) days.push(new Date(now.getFullYear(), now.getMonth(), now.getDate() + i).toLocaleDateString(A.ar() ? 'ar' : 'en', { weekday: 'short' }));
+    for (var i = 0; i < 7; i++) days.push(new Date(now.getFullYear(), now.getMonth(), now.getDate() + i).toLocaleDateString(A.ar() ? 'ar-u-nu-arab' : 'en', { weekday: 'short' }));
     return { html: page(c, L(['My prayers this week', 'صلواتي هذا الأسبوع']), T('Tick each one prayed. This is for the two of you, not for marks.'), '<div class="tbl fill"><table class="chart" style="font-size:13pt"><tr><th></th>' + days.map(function (d) { return '<th>' + esc(d) + '</th>'; }).join('') + '</tr>' + P.map(function (x) { return '<tr><td class="l">' + esc(L(x)) + '</td>' + new Array(8).join('<td></td>') + '</tr>'; }).join('') + '</table></div>') };
   }, { use: 'do' });
   kind('chart-hifz', 'deen', ['My Qurʾān shelf', 'رف قرآني'], ['Each sūrah, how much is kept, and who heard it', 'كل سورة وكم حُفظ منها ومن سمعها'], function (c) {
@@ -306,7 +306,7 @@
   kind('certificate', 'reward', ['Certificate', 'شهادة'], ['For the newest lantern they have lit', 'لآخر فانوس أضاءه'], function (c) {
     var lit = Flow.lanterns(c.pid).filter(function (x) { return x.lit; }), d = A.D(c.pid).units || {}; lit.sort(function (a, b) { return d[b.id].t - d[a.id].t; });
     var u = lit[0]; if (!u) return null;
-    return { html: page(c, '', '', '<div class="cert fill">' + A.art('key', 160) + '<p>' + esc(T('With thanks to Allah, this key is earned by')) + '</p><h1>' + esc(c.p.name) + '</h1><p>' + esc(L(C.rooms[u.room].name)) + '</p><h2>' + esc(L(u.title)) + '</h2><p>' + esc(new Date(d[u.id].t).toLocaleDateString(A.ar() ? 'ar' : 'en', { year: 'numeric', month: 'long', day: 'numeric' })) + (Voice.dates().h ? ' · ' + esc(Voice.dates().h) : '') + '</p></div>', { bare: 1, nofoot: 1 }) };
+    return { html: page(c, '', '', '<div class="cert fill">' + A.art('key', 160) + '<p>' + esc(T('With thanks to Allah, this key is earned by')) + '</p><h1>' + esc(c.p.name) + '</h1><p>' + esc(L(C.rooms[u.room].name)) + '</p><h2>' + esc(L(u.title)) + '</h2><p>' + esc(new Date(d[u.id].t).toLocaleDateString(A.ar() ? 'ar-u-nu-arab' : 'en', { year: 'numeric', month: 'long', day: 'numeric' })) + (Voice.dates().h ? ' · ' + esc(Voice.dates().h) : '') + '</p></div>', { bare: 1, nofoot: 1 }) };
   }, { need: function (pid) { return Flow.lanterns(pid).some(function (x) { return x.lit; }); } });
   kind('poster', 'reward', ['My keys poster', 'ملصق مفاتيحي'], ['Everything they have earned so far, and what comes next, to go on the wall', 'كل ما حققه حتى الآن وما يليه، ليعلق على الحائط'], function (c) {
     /* every cell is 13 mm and every room heading 11 mm, so the pages are packed by arithmetic, never by luck; a long room carries on over the page */
@@ -324,7 +324,7 @@
     return { html: pages.map(function (pg, i) { return page(c, L(['My keys', 'مفاتيحي']), i ? '' : T('The gold ones are earned. Colour them in as you go.') + ' ' + L(['The white ones come next.', 'البيضاء هي التالية.']), pg.map(function (r) { return '<div class="pp-t">' + esc(r.name) + '</div><div class="keysg">' + r.sks.map(function (s) { return '<div class="' + (M.met(s.id, c.pid) ? 'on' : '') + '">' + esc(L(s.title)) + '</div>'; }).join('') + '</div>'; }).join('')); }).join('') };
   });
   kind('week', 'reward', ['This week’s plan', 'خطة الأسبوع'], ['What to expect, and what to have ready', 'ما تتوقعه وما تجهزه'], function (c) {
-    var rows = Flow.preview(c.pid, 7).map(function (d) { return '<tr><td class="l" style="width:32mm">' + esc(d.date.toLocaleDateString(A.ar() ? 'ar' : 'en', { weekday: 'long' })) + '</td><td class="l">' + esc(d.kind === 'rest' ? T('Rest') : d.kind === 'light' ? T('Remember and make') : d.lessons.map(function (s) { return L(s.title); }).join(' · ')) + '</td><td style="width:16mm"></td></tr>'; }).join('');
+    var rows = Flow.preview(c.pid, 7).map(function (d) { return '<tr><td class="l" style="width:32mm">' + esc(d.date.toLocaleDateString(A.ar() ? 'ar-u-nu-arab' : 'en', { weekday: 'long' })) + '</td><td class="l">' + esc(d.kind === 'rest' ? T('Rest') : d.kind === 'light' ? T('Remember and make') : d.lessons.map(function (s) { return L(s.title); }).join(' · ')) + '</td><td style="width:16mm"></td></tr>'; }).join('');
     var need = {}; Flow.preview(c.pid, 7).forEach(function (d) { d.lessons.forEach(function (sk) { Object.keys(C.missions).forEach(function (id) { var m = C.missions[id]; if (m.hands && m.skill === sk.id) need[L(m.materials)] = 1; }); }); });
     var list = Object.keys(need);
     return { html: page(c, L(['This week', 'هذا الأسبوع']), T('A forecast: it adapts to how each day goes.'), '<div class="tbl" style="flex:3 1 0;min-height:0"><table class="chart"><tr><th>' + esc(T('Day')) + '</th><th>' + esc(T('New doors')) + '</th><th>' + A.icon('check', 14) + '</th></tr>' + rows + '</table></div>' + (list.length ? '<div class="pp-t">' + esc(T('To have ready')) + '</div><div class="pp-n">' + esc(list.join(' · ')) + '</div>' : '') + '<div class="box fill" style="flex:1 1 0;margin-top:3mm"><b>' + esc(L(['Notes for the week', 'ملاحظات الأسبوع'])) + '</b><div class="lines"></div></div>') };

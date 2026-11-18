@@ -69,18 +69,16 @@
     if (!raf) raf = requestAnimationFrame(loop);
   };
   Fx.bloomAt = function (el, color, big) { if (A.motion() !== 'full') return; if (!el) return; var r = el.getBoundingClientRect(); Fx.bloom(r.left + r.width / 2, r.top + r.height / 2, color, big); };
-  Fx.shake = function (el) { if (!el || A.reduced()) return; el.animate([{ transform: 'translateX(0)' }, { transform: 'translateX(-7px)' }, { transform: 'translateX(6px)' }, { transform: 'translateX(-4px)' }, { transform: 'translateX(0)' }], { duration: 300, easing: 'ease-out' }); };
+  /* no shaking for the youngest: a wrong answer simply fades (the style sheet does it), which never startles */
+  Fx.shake = function (el) { if (!el || A.reduced() || (A.P() && A.stage() <= 1)) return; el.animate([{ transform: 'translateX(0)' }, { transform: 'translateX(-7px)' }, { transform: 'translateX(6px)' }, { transform: 'translateX(-4px)' }, { transform: 'translateX(0)' }], { duration: 300, easing: 'ease-out' }); };
   Fx.pop = function (el) { if (A.motion() !== 'full') return; if (!el || A.reduced()) return; el.animate([{ transform: 'scale(.86)' }, { transform: 'scale(1.08)' }, { transform: 'scale(1)' }], { duration: 340, easing: 'cubic-bezier(.34,1.4,.5,1)' }); };
 
   /* ===== the door: every journey into a room passes through one =====
      Two carved leaves swing shut, a key turns in the lock, and the view moves forward through them as the room's light comes in. */
   var going = false;
   var lastFull = 0;
-  /* the sounds of the door, from filtered noise: metal into metal, a bolt drawing, wood moving on its hinges */
-  function doorSound(k, dur) {
-    if (k === 'latch') { noise(.018, 3800, 6, .16); noise(.05, 900, 3, .22, .012); noise(.09, 160, 1.4, .3, .02); A.N.haptic('tick'); }
-    else if (k === 'swing') { noise((dur || 1) * .9, 420, .7, .055, .05); noise((dur || 1) * .6, 190, .9, .05, .15); }
-  }
+  /* the door opens in silence: made from filtered noise it never sounded like real wood and metal, so only the hand feels the latch */
+  function doorSound(k) { if (k === 'latch') A.N.haptic('tick'); }
   Fx.doorSound = doorSound;
   Fx.door = function (hue, route, label) {
     if (going) return;
