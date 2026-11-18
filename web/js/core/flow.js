@@ -22,9 +22,9 @@
     4: { day: 140, news: 4, reviewCap: 20, moveEvery: 0, perWeek: 18 }
   };
   /* each room's share of new learning, per stage; a parent can lean any room up or down */
-  var WEIGHT = { 1: { arabic: 4, math: 6, english: 4, deen: 3, science: 3, world: 1, computing: 1, engineering: 2 }, 2: { arabic: 4, math: 7, english: 4, deen: 3, science: 5, world: 2, computing: 3, engineering: 3 }, 3: { arabic: 3, math: 8, english: 3, deen: 3, science: 7, world: 2, computing: 5, engineering: 4, life: 1 }, 4: { arabic: 3, math: 9, english: 3, deen: 3, science: 8, world: 2, computing: 6, engineering: 5, life: 2 } };
+  var WEIGHT = { 1: { arabic: 4, math: 6, english: 4, deen: 3, science: 3, world: 1, computing: 1, engineering: 2, think: 2 }, 2: { arabic: 4, math: 7, english: 4, deen: 3, science: 5, world: 2, computing: 3, engineering: 3, think: 3 }, 3: { arabic: 3, math: 8, english: 3, deen: 3, science: 7, world: 2, computing: 5, engineering: 4, life: 1 }, 4: { arabic: 3, math: 9, english: 3, deen: 3, science: 8, world: 2, computing: 6, engineering: 5, life: 2 } };
   /* heavier thinking goes first, while the mind is fresh */
-  var LOAD = { math: 3, arabic: 3, english: 2, deen: 1, science: 2, world: 1, computing: 3, engineering: 2, life: 1 };
+  var LOAD = { think: 3, math: 3, arabic: 3, english: 2, deen: 1, science: 2, world: 1, computing: 3, engineering: 2, life: 1 };
 
   /* ---------- strands: parallel threads that weave in rather than wait their turn ---------- */
   var STRANDS = ['d-adab', 'd-dua', 'd-seerah', 'd-hadith', 'm-think', 'm-measure'];
@@ -88,25 +88,40 @@
 
   /* ---------- the pace: how many new doors today, and why ---------- */
   function firstPass(pid) { var d = A.D(pid), since = A.dayNum() - 14, n = 0, ok = 0; (d.hist || []).forEach(function (h) { if (h.n >= since && !h.again) { n++; if (h.p) ok++; } }); return n >= 4 ? ok / n : null; }
+  /* how fast a child is really moving: of their last new lessons (a month at most), how many were clean, every answer right
+     the first time with no help. Twelve or more clean in a row of nearly all is flying; most of eight is quick. Only lessons
+     recorded with this measure count, so nothing changes until there is real evidence. */
+  Flow.velocity = function (pid) {
+    var d = A.D(pid), since = A.dayNum() - 30, list = (d.hist || []).filter(function (h) { return h.n > since && !h.again && h.c != null; }).slice(-20);
+    var n = list.length, clean = list.filter(function (h) { return h.p && h.c; }).length, rate = n ? clean / n : 0;
+    var deep = list.filter(function (h) { return h.x === 1; }).length;
+    var level = n >= 12 && rate >= .88 ? 'flying' : n >= 8 && rate >= .75 ? 'quick' : 'steady';
+    return { n: n, rate: rate, deep: deep, level: level };
+  };
   Flow.pace = function (pid) {
     var p = A.profile(pid), st = A.stage(p), pr = Flow.PROFILE[st], news = pr.news, why = [];
     var due = M.due(pid).length, r = M.retention(pid, 14), fp = firstPass(pid);
+    /* a child racing ahead gets more, as long as what they learn is staying; a parent's gentle pace always wins */
+    var vel = Flow.velocity(pid), holding = !(r.of >= 8 && r.ok / r.of < .8) && due < pr.reviewCap * 2;
+    var fast = st >= 1 && p.pace !== 'gentle' && holding ? vel.level : 'steady';
     if (p.pace === 'gentle') { news = Math.max(1, news - 1); why.push(['A gentle pace, as you chose.', 'وتيرة هادئة كما اخترت.']); }
     if (p.pace === 'strong') { news += 1; why.push(['A stronger pace, as you chose.', 'وتيرة أقوى كما اخترت.']); }
     if (due >= pr.reviewCap * 2) { news = Math.max(1, news - 1); why.push(['Fewer new lessons: ' + due + ' are due for review first.', 'دروس جديدة أقل: ' + A.num(due) + ' تحتاج مراجعة أولًا.']); }
     if (r.of >= 8 && r.ok / r.of < .6) { news = Math.max(1, news - 1); why.push(['Fewer new lessons: older ones are slipping, so memory comes first.', 'دروس جديدة أقل: القديمة تضعف، فالذاكرة أولًا.']); }
     else if (r.of >= 8 && r.ok / r.of >= .88 && (fp == null || fp >= .8) && due < pr.reviewCap && p.pace !== 'gentle') { news += 1; why.push(['One more new lesson: what they learn is staying with them.', 'درس جديد إضافي: ما يتعلمه يبقى معه.']); }
     /* the calendar: a year's learning spread over a year. Enough new doors this week means the rest of the week strengthens them. */
-    var d = A.D(pid), since = A.dayNum() - 7, fresh = (d.hist || []).filter(function (h) { return h.n > since && !h.again; }).length, cap = pr.perWeek + (p.pace === 'strong' ? 4 : p.pace === 'gentle' ? -2 : 0);
+    if (fast === 'flying') { news += 2; why.push(['Two more new lessons: they are getting nearly everything right first time, and keeping it.', 'درسان جديدان إضافيان: يجيب صحيحًا من أول مرة تقريبًا ويحتفظ بما تعلّم.']); }
+    else if (fast === 'quick') { news += 1; why.push(['One more new lesson: they are moving quickly and cleanly.', 'درس جديد إضافي: يتقدم بسرعة ودقة.']); }
+    var d = A.D(pid), since = A.dayNum() - 7, fresh = (d.hist || []).filter(function (h) { return h.n > since && !h.again; }).length, cap = (fast === 'flying' ? 8 : fast === 'quick' ? 4 : 0) + pr.perWeek + (p.pace === 'strong' ? 4 : p.pace === 'gentle' ? -2 : 0);
     if (cap && fresh >= cap) { news = 0; why.push(['Enough new lessons this week: the rest of it makes them last.', 'دروس جديدة كافية هذا الأسبوع: وبقيته تثبّتها.']); }
-    return { news: news, why: why };
+    return { news: news, why: why, fast: fast };
   };
 
   /* ---------- choosing rooms: whoever is furthest behind its share ---------- */
-  Flow.record = function (skill, passed, pid) {
+  Flow.record = function (skill, passed, pid, res) {
     var d = A.D(pid), sk = C.skill(skill); if (!sk) return;
     d.hist = d.hist || []; var again = d.hist.some(function (h) { return h.s === skill; });
-    d.hist.push({ n: A.dayNum(), r: sk.room, s: skill, p: passed ? 1 : 0, again: again ? 1 : 0 });
+    d.hist.push({ n: A.dayNum(), r: sk.room, s: skill, p: passed ? 1 : 0, again: again ? 1 : 0, c: res && res.clean ? 1 : 0, x: res && res.stretch ? (res.stretchOk === res.stretch ? 1 : 0) : undefined });
     if (d.hist.length > 600) d.hist.splice(0, d.hist.length - 600);
     if (passed && d.pin) d.pin = d.pin.filter(function (x) { return x !== skill; });
   };
@@ -141,7 +156,7 @@
   };
 
   /* ---------- today's path ---------- */
-  Plan.est = function (s, st) { return s.t === 'review' ? Math.max(2, s.items.length * .8) : s.t === 'hifz' ? (st === 2 ? 7 : 5) : s.t === 'lesson' ? ((C.skill(s.s) || {}).mins || (st === 2 ? 8 : 6)) : s.t === 'mission' ? 2 : s.t === 'move' ? 1 : s.t === 'check' ? 4 : s.t === 'practice' ? (st === 2 ? 10 : st === 3 ? 15 : 20) : s.t === 'read' ? 0 : 5; };
+  Plan.est = function (s, st) { return s.t === 'leap' ? 4 : s.t === 'review' ? Math.max(2, s.items.length * .8) : s.t === 'hifz' ? (st === 2 ? 7 : 5) : s.t === 'lesson' ? ((C.skill(s.s) || {}).mins || (st === 2 ? 8 : 6)) : s.t === 'mission' ? 2 : s.t === 'move' ? 1 : s.t === 'check' ? 4 : s.t === 'practice' ? (st === 2 ? 10 : st === 3 ? 15 : 20) : s.t === 'read' ? 0 : 5; };
   Plan.limit = function (p) { p = p || A.P(); return p && p.limit ? p.limit : Flow.PROFILE[A.stage(p)].day; };
 
   Plan.build = function (pid) {
@@ -192,6 +207,7 @@
       if (!picked.length && rested.length && pace.news > 0) { var back = C.skill(rested[0]); if (back && !off[back.room]) picked.push(back); }
       picked.sort(function (a, b) { return (LOAD[b.room] || 1) - (LOAD[a.room] || 1); });
       picked.forEach(function (s) { stops.push({ t: 'lesson', s: s.id, done: false }); });
+      if (pace.fast === 'flying' && picked.length) { var lr = picked[picked.length - 1].room; stops.push({ t: 'leap', room: lr, done: false }); why.push(['A leap ahead in ' + C.rooms[lr].name[0] + ': the next lessons, tested. Those already known are passed over.', 'قفزة للأمام في ' + C.rooms[lr].name[1] + ': تُختبر الدروس التالية، ويُتجاوز ما يعرفه.']); }
     }
     /* no new door today? Then keep what they know sharp, in a mix they have not just seen */
     if (!stops.some(function (x) { return x.t === 'lesson' || x.t === 'review'; })) {

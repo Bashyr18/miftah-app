@@ -83,6 +83,7 @@
 
   function stopInfo(st) {
     if (st.t === 'move') return { hue: 'amber', art: Flow.moveFor(st.n).art, title: ['Move your body', 'حرّك جسمك'], sub: ['A minute away from the screen', 'دقيقة بعيدًا عن الشاشة'] };
+    if (st.t === 'leap') { var lr0 = C.rooms[st.room]; return { hue: lr0.hue, art: 'key', title: ['Leap ahead', 'قفزة للأمام'], sub: lr0.name }; }
     if (st.t === 'check') { var un = C.units[st.unit]; return { hue: C.rooms[un.room].hue, art: 'lantern', title: ['Show what you know', 'أرِنا ما تعرف'], sub: un.title }; }
     if (st.t === 'practice') { var pr0 = C.rooms[st.room]; return { hue: pr0.hue, art: pr0.art, title: ['Practice', 'تدريب'], sub: pr0.name }; }
     if (st.t === 'read') { var bk = (A.D().books || []).filter(function (b) { return !b.of || (b.at || 0) < b.of; })[0]; return { hue: 'amber', art: 'book', title: ['Read a real book', 'اقرأ كتابًا حقيقيًا'], sub: bk ? [bk.title, bk.title] : ['Any good book, off the screen', 'أي كتاب جيد بعيدًا عن الشاشة'] }; }
@@ -298,7 +299,7 @@
     var firstForge = false;
     if (passed) { var k = M.key(sk.id); if (!k || !k.forged) { M.forge(sk.id); firstForge = true; } M.clearNotYet(sk.id); }
     else M.noteNotYet(sk.id);
-    Flow.record(sk.id, passed); Plan.completeSkill(sk.id); Flow.checkPromises();
+    Flow.record(sk.id, passed, undefined, res); Plan.completeSkill(sk.id); Flow.checkPromises();
     A.saveNow();
     /* from 12, a clear result and on with the work */
     if (A.stage() >= 3) {
@@ -333,6 +334,16 @@
     var res = A.resumeOf(); if (res && res.skill !== sk.id) res = null;
     var seed = res ? res.seed : A.seed(), rng = A.rng(seed), r = C.rooms[sk.room];
     var steps = Player.compose(sk, rng);
+    /* depth for a child moving fast: harder questions at the end, with no help, one of them from the next lesson. They never stop
+       a key being forged; they show how far the idea really reaches */
+    var fastNow = A.stage() >= 1 && !res && Flow.pace().fast !== 'steady';
+    if (fastNow && sk.review && !sk.hifz) {
+      var extra = [], u0 = C.units[sk.unit], nextSk = u0 ? u0.skills[u0.skills.indexOf(sk) + 1] : null;
+      for (var si = 0; si < 2; si++) { var q0 = sk.review(rng); q0 = Array.isArray(q0) ? q0[0] : q0; if (q0 && q0.k !== 'say' && q0.k !== 'mission') extra.push(Object.assign({}, q0, { ph: 'stretch', hint: null, noHelp: true })); }
+      if (nextSk && nextSk.review) { var q1 = nextSk.review(rng); q1 = Array.isArray(q1) ? q1[0] : q1; if (q1 && q1.k !== 'say' && q1.k !== 'mission') extra.push(Object.assign({}, q1, { ph: 'stretch', hint: null, noHelp: true, skill: nextSk.id })); }
+      var mk = steps.findIndex ? steps.findIndex(function (x) { return x.ph === 'make' || x.ph === 'watch' && steps.indexOf(x) > 0; }) : -1;
+      if (extra.length) { if (mk < 0) steps = steps.concat(extra); else steps = steps.slice(0, mk).concat(extra, steps.slice(mk)); }
+    }
     Player.start(el, {
       steps: steps, skill: sk.id, hue: r.hue, rng: rng, mode: 'lesson', quiet: !!sk.quiet,
       track: { skill: sk.id, seed: seed, stop: stopI }, at: res,
@@ -365,6 +376,7 @@
     if (s.t === 'review') return { bare: true, html: '<div id="plh"></div>', mount: function (v) { runReview($('#plh', v), s, i); }, unmount: function () { Player.stop(); Voice.stop(); }, onBack: function () { Player.stop(); A.go('home'); return 'handled'; } };
     if (s.t === 'mission') return { bare: true, html: '<div id="plh"></div>', mount: function (v) { runMission($('#plh', v), s, i); }, unmount: function () { Player.stop(); }, onBack: function () { Player.stop(); A.go('home'); return 'handled'; } };
     if (s.t === 'move') return { bare: true, html: '<div id="plh"></div>', mount: function (v) { runMove($('#plh', v), s, i); }, unmount: function () { Player.stop(); Voice.stop(); }, onBack: function () { Player.stop(); A.go('home'); return 'handled'; } };
+    if (s.t === 'leap') return { bare: true, html: '<div id="plh"></div>', mount: function (v) { runLeap($('#plh', v), s, i); }, unmount: function () { Player.stop(); Voice.stop(); }, onBack: function () { Player.stop(); A.go('home'); return 'handled'; } };
     if (s.t === 'check') return { bare: true, html: '<div id="plh"></div>', mount: function (v) { runCheck($('#plh', v), s, i); }, unmount: function () { Player.stop(); Voice.stop(); }, onBack: function () { Player.stop(); A.go('home'); return 'handled'; } };
     if (s.t === 'practice') return { bare: true, html: '<div id="plh"></div>', mount: function (v) { runPractice($('#plh', v), s, i); }, unmount: function () { Player.stop(); Voice.stop(); }, onBack: function () { Player.stop(); A.go('home'); return 'handled'; } };
     if (s.t === 'read') return { bare: true, html: '<div id="plh"></div>', mount: function (v) { runRead($('#plh', v), s, i); } };
@@ -381,6 +393,31 @@
     });
   }
   /* a unit's check: every lesson once more, mixed up, no hints. Passing lights a lantern; not yet means a little more polishing and another go. */
+  /* a leap: the next lessons in a room, two questions each with no help. A lesson answered fully right is known already: its key is
+     forged as earned, and it comes back for review like any other. The first one missed is where teaching starts again. */
+  function runLeap(el, s, i) {
+    var rng = A.rng(A.seed()), R = C.rooms[s.room], used = [], list = [];
+    for (var k = 0; k < 3; k++) { var nx = C.next(s.room, A.S.cur, used); if (!nx || !nx.review || nx.hifz) break; used.push(nx.id); list.push(nx); }
+    if (!list.length) { Plan.complete(i); afterStop(); return; }
+    var passed = [], at = 0;
+    function one() {
+      if (at >= list.length) return done();
+      var sk = list[at], steps = [];
+      for (var q = 0; q < 2; q++) { var x = sk.review(rng); (Array.isArray(x) ? x.slice(0, 1) : [x]).forEach(function (y) { if (y && y.k !== 'mission' && y.k !== 'say') steps.push(Object.assign({}, y, { ph: 'solo', skill: sk.id, hint: null, noHelp: true })); }); }
+      if (!steps.length) { at++; return one(); }
+      Player.start(el, { steps: steps, hue: R.hue, rng: rng, mode: 'review', exam: true, label: ['Leap ahead', 'قفزة للأمام'],
+        onExit: function () { Plan.complete(i); A.go('home'); },
+        onDone: function (res) { if (res.solo && res.soloOk === res.solo) { M.log(sk.id, { k: 'forge', ok: true, by: 'leap' }); Flow.record(sk.id, true, undefined, { clean: true }); passed.push(sk); at++; one(); } else done(); } });
+    }
+    function done() {
+      Plan.complete(i); A.D().path = null; A.saveNow();
+      var n = passed.length;
+      el.innerHTML = '<div class="forge h-' + R.hue + '"><div class="forge-rays" style="' + (n ? '' : 'display:none') + '"></div><div class="forge-key">' + A.art('key', Math.min(innerWidth, innerHeight) * .42) + '</div><div class="forge-txt"><small>' + esc(L(R.name)) + '</small><h2>' + esc(n ? L(['You leapt over ' + n + (n === 1 ? ' lesson' : ' lessons'), 'قفزت فوق ' + A.num(n) + (n === 1 ? ' درس' : ' دروس')]) : L(['Good: this is where we start', 'جيد: من هنا نبدأ'])) + '</h2><p>' + esc(n ? passed.map(function (x) { return L(x.title); }).join(' · ') : L(list[0].title)) + '</p><button class="btn pri big" id="fgo">' + esc(T('Next')) + '</button></div></div>';
+      if (n) { Fx.clack(); Fx.bloom(innerWidth / 2, innerHeight * .42, '#f1d59e', true); }
+      A.$('#fgo', el).onclick = function () { afterStop(); };
+    }
+    one();
+  }
   function runCheck(el, s, i) {
     var rng = A.rng(A.seed()), u = C.units[s.unit], d = A.D(), steps = [], list = u ? rng.shuffle(u.skills.filter(function (x) { return d.keys[x.id] && d.keys[x.id].forged && x.review; })) : [];
     list.slice(0, 7).forEach(function (sk) { var st = sk.review(rng); (Array.isArray(st) ? st.slice(0, 1) : [st]).forEach(function (x) { steps.push(Object.assign({}, x, { ph: 'solo', skill: sk.id, hint: null, noHelp: true })); }); });

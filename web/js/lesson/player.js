@@ -8,7 +8,7 @@
   var Player = window.Player = {};
   var PH = {
     recall: ['Remember', 'تذكّر'], meet: ['Meet', 'تعرّف'], name: ['Name it', 'سمِّها'], try: ['Try together', 'جرّب معنا'],
-    do: ['With your body', 'بجسمك'], watch: ['Watch', 'شاهد'], solo: ['On your own', 'وحدك'], make: ['Make it', 'اصنع'], review: ['Polish your keys', 'لمّع مفاتيحك'], key: ['Your key', 'مفتاحك']
+    do: ['With your body', 'بجسمك'], watch: ['Watch', 'شاهد'], solo: ['On your own', 'وحدك'], stretch: ['Stretch', 'تحدٍّ'], make: ['Make it', 'اصنع'], review: ['Polish your keys', 'لمّع مفاتيحك'], key: ['Your key', 'مفتاحك']
   };
   Player.PH = PH;
   var KIND = { choice: 'recognition', sort: 'recognition', match: 'recognition', order: 'recall', pad: 'recall', plate: 'recall', line: 'recall', clock: 'recall', tenframe: 'production', bond: 'production', blocks: 'production', array: 'production', frac: 'production', share: 'production', trace: 'production', build: 'production', sentence: 'recall', root: 'recall', mission: 'exposure', predict: 'exposure', phon: 'recall', pick: 'recognition' };
@@ -46,13 +46,59 @@
       steps.forEach(function (x) { if (x.ph === 'solo') { soloSeen[sigOf(x)] = 1; soloN++; } });
       for (var more = 0; more < 10 && soloN < 3; more++) { var q1 = sk.review(rng), q2 = Array.isArray(q1) ? q1[0] : q1; if (q2 && q2.k !== 'say' && !soloSeen[sigOf(q2)]) { soloSeen[sigOf(q2)] = 1; soloN++; steps.push(Object.assign({}, q2, { ph: 'solo' })); } }
     }
+    /* deeper teaching for lessons not yet written in full (the taught lessons have their own pages): from the lesson's own
+       questions and hints, one solved in front of the child before they try, and one answer to check (spotting a mistake
+       is understanding, not recall). Not in the Qurʾān or Living Islam. */
+    if (!sk.teach && DEEP[sk.room] && sk.review && A.stage() >= 1) {
+      var wk = worked(sk, rng); if (wk) { var at = steps.findIndex(function (x) { return x.ph === 'try' || x.ph === 'do' || x.ph === 'solo'; }); if (at < 0) steps.push(wk); else steps.splice(at, 0, wk); }
+      var jd = judge(sk, rng); if (jd) steps.push(Object.assign(jd, { ph: 'solo' }));
+    }
     add('make', sk.make);
     if (window.Media) add('watch', Media.steps(sk, 'after'));
     return steps;
   };
 
-  var PH3 = { recall: ['Recall', 'تذكّر'], meet: ['Learn', 'تعلّم'], name: ['Terms', 'مصطلحات'], try: ['Worked', 'مثال محلول'], do: ['Practical', 'عملي'], watch: ['Watch', 'شاهد'], solo: ['Practice', 'تدريب'], make: ['Apply', 'تطبيق'], review: ['Review', 'مراجعة'] };
-  function stepKinds(steps) { var seen = [], order = ['recall', 'watch', 'meet', 'name', 'try', 'do', 'solo', 'make']; order.forEach(function (o) { if (steps.some(function (s) { return s.ph === o; })) seen.push(o); }); return seen; }
+  var DEEP = { math: 1, english: 1, science: 1, world: 1, think: 1, computing: 1, engineering: 1 };
+  function one(sk, rng) { for (var i = 0; i < 6; i++) { var q = sk.review(rng); q = Array.isArray(q) ? q[0] : q; if (q && (q.k === 'pad' || q.k === 'choice')) return q; } return null; }
+  function rightOf(q) { if (q.k === 'pad') return { t: [String(q.a), A.num ? String(q.a).replace(/[0-9]/g, function (d) { return '٠١٢٣٤٥٦٧٨٩'[+d]; }) : String(q.a)] }; var o = (q.o || []).filter(function (x) { return x.ok; })[0]; return o && o.t != null && !o.art ? o : null; }
+  /* the question as the child would read it: a sum on its own, or the words of the question */
+  function askOf(q, fill) {
+    if (q.k === 'pad' && q.eq && q.eq !== '?' && /[0-9]/.test(q.eq)) { var e = q.eq.indexOf('?') < 0 ? q.eq + ' = ?' : q.eq; return (q.q ? L(q.q) + ' · ' : '') + (fill != null ? e.replace('?', fill) : e); }
+    return [q.q ? L(q.q) : '', L(q.p)].filter(Boolean).join(' · ');
+  }
+  /* "I do": the question answered, with the reason, before the child tries */
+  function worked(sk, rng) {
+    var q = one(sk, rng); if (!q || q.html || q.qHtml || q.qArt) return null; var ok = rightOf(q); if (!ok) return null;
+    var why = q.hint ? L(q.hint) : '';
+    return { k: 'say', ph: 'try', lab: ['Watch it done', 'شاهد الحل'], p: ['Watch: here is one done for you.', 'شاهد: هذا واحد محلول لك.'],
+      html: '<div class="wk">' + (q.k === 'pad' && /[0-9]/.test(q.eq || '') ? '<p class="wk-a">' + A.icon('check', 20) + '<b>' + esc(A.num(askOf(q, q.a))) + '</b></p>' : '<p class="wk-q">' + esc(A.num(askOf(q))) + '</p><p class="wk-a">' + A.icon('check', 20) + '<b>' + esc(A.num(L(ok.t))) + '</b></p>') + (why ? '<p class="wk-w">' + esc(why) + '</p>' : '') + '</div>' };
+  }
+  /* "check the work": someone answered; were they right? Half the time they were, so guessing does not pay */
+  var WHO = [['Sami', 'سامي'], ['Huda', 'هدى'], ['Bilal', 'بلال'], ['Maryam', 'مريم']];
+  function judge(sk, rng) {
+    var q = one(sk, rng); if (!q || q.html || q.qHtml || q.qArt) return null; var ok = rightOf(q); if (!ok) return null;
+    var claim = ok, isRight = rng.bool(), who = rng.pick(WHO);
+    if (!isRight) {
+      if (q.k === 'pad') { var n = +q.a; if (!isFinite(n)) return null; var off = rng.pick([-2, -1, 1, 2, 10, -10].filter(function (d) { return n + d >= 0 && Math.abs(d) < Math.max(3, Math.abs(n)); })); if (off == null) return null; claim = { t: [String(n + off), String(n + off).replace(/[0-9]/g, function (d) { return '٠١٢٣٤٥٦٧٨٩'[+d]; })] }; }
+      else { var wr = (q.o || []).filter(function (x) { return !x.ok && x.t != null && !x.art; }); if (!wr.length) return null; claim = rng.pick(wr); }
+    }
+    var A2 = [{ t: ['Yes, that is right', 'نعم، صحيح'], ok: isRight, e: q.err || 'understanding' }, { t: ['No, that is wrong', 'لا، خطأ'], ok: !isRight, e: q.err || 'understanding' }];
+    return { k: 'choice', lab: ['Check the work', 'تحقّق من الحل'], p: [who[0] + ' answered this. Is ' + who[0] + ' right?', 'أجاب ' + who[1] + ' هكذا. هل هو مصيب؟'],
+      qHtml: '<div class="wk">' + (q.k === 'pad' && /[0-9]/.test(q.eq || '') ? '<p class="wk-c">' + esc(L(who)) + ':</p><p class="wk-s">' + esc(A.num(askOf(q, (Array.isArray(claim.t) ? claim.t[0] : claim.t)))) + '</p>' : '<p class="wk-q">' + esc(A.num(askOf(q))) + '</p><p class="wk-c">' + esc(L(who)) + ': <b>' + esc(A.num(L(claim.t))) + '</b></p>') + '</div>', o: A2, shuffle: false, cols: 1, err: q.err || 'understanding',
+      hint: ['Work it out yourself first, then compare.', 'حُلّها بنفسك أولًا ثم قارن.'] };
+  }
+  /* "why": the right reason, from the lesson's own hint, among reasons from other lessons in the same room */
+  function explain(sk, rng) {
+    var q = one(sk, rng); if (!q || !q.hint || q.html || q.qHtml || q.qArt) return null; var ok = rightOf(q); if (!ok) return null;
+    var others = [], room = C.rooms[sk.room];
+    for (var t = 0; t < 30 && others.length < 2; t++) { var u = rng.pick(room.units), o = u && u.skills.length ? rng.pick(u.skills) : null; if (!o || o === sk || !o.review) continue; var x = o.review(rng); x = Array.isArray(x) ? x[0] : x; if (x && x.hint && L(x.hint) !== L(q.hint) && others.every(function (y) { return L(y) !== L(x.hint); })) others.push(x.hint); }
+    if (others.length < 2) return null;
+    var en = Array.isArray(ok.t) ? ok.t[0] : ok.t, arT = Array.isArray(ok.t) ? (ok.t[1] || ok.t[0]) : ok.t;
+    return { k: 'choice', lab: ['Why?', 'لماذا؟'], p: ['The answer is ' + en + '. Which reason shows why?', 'الجواب ' + arT + '. أيّ سبب يبيّن ذلك؟'],
+      q: q.q || q.p, o: rng.shuffle([{ t: q.hint, ok: true }].concat(others.map(function (h) { return { t: h, e: 'understanding' }; }))), shuffle: false, cols: 1, err: 'understanding' };
+  }
+  var PH3 = { recall: ['Recall', 'تذكّر'], meet: ['Learn', 'تعلّم'], name: ['Terms', 'مصطلحات'], try: ['Worked', 'مثال محلول'], do: ['Practical', 'عملي'], watch: ['Watch', 'شاهد'], solo: ['Practice', 'تدريب'], stretch: ['Stretch', 'تحدٍّ'], make: ['Apply', 'تطبيق'], review: ['Review', 'مراجعة'] };
+  function stepKinds(steps) { var seen = [], order = ['recall', 'watch', 'meet', 'name', 'try', 'do', 'solo', 'stretch', 'make']; order.forEach(function (o) { if (steps.some(function (s) { return s.ph === o; })) seen.push(o); }); return seen; }
 
   /* the key that forms at the top: one tooth per phase */
   function keyBar(phases, curPh, frac, hue) {
@@ -166,6 +212,7 @@
     log(true);
     /* unaided means right first time. The youngest get one gentle second go. */
     if (s_isSolo(r.step)) { r.solo++; if (!r.hinted && r.tries <= (r.st <= 1 ? 1 : 0)) r.soloOk++; }
+    if (r.step.ph === 'stretch') { r.stN = (r.stN || 0) + 1; if (!r.hinted && r.tries === 0) r.stOk = (r.stOk || 0) + 1; }
     Fx.ok();
     if (!r.o.quiet) Fx.bloomAt(x || $('.step-in', r.host), getHue(r), false);
     var delay = opts.delay != null ? opts.delay : (r.st >= 3 ? 420 : r.st === 2 ? 700 : 950);
@@ -219,7 +266,7 @@
     show();
   }
   function finish() {
-    var r = run, o = r.o, res = { solo: r.solo, soloOk: r.soloOk, passed: r.solo === 0 || r.soloOk / r.solo >= (r.st >= 2 ? .75 : .66) };
+    var r = run, o = r.o, res = { solo: r.solo, soloOk: r.soloOk, passed: r.solo === 0 || r.soloOk / r.solo >= (r.st >= 2 ? .75 : .66), clean: r.solo > 0 && r.soloOk === r.solo, ms: Date.now() - r.started, stretch: r.stN || 0, stretchOk: r.stOk || 0 };
     if (r.cleanup) { try { r.cleanup(); } catch (e) { } }
     var host = r.host; run = null;
     if (o.track) { A.D().resume = null; A.save(); }

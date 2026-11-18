@@ -336,7 +336,7 @@ T = boot({ profiles: [kid(6)], cur: 'c1' }, '2026-11-05T09:00:00');
   ok(!w.Flow.inbox().some(x => x.kind === 'sheet'), 'the inbox clears');
   for (const t of ['plan', 'make', 'hear', 'rooms', 'set']) { T.go('parent/c1/' + t); ok(A.$('.tabs'), 'tab ' + t + ' opens'); }
   T.go('parent/c1/sheet/trace-ar'); ok(A.$('.ppz .pp'), 'a sheet previews');
-  T.go('parent/media'); ok(A.$('.fab'), 'the media library opens'); A.acts['m-add'](); ok(A.$$('.ao').length === 5, 'five kinds can be added, photos among them'); A.closeSheet();
+  T.go('parent/media'); ok(A.$('[data-a="m-add"]'), 'the media library opens'); A.acts['m-add'](); ok(A.$$('.ao').length === 5, 'five kinds can be added, photos among them'); A.closeSheet();
   T.go('place/c1/math'); ok(A.$('.pl'), 'finding the level opens');
   {
     const Sync = A.Sync, base = JSON.parse(JSON.stringify(A.S)), M = w.M, mine = JSON.parse(JSON.stringify(A.S)), id = 'c1';

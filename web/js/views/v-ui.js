@@ -92,7 +92,7 @@
     if (row.dataset.ui) return; var tabs = A.$$('a.tab', row); if (tabs.length < 6) return; row.dataset.ui = '1';
     var more = tabs.filter(function (t) { return !KEEP.test(t.getAttribute('href')); }), active = more.filter(function (t) { return t.classList.contains('on'); })[0];
     more.forEach(function (t) { t.style.display = 'none'; });
-    var b = document.createElement('button'); b.type = 'button'; b.className = 'tab' + (active ? ' on' : ''); b.textContent = active ? active.textContent : L(['More', 'المزيد']); b.insertAdjacentHTML('beforeend', chev);
+    var b = document.createElement('button'); b.type = 'button'; b.className = 'tab' + (active ? ' on' : ''); b.className += ' tab-more'; var lb = document.createElement('span'); lb.className = 'tab-l'; lb.textContent = active ? active.textContent : L(['More', 'المزيد']); b.appendChild(lb); b.insertAdjacentHTML('beforeend', chev);
     b.onclick = function () { A.picker(L(['More', 'المزيد']), more.map(function (t) { return { v: t.getAttribute('href'), t: t.textContent }; }), active ? active.getAttribute('href') : '', function (h) { location.hash = h; }); };
     row.appendChild(b);
   }

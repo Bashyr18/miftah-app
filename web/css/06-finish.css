@@ -244,3 +244,26 @@ html.is-desk body.has-rail .ink-v{inset-inline-start:var(--rail)}
 .tile.mk .mk-g{display:block;line-height:1.3}
 .step .tile.mk small,body[data-age] .step .tile.mk small{font-size:13px}
 .step .tile.mk .mk-g{font-size:1.3em;line-height:1.15}
+/* credits: one row on the page, the details in a sheet */
+.crow{display:flex;align-items:center;gap:12px;width:100%;text-align:start;min-height:64px}
+.crd h3{font-size:14px;margin:16px 0 8px;color:var(--t1)}.crd h3:first-child{margin-top:4px}
+.crd p{font-size:13.5px;line-height:1.55;color:var(--t2)}
+.crd-l{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.crd-l li{display:grid;gap:2px}.crd-l a{color:var(--t1);font-weight:600;font-size:14px;text-decoration:underline;text-decoration-color:var(--line2);text-underline-offset:3px}
+.crd-l small{font-size:12.5px;color:var(--t3)}
+/* thinking: rows of pictures, the number machine, shapes for numbers */
+.rz-row{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:6px;margin:4px auto 10px;max-width:100%}
+.rz-i{display:grid;place-items:center;padding:4px;border-radius:12px;background:var(--s1);border:1px solid var(--line)}
+.rz-q{display:grid;place-items:center;width:52px;height:52px;border-radius:12px;border:2px dashed var(--gold-line);color:var(--gold2);font-size:26px;font-weight:800}
+.rz-eq{text-align:center;font-size:24px;font-weight:800;color:var(--h)}
+.rz-mach{display:grid;gap:8px;margin:0 auto 12px;width:max-content;max-width:100%;padding:12px 18px;border-radius:16px;background:var(--s1);border:1.5px solid var(--line2)}
+.rz-mr{display:grid;grid-template-columns:56px 28px 56px;align-items:center;text-align:center;font-size:22px;font-weight:800;color:var(--t1)}.rz-mr span{color:var(--t3)}
+.rz-sym{display:grid;gap:6px;margin:0 auto 12px;text-align:center;font-size:24px;font-weight:800;color:var(--t1);direction:ltr}
+.rz-row{flex-wrap:nowrap}.rz-row .rz-i{padding:3px}.rz-row .rz-q{width:42px;height:42px;font-size:22px;flex:none}
+/* a worked example, and someone's answer to check */
+.wk{max-width:520px;margin:0 auto 10px;padding:16px 18px;border-radius:18px;background:var(--s1);border:1.5px solid var(--line2);text-align:center;display:grid;gap:8px}
+.wk-q{font-size:19px;font-weight:700;color:var(--t1);line-height:1.4}
+.wk-a{display:flex;align-items:center;justify-content:center;gap:8px;font-size:26px;font-weight:800;color:var(--ok,#2e9d6e)}
+.wk-w{font-size:15px;color:var(--t2);line-height:1.5}
+.wk-c{font-size:18px;color:var(--t2)}.wk-c b{font-size:24px;color:var(--t1);font-weight:800;margin-inline-start:6px}
+.wk-s{font-size:28px;font-weight:800;color:var(--t1);direction:ltr}

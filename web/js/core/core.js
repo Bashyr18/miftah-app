@@ -89,6 +89,9 @@
   function shape(st) {
     var d = defaults(); D_DATA = d.data; d.seen = st && typeof st.seen === 'object' && st.seen && !Array.isArray(st.seen) ? st.seen : {};
     var out = merge(d, st);
+    /* anything else the record holds is kept as it is: settings added after the defaults were written (the weekly update check,
+       group challenges, card names, Arabic books) were silently dropped at every start */
+    if (st && typeof st === 'object') Object.keys(st).forEach(function (k) { if (!(k in out) && st[k] !== undefined) out[k] = st[k]; });
     out.data = st && st.data && typeof st.data === 'object' && !Array.isArray(st.data) ? st.data : {};
     out.profiles = (out.profiles || []).filter(function (p) { return p && p.id && p.name; });
     if (!out.profiles.some(function (p) { return p.id === out.cur; })) out.cur = out.profiles[0] ? out.profiles[0].id : null;

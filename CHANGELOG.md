@@ -2,6 +2,32 @@
 
 The version is set in `version.txt`.
 
+## 2.2 (code 5), November 2026
+
+**Thinking: a new subject for ages 5 to 11**
+- Verbal, quantitative and pattern reasoning, one unit a year: look and think (odd one out, what comes next, what goes together, opposites, which has more), find the rule (number patterns, balancing, if-then logic where "we cannot tell" is sometimes the answer), words that think (odd word out, analogies, words that mean the same; compound words in English, word families from one root in Arabic), numbers that think (sequences, number machines, shapes for numbers), codes and logic (letter patterns, secret codes, ordering clues, two-step problems).
+- Every question is generated, in English and Arabic, so practice never runs out.
+
+**Children who learn fast**
+- Miftāḥ notices a child getting nearly everything right first time, without help, and keeping it: one or two more new lessons a day, a higher weekly ceiling, and Stretch questions at the end of a lesson, harder and without help, one of them from the next lesson.
+- Once a day such a child gets a Leap ahead: the next lessons in a subject, tested. The ones they already know are passed over and come back for review like any other key; teaching starts at the first one they miss.
+- It steps back by itself if memory slips, and a parent's gentle pace always wins. The plan says why.
+
+**Deeper teaching**
+- Lessons not yet written in full (maths to Year 4, English, science, Our World, computing, engineering, Thinking) now show one question solved before the child tries, and give one answer to check: someone answered; are they right?
+
+**Follow an Arabic book**
+- Parent area › Arabic books: the Madinah books 1 to 3, al-ʿArabiyyah Bayna Yadayk, or any other course. Every lesson has its place in a grid, so gaps show until they are filled.
+- Enter a lesson's words, rules and sentences from your own copy, or paste a whole book a teacher shared. Each becomes a full lesson: the words, the rule, practice both ways, the book's sentences with a word missing, and review.
+- A child can follow the book as their Arabic path. Books travel between phone and computer.
+
+**Polish**
+- Credits are one row on How Miftāḥ teaches, opening a sheet with names, licences and links, instead of raw web addresses and licence lists.
+- Row text no longer spills over the next row on grown-up pages, and the More tab is never cut off.
+- Sheet codes show only when two sheets share a title; empty subjects and placeholder dashes are gone; Knows these is a quiet pill; an empty Media page has one add button.
+- On the computer: no network address or folder path on show; Show the folder instead.
+- Fixed: some settings were lost at every start (the weekly update check, group challenges, card names).
+
 ## 2.1.1 (code 4), November 2026
 
 **A real installer for Windows**

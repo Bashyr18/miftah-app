@@ -56,6 +56,7 @@
       var lp = S.profiles.filter(function (p) { return sameChild(p, tp); })[0], fresh = !lp;
       if (fresh) { lp = JSON.parse(JSON.stringify(tp)); S.profiles.push(lp); }
       else lp.exams = unionBy(lp.exams, tp.exams, function (e) { return e.title + e.date; });
+      if (!lp.arBook && tp.arBook) lp.arBook = tp.arBook;
       var a = S.data[lp.id], b = data[tp.id], before = a ? Object.keys(a.keys || {}).filter(function (k) { return a.keys[k].forged; }).length : 0, beforeA = a && a.hifz && a.hifz.u ? Object.keys(a.hifz.u).length : 0, ledA = a && a.led ? a.led.length : 0;
       if (b) S.data[lp.id] = mergeChild(a, b);
       var d = S.data[lp.id] || {}, after = Object.keys(d.keys || {}).filter(function (k) { return d.keys[k].forged; }).length;
@@ -63,6 +64,20 @@
     });
     /* links always travel; files travel only inside a family file that carries them */
     S.media = unionBy(S.media, (theirs.media || []).filter(function (m) { return withFiles || m.kind === 'youtube'; }), function (m) { return m.kind + m.ref; });
+    /* Arabic books travel with the family: a book entered on one device is there on the other, lesson by lesson, the fuller one kept */
+    if (Array.isArray(theirs.books)) {
+      if (!Array.isArray(S.books)) S.books = [];
+      theirs.books.forEach(function (tb) {
+        var lb = S.books.filter(function (b) { return b.id === tb.id; })[0];
+        if (!lb) { S.books.push(JSON.parse(JSON.stringify(tb))); return; }
+        (tb.lessons || []).forEach(function (tl) {
+          var ll = (lb.lessons || []).filter(function (x) { return x.n === tl.n; })[0], size = function (x) { return x ? (x.words || []).length + (x.sents || []).length + (x.grammar || []).length : 0; };
+          if (!ll) lb.lessons.push(JSON.parse(JSON.stringify(tl))); else if (size(tl) > size(ll)) { ll.title = tl.title; ll.words = tl.words; ll.grammar = tl.grammar; ll.sents = tl.sents; }
+        });
+        lb.lessons.sort(function (x, y) { return x.n - y.n; });
+      });
+      if (A.Books) A.Books.register();
+    }
     S.lastSync = A.now().getTime();
     return { S: S, report: report };
   };
