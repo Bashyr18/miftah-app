@@ -71,6 +71,27 @@ module.exports = async (p) => {
     await go('room/math', 1400); await shot('p-room', ['.ph h1', '.rmap-unit', '.rmap']);
     await family('en', 'light');
     await go('keys', 1200); await shot('p-keys', ['.kstats', '.lamp-rows', '.keys-grid']);
+    /* 2.2: Thinking, a day walked (and walked again), a book followed in Arabic */
+    if (want('p-think')) {
+      const tk = await p.eval(`(function(){var o=null;C.rooms.think.units.forEach(function(u){u.skills.forEach(function(s){if(!o&&u.y<=4)o=s.id})});return o})()`);
+      await go('lesson/' + tk, 1800); await shot('p-think', ['.pl-prompt', '.sc-arts, .rz-row, .pl-body .opt']);
+    }
+    if (want('p-again')) {
+      await go('rooms', 500); await p.eval(`(function(){var pl=Plan.today();pl.stops.forEach(function(s){s.done=true});A.saveNow();return 1})()`);
+      await go('home', 1500); await shot('p-again', ['.pathdone h2', '[data-a="go-again"]', '.dayprog, .path']);
+      await family('en', 'light');
+    }
+    if (want('p-book')) {
+      await unlock();
+      await p.eval(`(function(){
+        var ls=[]; for (var i=1;i<=23;i++) ls.push({n:i,title:'',words:[],grammar:[],sents:[]});
+        var w=[[['بَيْتٌ','a house'],['مَسْجِدٌ','a mosque'],['بَابٌ','a door'],['كِتَابٌ','a book'],['قَلَمٌ','a pen']],[['مِفْتَاحٌ','a key'],['سَرِيرٌ','a bed'],['كُرْسِيٌّ','a chair']],[['وَلَدٌ','a boy'],['بِنْتٌ','a girl'],['طَالِبٌ','a student']],[['قَمَرٌ','a moon'],['نَجْمٌ','a star']]];
+        w.forEach(function(x,i){ls[i].words=x});
+        A.S.books=[{id:'bkdemo',kind:'madinah1',name:A.L(['Madinah Arabic, Book 1','دروس اللغة العربية، الكتاب الأول']),lessons:ls}];
+        A.profile('u9').arBook='bkdemo'; A.Books.register(); A.saveNow(); return 1 })()`);
+      await go('parent/books/bkdemo', 1400); await shot('p-book', ['.bk-grid', '[data-follow]']);
+      await p.eval(`A.S.books=[];A.profile('u9').arBook=null;A.Books.register();A.saveNow();1`);
+    }
     const les = JSON.parse(await p.eval(`JSON.stringify((function(){var o={};['math','arabic'].forEach(function(r){C.rooms[r].units.forEach(function(u){u.skills.forEach(function(s){if(!o[r]&&!M.met(s.id,'u9')&&C.open(s,'u9'))o[r]=s.id})})});return o})())`));
     await go('lesson/' + les.math, 1800); await shot('p-lesson', ['.pl-top', '.pl-prompt', '.pad', '.pl-foot']);
     await who('t13'); await go('home', 1200); await shot('p-teen', ['.th', '.tnext', '.tl', '.nav']);

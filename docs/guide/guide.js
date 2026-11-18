@@ -35,13 +35,18 @@ var CH = [
           { b: 'How far through', x: 'The bar fills as the lesson goes. The cross leaves at any time, and the lesson waits where it was.', m: { p: 0 } },
           { b: 'The question, and paper to work on', x: 'On the computer the sum sits on the left with squared working paper beneath it, and the answer pad opposite: two equal halves read as one page.', m: { p: 1, d: 0 } },
           { b: 'Answer', x: 'A number pad or picture choices. On the computer, type the number, press 1 to 4 for a choice, and Enter to check.', m: { p: 2 } },
-          { b: 'Look back', x: 'The worked example again, when it is needed. Honest: a question answered after looking back does not count as unaided.', m: { p: 3, d: 1 } } ] } ] },
+          { b: 'Look back', x: 'The worked example again, when it is needed. Honest: a question answered after looking back does not count as unaided.', m: { p: 3, d: 1 } } ] },
+      { shots: { p: 'p-again' }, h: 'Done, or once more', p: 'When the path is walked, the day is done. A child who wants more can walk today again: every lesson and key from today comes back as revision, then practice in today’s subjects. A child who learns fast is noticed and given more, on their own.',
+        steps: [
+          { b: 'Today’s path is walked', x: 'Every stop is done. The best learning now is play, helping at home, and coming back tomorrow.', m: { p: 0 } },
+          { b: 'Today, again', x: 'Another round of today: revision first, then practice. Past the day’s screen time a grown-up says yes, and the day stretches by what the round needs. Rounds are counted, and every answer is kept as revision.', m: { p: 1 } },
+          { b: 'For the child who flies', x: 'Nearly everything right first time, unaided, and still remembered later: Miftāḥ adds a lesson or two a day, ends lessons with harder Stretch questions, and once a day offers a Leap: the next lessons tested, the known ones passed over. It steps back by itself if memory slips, and a parent’s gentle pace always wins.', m: { p: 2 } } ] } ] },
 
   { id: 'ages', kicker: 'Every age, one app', title: 'Two to eighteen', dek: 'Five stages, each with its own pace, voice and design. The app grows with the child.', thumb: 'p-age3', ages: true, spreads: [] },
 
-  { id: 'rooms', kicker: 'Nine subjects, one memory', title: 'Rooms and memory', dek: 'Each subject is a room with its own path, and a memory that brings back what is about to fade.', thumb: 'p-rooms',
+  { id: 'rooms', kicker: 'Ten subjects, one memory', title: 'Rooms and memory', dek: 'Each subject is a room with its own path, and a memory that brings back what is about to fade.', thumb: 'p-rooms',
     spreads: [
-      { shots: { p: 'p-rooms' }, h: 'Nine rooms', drop: true, p: 'Qurʾān, Arabic, Living Islam, maths, English, science, our world, computing and engineering. Each opens at the child’s level and grows with them.',
+      { shots: { p: 'p-rooms' }, h: 'Ten rooms', drop: true, p: 'Qurʾān, Arabic, Living Islam, maths, English, science, our world, computing, engineering and Thinking. Each opens at the child’s level and grows with them.',
         steps: [
           { b: 'The Lab', x: 'Live simulations for every subject, to explore after the lesson. Nothing here can break.', m: { p: 0 } },
           { b: 'A room', x: 'Each door shows what comes next in it and how far the child has come.', m: { p: 1 } },
@@ -55,7 +60,11 @@ var CH = [
         steps: [
           { b: 'Three levels', x: 'Learned and shown; still right after a break; kept for months. The real state of the child’s memory, not points.', m: { p: 0 } },
           { b: 'Lanterns', x: 'A lantern lights when a whole unit can be shown again, together.', m: { p: 1 } },
-          { b: 'Everything learned', x: 'Every skill, by subject. Skills that start to fade come back into the day by themselves.', m: { p: 2 } } ] } ] },
+          { b: 'Everything learned', x: 'Every skill, by subject. Skills that start to fade come back into the day by themselves.', m: { p: 2 } } ] },
+      { shots: { p: 'p-think' }, flip: true, h: 'Thinking', p: 'Verbal, number and pattern reasoning from five to eleven, a unit a year: the odd one out, what comes next, balances, analogies, words from one root, number machines, codes and logic. Every question is made fresh, in English and in Arabic, so practice never runs out.',
+        steps: [
+          { b: 'One idea a question', x: 'Plain words and big pictures; a young child is never asked to read a paragraph.', m: { p: 0 } },
+          { b: 'Choose, then see why', x: 'A wrong answer shows the rule. Sometimes the honest answer is “we cannot tell”, and that is taught too.', m: { p: 1 } } ] } ] },
 
   { id: 'teens', kicker: 'From twelve', title: 'For teenagers', dek: 'The screens grow quieter and the young person takes over the plan.', thumb: 'p-teen',
     spreads: [
@@ -80,7 +89,11 @@ var CH = [
         steps: [
           { b: 'Tabs', x: 'Today, Lessons, Print, Qurʾān, and More: plan, rooms, record and settings for this child.', m: { p: 0, d: 0 } },
           { b: 'At a glance', x: 'Today’s stops, minutes, what is remembered and everything mastered.', m: { p: 1, d: 1 } },
-          { b: 'Sheets waiting for you', x: 'Practice to mark, which is the evidence, and worksheets to tick.', m: { p: 2, d: 2 } } ] } ] },
+          { b: 'Sheets waiting for you', x: 'Practice to mark, which is the evidence, and worksheets to tick.', m: { p: 2, d: 2 } } ] },
+      { shots: { p: 'p-book' }, flip: true, h: 'Arabic from the book you use', p: 'Parent area › Arabic books: the Madinah books, al-ʿArabiyyah Bayna Yadayk, or any course. Each lesson has its square, so gaps show until they are filled. Enter its words, rules and sentences from your own copy, or paste a whole book a teacher shared.',
+        steps: [
+          { b: 'Every lesson in its place', x: 'A filled square is a lesson ready to learn: the words, the rule, practice both ways and the book’s sentences with a word missing.', m: { p: 0 } },
+          { b: 'Who follows it', x: 'Switch a child on and their Arabic path comes from this book, lesson by lesson. Books travel between phone and computer.', m: { p: 1 } } ] } ] },
 
   { id: 'paper', kicker: 'Printed, or done on screen', title: 'Paper and pen', dek: 'Sheets made fresh from what the child knows today, on A4 or on the screen, and marked by a grown-up.', thumb: 'p-ink',
     spreads: [

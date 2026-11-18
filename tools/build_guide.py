@@ -19,7 +19,8 @@ FONTS = os.path.join(OUT, 'fonts'); os.makedirs(FONTS, exist_ok=True)
 KEPT = os.path.join(OUT, 'marks.json')   # the measured places, kept with the guide so the page can be rebuilt without new screenshots
 fresh = os.path.exists(os.path.join(SHOTS, 'marks.json'))
 marks = json.load(io.open(os.path.join(SHOTS, 'marks.json'), encoding='utf8')) if fresh else {}
-compact, total = ({} if fresh else json.load(io.open(KEPT, encoding='utf8'))), 0
+# new screenshots join the kept ones, so a few screens can be retaken without the rest
+compact, total = (json.load(io.open(KEPT, encoding='utf8')) if os.path.exists(KEPT) else {}), 0
 if not fresh:
     print('no new screenshots in build/guide2: rebuilding the page with the pictures already in docs/guide/shots')
 for key, m in sorted(marks.items()):
