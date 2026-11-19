@@ -46,13 +46,31 @@
     });
   }
   U.bind = bind;
+  /* only what changed is touched: the version line, the button, the bar, the notes. The heading and the weekly switch stay
+     the same nodes, so nothing flashes when a check starts or ends, and a folded section keeps its fold. */
+  function patch(old, now) {
+    if (old.isEqualNode(now)) return;
+    if (old.nodeType === 3 && now.nodeType === 3) { old.textContent = now.textContent; return; }
+    if (old.nodeType !== 1 || now.nodeType !== 1 || old.tagName !== now.tagName || old.children.length !== now.children.length) { old.replaceWith(now); return; }
+    [].slice.call(now.attributes).forEach(function (a) { if (old.getAttribute(a.name) !== a.value) old.setAttribute(a.name, a.value); });
+    [].slice.call(old.attributes).forEach(function (a) { if (!now.hasAttribute(a.name)) old.removeAttribute(a.name); });
+    var oc = [].slice.call(old.childNodes), nc = [].slice.call(now.childNodes);
+    if (oc.length !== nc.length) { old.replaceChildren.apply(old, nc); return; }
+    for (var i = 0; i < nc.length; i++) patch(oc[i], nc[i]);
+  }
   function paint() {
-    /* only the body is redrawn: the heading stays, so a folded settings section keeps its fold and its open state */
     document.querySelectorAll('[data-upd]').forEach(function (el) {
       var t = document.createElement('div'); t.innerHTML = U.card(el.dataset.upd); var n = t.firstChild;
-      Array.prototype.slice.call(el.children).forEach(function (c) { if (c.tagName !== 'H3') c.remove(); });
-      Array.prototype.slice.call(n.children).forEach(function (c) { if (c.tagName !== 'H3') el.appendChild(c); });
       el.classList.toggle('on', n.classList.contains('on'));
+      var oc = [].slice.call(el.children), nc = [].slice.call(n.children);
+      /* the same pieces in the same order: patch each; otherwise swap only the pieces between the heading and the switch */
+      if (oc.length === nc.length) { for (var i = 0; i < nc.length; i++) if (oc[i].tagName !== 'H3') patch(oc[i], nc[i]); }
+      else {
+        var keep = el.querySelector('#upd-auto');
+        oc.forEach(function (c) { if (c.tagName !== 'H3' && c !== keep) c.remove(); });
+        nc.forEach(function (c) { if (c.tagName === 'H3' || c.id === 'upd-auto') return; keep ? el.insertBefore(c, keep) : el.appendChild(c); });
+        if (keep) { var sw = n.querySelector('#upd-auto'); if (sw) patch(keep, sw); }
+      }
     });
     bind(); pill();
   }
@@ -68,7 +86,9 @@
     if (!r || !r.latest || !r.current) { U.state = 'error'; paint(); return; }
     U.info = r.latest; U.cur = r.current;
     U.state = (+U.info.code || 0) > (+U.cur.code || 0) && U.info[U.platform()] ? 'ready' : 'latest';
-    paint();
+    /* kept, so the notice is still there tomorrow, until this copy is the new version */
+    if (U.state === 'ready') S().found = { info: U.info, cur: U.cur }; else delete S().found;
+    A.saveNow(); paint();
   };
   U.install = function () {
     var f = U.info && U.info[U.platform()]; if (!f) return;
@@ -82,17 +102,43 @@
   };
   U.onDone = function (status) { U.state = status === 'ok' ? 'installing' : status === 'allow' ? 'allow' : status === 'checksum' ? 'checksum' : 'failed'; paint(); };
 
-  /* ---------- the pill: a quiet sign on the grown-up screens, only once something is ready ---------- */
+  /* ---------- where an update shows, once one is ready ----------
+     A small Update chip in the home header (a grown-up opens it) and in the computer's rail, and a slim band on the family
+     dashboard. Each opens the same sheet: what is new, and Update. Nothing shows when there is nothing to do. */
+  U.ready = function () { return U.state === 'ready' || U.state === 'allow' || U.state === 'downloading'; };
+  var DL = '<path d="M12 4v11M7 10.5l5 5 5-5M5 20h14"/>';
+  U.chip = function () {
+    if (!U.ready() || !U.info) return '';
+    return '<button class="up-chip" data-a="upd-open" aria-label="' + esc(L(['Update to version ' + U.info.name, 'حدّث إلى الإصدار ' + A.num(U.info.name)])) + '">' + ic(DL, 16) + '<span>' + esc(L(['Update', 'تحديث'])) + '</span></button>';
+  };
+  U.band = function () {
+    if (!U.ready() || !U.info) return '';
+    var n = U.info.notes && U.info.notes[0] ? L(U.info.notes[0]) : '';
+    return '<button class="up-band" data-a="upd-open"><span class="up-band-i">' + ic(DL, 20) + '</span><span class="grow"><b>' + esc(L(['Miftāḥ ' + U.info.name + ' is ready', 'مفتاح ' + A.num(U.info.name) + ' جاهز'])) + '</b>' + (n ? '<small>' + esc(n) + '</small>' : '') + '</span><span class="up-band-go">' + esc(L(['See what’s new', 'ما الجديد'])) + '</span></button>';
+  };
+  A.acts['upd-open'] = function () {
+    var open = function () {
+      A.sheet(L(['Update Miftāḥ', 'حدّث مفتاح']), U.card('sheet'), function () { bind(); });
+    };
+    if (A.grownOpen && !A.grownOpen() && A.askGrown) A.askGrown(open); else open();
+  };
   function pill() {
-    var p = document.getElementById('upd-pill'), show = (U.state === 'ready' || U.state === 'allow') && /^(parent|desk)$/.test(document.body && document.body.dataset.view || '') && !document.querySelector('[data-upd]');
-    if (!show) { if (p) p.remove(); return; }
-    if (!p) { p = document.createElement('a'); p.id = 'upd-pill'; p.className = 'upd-pill'; document.body.appendChild(p); }
-    p.href = window.DeskBridge ? '#/desk/pc' : '#/parent/settings';
-    p.innerHTML = '<i></i><span>' + esc(L(['Version ' + U.info.name + ' is ready', 'الإصدار ' + A.num(U.info.name) + ' جاهز'])) + '</span>';
+    var old = document.getElementById('upd-pill'); if (old) old.remove();
+    document.querySelectorAll('.upd-slot').forEach(function (el) { el.innerHTML = U.chip(); });
+    document.querySelectorAll('.upd-band-slot').forEach(function (el) { el.innerHTML = U.band(); });
   }
+  U.pill = pill;
+  /* what was found before is shown again, until this copy is the new version */
+  U.restore = function () {
+    var f = S().found; if (!f || !U.can()) return;
+    var now = A.N.call('version');
+    if (now && f.cur && String(now) === String(f.cur.name)) { U.info = f.info; U.cur = f.cur; U.state = 'ready'; pill(); }
+    else { delete S().found; A.saveNow(); }
+  };
   addEventListener('hashchange', function () { setTimeout(pill, 60); });
   /* the weekly check, if a grown-up turned it on: quietly, a little after start, at most once a week */
   document.addEventListener('DOMContentLoaded', function () {
+    setTimeout(U.restore, 400);
     setTimeout(function () { if (U.can() && S().auto && Date.now() - (S().last || 0) > WEEK) U.check(); }, 12000);
   });
 })();

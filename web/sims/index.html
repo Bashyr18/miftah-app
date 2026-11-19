@@ -22,8 +22,29 @@ input[type=text]{width:100%;min-height:46px;padding:8px 12px;border:1px solid va
 .wide #ctl{grid-area:ctl;margin:0}.wide #btns{grid-area:btns;margin:0;align-content:start}.wide #out{grid-area:out;margin:0;align-content:start;grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
 .wide canvas{max-width:100%;border-radius:16px}
 .wide .out b{font-size:20px;margin-top:2px}
+/* the guided investigation (guide.js): the idea, then predict, try, see why */
+.gd{display:grid;gap:10px;margin:12px 0 0}
+.gd-idea{padding:12px 14px;border-radius:12px;background:var(--s1);border:1px solid var(--line);font-size:14.5px;line-height:1.5;color:var(--t1)}
+.gd-idea summary{cursor:pointer;list-style:none}.gd-idea summary::-webkit-details-marker{display:none}details.gd-idea small{display:inline;margin:0}details.gd-idea summary small::after{content:' ▾'}
+.gd-idea small,.gd-n{display:block;font-size:11.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--acc);margin-bottom:4px}
+.gd-card{padding:14px;border-radius:14px;border:1px solid color-mix(in srgb,var(--acc) 45%,transparent);background:color-mix(in srgb,var(--acc) 7%,var(--s1));display:grid;gap:10px}
+.gd-q{font-size:16px;font-weight:700;line-height:1.4;color:var(--t1)}
+.gd-opts{display:grid;gap:6px}.gd-opts button{min-height:44px;text-align:start;font-weight:600;line-height:1.3;padding:8px 12px}
+.gd-opts button.pick{border-color:var(--acc);background:color-mix(in srgb,var(--acc) 18%,var(--s1));color:var(--t1);opacity:1}
+.gd-do{display:flex;gap:10px;align-items:flex-start;font-size:15px;line-height:1.45;color:var(--t1)}
+.gd-dot{flex:none;width:12px;height:12px;margin-top:5px;border-radius:50%;border:2px solid var(--acc);animation:gdp 1.4s ease-in-out infinite}
+@keyframes gdp{50%{transform:scale(.6);opacity:.5}}
+.gd-why{padding:12px 14px;border-radius:12px;background:var(--s1);border:1px solid var(--line);font-size:14.5px;line-height:1.5;color:var(--t2)}
+.gd-why b{display:block;color:var(--a2);font-size:14.5px;margin-bottom:4px}.gd-why b.miss{color:var(--acc)}
+.gd-acts{display:flex;justify-content:flex-end;gap:8px}.gd-acts button{min-width:110px}
+.gd-real{font-size:14px;line-height:1.5;color:var(--t2)}
+.gd-prog{display:flex;gap:4px}.gd-prog i{flex:1;height:4px;border-radius:2px;background:var(--line)}.gd-prog i.on{background:var(--acc)}
+.wide #gd{grid-area:guide;margin:0}
+.wide body{grid-template-areas:"stage task" "stage guide" "stage ctl" "stage btns" "stage out";grid-template-rows:auto auto auto auto 1fr}
+@media (prefers-reduced-motion:reduce){.gd-dot{animation:none}}
 </style></head><body>
-<p class="task" id="task"></p><div id="stage"></div><div class="ctl" id="ctl"></div><div class="btns" id="btns"></div><div class="out" id="out"></div>
+<p class="task" id="task"></p><div id="stage"></div><div class="gd" id="gd"></div><div class="ctl" id="ctl"></div><div class="btns" id="btns"></div><div class="out" id="out"></div>
+<script src="guide.js"></script>
 <script>
 window.onerror=function(m,f,l){document.title='ERR '+m+' @'+l};
 'use strict';
@@ -37,10 +58,11 @@ var WIDE=innerWidth>=900;if(WIDE)document.documentElement.classList.add('wide');
 /* the frame may only reach its final size after it opens: lay out again when the width changes enough to matter */
 var W0=innerWidth;addEventListener('resize',function(){clearTimeout(window.__rz);window.__rz=setTimeout(function(){if((innerWidth>=900)!==WIDE||(WIDE&&Math.abs(innerWidth-W0)>60))location.reload()},180)});
 function canvas(h,draw){var c=document.createElement('canvas'),g=c.getContext('2d'),dpr=Math.min(devicePixelRatio||1,2);var W=WIDE?616:Math.min(innerWidth-24,616),k=1;if(WIDE){/* the space beside the controls column, never more: nothing spills out of the frame */k=Math.max(.6,Math.min((innerWidth-356-28-48)/W,(innerHeight-48)/h,2.6))}c.width=Math.round(W*dpr*k);c.height=Math.round(h*dpr*k);if(WIDE){c.style.width=W*k+'px';c.style.maxWidth='100%';c.style.height='auto'}else c.style.height=h+'px';g.scale(dpr*k,dpr*k);$('stage').appendChild(c);return{c:c,g:g,W:W,H:h,clear:function(){g.clearRect(0,0,W,h)}}}
-function slider(lb,min,max,v,step,cb,fmt){var l=document.createElement('label'),b=document.createElement('b'),s=document.createElement('input');s.type='range';s.min=min;s.max=max;s.step=step||1;s.value=v;fmt=fmt||function(x){return x};l.append(L(lb),b,s);b.textContent=fmt(v);s.oninput=function(){b.textContent=fmt(+s.value);cb(+s.value)};$('ctl').appendChild(l);return s}
-function outs(o){var e=$('out'),h='';o.forEach(function(x){h+='<div>'+L(x[0])+'<b dir="ltr">'+x[1]+'</b></div>'});e.innerHTML=h}
-function btn(lb,cb,on){var b=document.createElement('button');b.textContent=L(lb);if(on)b.className='on';b.onclick=function(){cb(b)};$('btns').appendChild(b);return b}
-function radio(list,cb){var bs=list.map(function(x,i){return btn(x,function(b){bs.forEach(function(y){y.className=''});b.className='on';cb(i)},i===0)});return bs}
+var ST={v:{},o:{},b:{},h:{},sel:null};function EN(x){return Array.isArray(x)?x[0]:String(x)}
+function slider(lb,min,max,v,step,cb,fmt){ST.v[EN(lb)]=v;ST.h[EN(lb)]=[v];var cb0=cb;cb=function(n){ST.v[EN(lb)]=n;ST.h[EN(lb)].push(n);cb0(n)};var l=document.createElement('label'),b=document.createElement('b'),s=document.createElement('input');s.type='range';s.min=min;s.max=max;s.step=step||1;s.value=v;fmt=fmt||function(x){return x};b.dir='ltr';l.append(L(lb),b,s);b.textContent=fmt(v);s.oninput=function(){b.textContent=fmt(+s.value);cb(+s.value)};$('ctl').appendChild(l);return s}
+function outs(o){o.forEach(function(x){ST.o[EN(x[0])]=String(x[1])});var e=$('out'),h='';o.forEach(function(x){h+='<div>'+L(x[0])+'<b dir="ltr">'+x[1]+'</b></div>'});e.innerHTML=h}
+function btn(lb,cb,on){var b=document.createElement('button');b.textContent=L(lb);if(on)b.className='on';b.onclick=function(){ST.b[EN(lb)]=(ST.b[EN(lb)]||0)+1;cb(b)};$('btns').appendChild(b);return b}
+function radio(list,cb){var bs=list.map(function(x,i){return btn(x,function(b){bs.forEach(function(y){y.className=''});b.className='on';ST.sel=EN(x);cb(i)},i===0)});ST.sel=EN(list[0]);return bs}
 function drag(cv,pts,cb,r){var a=null;function P(e){var b=cv.c.getBoundingClientRect();return{x:(e.clientX-b.left)*cv.W/b.width,y:(e.clientY-b.top)*cv.H/b.height}}cv.c.onpointerdown=function(e){var p=P(e),best=-1,bd=(r||32)*(r||32);pts.forEach(function(q,i){var d=(q.x-p.x)*(q.x-p.x)+(q.y-p.y)*(q.y-p.y);if(d<bd){bd=d;best=i}});if(best>=0){a=best;cv.c.setPointerCapture(e.pointerId)}};cv.c.onpointermove=function(e){if(a==null)return;var p=P(e);pts[a].x=Math.max(8,Math.min(cv.W-8,p.x));pts[a].y=Math.max(8,Math.min(cv.H-8,p.y));cb()};cv.c.onpointerup=cv.c.onpointercancel=function(){a=null}}
 function dot(g,x,y,r,c){g.fillStyle=c;g.beginPath();g.arc(x,y,r,0,7);g.fill()}
 function line(g,a,b,c,d,col,w){g.strokeStyle=col;g.lineWidth=w||1.5;g.beginPath();g.moveTo(a,b);g.lineTo(c,d);g.stroke()}
@@ -101,5 +123,26 @@ S.moon={t:['Why does the moon change? It is where the sun lights it from.','لم
 S.shadow={t:['A stick’s shadow tells the prayer times. Move the sun.','ظل العصا يعرّف بمواقيت الصلاة. حرك الشمس.'],go:function(){var v=canvas(220),h=12;function draw(){var g=v.g;v.clear();var a=(h-6)/12*Math.PI,sx=v.W/2-Math.cos(a)*(v.W/2-20),sy=190-Math.sin(a)*165;line(g,0,190,v.W,190,T2);dot(g,sx,sy,12,C1);var st=50,top=190-st,dx=Math.tan(Math.PI/2-a)*st;line(g,v.W/2,190,v.W/2,top,T1,4);if(Math.sin(a)>.05)line(g,v.W/2,190,v.W/2+Math.max(-v.W/2,Math.min(v.W/2,dx*(a>0?1:-1)*-1*-1)),190,C4,5);var len=Math.abs(dx)/st,N=L(h<12?['morning','الضحى']:h<12.2?['midday: Ẓuhr begins','الظهر']:len<1?['Ẓuhr time','وقت الظهر']:h<18?['ʿAṣr time: shadow longer than the stick','العصر: الظل أطول من العصا']:['sunset','المغرب']);outs([[['time','الوقت'],Math.floor(h)+':'+('0'+Math.round((h%1)*60)).slice(-2)],[['shadow ÷ stick','الظل ÷ العصا'],f2(len)],[['','' ],N]])}slider(['time of day','وقت اليوم'],6.2,17.9,h,.1,function(n){h=n;draw()},f1);draw()}};
 S.steps={t:['A worked solution, one move at a time.','حل مفصل، خطوة بعد خطوة.'],go:function(){var a=1,b=-5,c=6,e=document.createElement('div'),n=0;e.style.cssText='display:grid;gap:8px';$('stage').append(e);function list(){var D=b*b-4*a*c,r=Math.sqrt(Math.max(0,D));return['ax² + bx + c = 0:  '+a+'x² + ('+b+')x + ('+c+') = 0',L(['Find the discriminant: ','احسب المميز: '])+'b² − 4ac = '+D,D<0?L(['Negative, so no real roots.','سالب فلا جذور حقيقية.']):'√'+D+' = '+f2(r),D<0?'':'x = ('+(-b)+' ± '+f2(r)+') ÷ '+(2*a),D<0?'':'x = '+f2((-b+r)/(2*a))+L(['  or  x = ','  أو  x = '])+f2((-b-r)/(2*a))].filter(Boolean)}function show(){var L0=list();e.innerHTML=L0.slice(0,n).map(function(s){return '<div dir="ltr" style="padding:10px 12px;background:var(--s1);border:1px solid var(--line);border-radius:10px">'+s+'</div>'}).join('');outs([[['steps shown','الخطوات'],Math.min(n,L0.length)+' / '+L0.length]])}slider('a',1,5,a,1,function(x){a=x;n=0;show()});slider('b',-12,12,b,1,function(x){b=x;n=0;show()});slider('c',-12,12,c,1,function(x){c=x;n=0;show()});btn(['Next step','الخطوة التالية'],function(){n++;show()},true);btn(['Start again','من جديد'],function(){n=0;show()});show()}};
 /* start once the frame has its real size (a frame begins at 300 pixels wide), and decide the layout then */
-var s=S[ID]||S.triangle;$('task').textContent=L(s.t);(function start(n,last,same){var w=innerWidth;same=w===last?same+1:0;if(n<45&&(w<320||same<3)){requestAnimationFrame(function(){start(n+1,w,same)});return}WIDE=w>=900;W0=w;document.documentElement.classList.toggle('wide',WIDE);s.go()})(0,-1,0);
+/* the guided investigation: the idea, then for each step a prediction, one thing to try (checked from ST), and why */
+function guide(id){var G=window.GUIDE&&GUIDE[id],box=$('gd');if(!G||!box)return;var i=0,pick=-1,timer=null,done=false;
+  var api={v:function(k){return ST.v[k]},t:function(k){return ST.o[k]||''},ns:function(k){return(String(ST.o[k]||'').replace(/\u2212/g,'-').match(/-?\d+(\.\d+)?/g)||[]).map(Number)},o:function(k){var n=api.ns(k);return n.length?n[0]:NaN},b:function(k){return ST.b[k]||0},seen:function(k,f){return(ST.h[k]||[]).some(f)}};
+  Object.defineProperty(api,'sel',{get:function(){return ST.sel}});
+  function esc(t){t=String(t).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]});return AR?t.replace(/[A-Za-zα-ωΑ-Ωθλπ√∫Σ(\[][A-Za-z0-9α-ωΑ-Ωθλπ√∫Σ²³⁰-⁹₀-₉ =+\-−×÷·.,/()\[\]'′]*[A-Za-z0-9α-ωΑ-Ωθλπ²³⁰-⁹₀-₉)\]]/g,function(m){return '<bdi dir="ltr">'+m+'</bdi>'}):t}
+  function order(n){var a=[];for(var k=0;k<n;k++)a.push(k);for(k=n-1;k>0;k--){var j=(id.length*7+i*13+k*5)%(k+1),t=a[k];a[k]=a[j];a[j]=t}return a}
+  function prog(){return '<div class="gd-prog">'+G.steps.map(function(x,k){return '<i class="'+(k<i||(k===i&&done)?'on':'')+'"></i>'}).join('')+'</div>'}
+  function idea(){var full=(i===0&&pick<0)||i>=G.steps.length;return full?'<div class="gd-idea"><small>'+esc(L(['The idea','الفكرة']))+'</small>'+esc(L(G.idea))+'</div>':'<details class="gd-idea"><summary><small>'+esc(L(['The idea','الفكرة']))+'</small></summary>'+esc(L(G.idea))+'</details>'}
+  function draw(){clearInterval(timer);
+    if(i>=G.steps.length){box.innerHTML=idea()+'<div class="gd-card">'+prog()+'<div class="gd-q">'+esc(L(['You have found it all.','وجدتها كلها.']))+'</div><p class="gd-real">'+esc(L(G.real))+'</p><div class="gd-acts"><button id="gd-again">'+esc(L(['Again','من جديد']))+'</button></div></div>';$('gd-again').onclick=function(){i=0;pick=-1;done=false;draw()};try{parent.postMessage({miftahLab:id,done:true},'*')}catch(e){}return}
+    var st=G.steps[i],ord=order(st.o.length);
+    var h=idea()+'<div class="gd-card">'+prog()+'<span class="gd-n">'+esc(L(['Investigation ','تجربة ']))+(i+1)+' / '+G.steps.length+'</span><div class="gd-q">'+esc(L(st.q))+'</div>';
+    if(pick<0){h+='<div class="gd-opts">'+ord.map(function(k){return '<button data-k="'+k+'">'+esc(L(st.o[k]))+'</button>'}).join('')+'</div><p class="gd-real">'+esc(L(['Predict first, then test it.','توقّع أولًا ثم اختبر.']))+'</p>'}
+    else{h+='<div class="gd-opts"><button class="pick" disabled>'+esc(L(st.o[pick]))+'</button></div>';
+      h+=done?'<div class="gd-why"><b class="'+(pick===0?'':'miss')+'">'+esc(L(pick===0?['Your prediction was right.','توقّعك صحيح.']:['Not what you predicted: that is what experiments are for.','ليس كما توقعت: لهذا نجرّب.']))+'</b>'+esc(L(st.why))+'</div><div class="gd-acts"><button class="on" id="gd-next">'+esc(L(i+1<G.steps.length?['Next','التالي']:['Finish','إنهاء']))+'</button></div>'
+        :'<div class="gd-do"><span class="gd-dot"></span><span>'+esc(L(st.go))+'</span></div>'}
+    box.innerHTML=h+'</div>';
+    [].forEach.call(box.querySelectorAll('[data-k]'),function(b){b.onclick=function(){pick=+b.dataset.k;draw()}});
+    var nx=$('gd-next');if(nx)nx.onclick=function(){i++;pick=-1;done=false;draw();box.scrollIntoView({block:'nearest'})};
+    if(pick>=0&&!done)timer=setInterval(function(){var ok=false;try{ok=!!st.ok(api)}catch(e){}if(ok){done=true;draw()}},300)}
+  draw()}
+var s=S[ID]||S.triangle;$('task').textContent=L(s.t);(function start(n,last,same){var w=innerWidth;same=w===last?same+1:0;if(n<45&&(w<320||same<3)){requestAnimationFrame(function(){start(n+1,w,same)});return}WIDE=w>=900;W0=w;document.documentElement.classList.toggle('wide',WIDE);s.go();guide(S[ID]?ID:'triangle')})(0,-1,0);
 </script></body></html>

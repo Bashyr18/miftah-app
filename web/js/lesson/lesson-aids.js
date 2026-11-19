@@ -91,7 +91,7 @@
   /* Teaching pages from age 8 up. Text is structure, not a paragraph: the first sentence is the idea, an equation
      stands on its own plate, and a worked example unfolds one line at a time so the child thinks before reading on. */
   var WORKED = /^(Worked:|مثال محلول:)\s*/;
-  var EQ = /^[A-Za-z0-9²³°Ωπ()\/×÷·+\-−√., ]{1,30}=[A-Za-z0-9²³°Ωπ()\/×÷·+\-−√.,% ]{1,40}\.?$/;
+  var EQ = /^[A-Za-z0-9²³ⁿ⁰¹⁴-⁹₀-₉°ΩπθλμρσωαβγδεφΔΣ½¼¾()\[\]\/×÷·+\-−√∫∑′., ]{1,30}(=|≈|∝)[A-Za-z0-9²³ⁿ⁰¹⁴-⁹₀-₉°ΩπθλμρσωαβγδεφΔΣ½¼¾()\[\]\/×÷·+\-−√∫∑′.,% ]{1,40}\.?$/;
   /* sentences, without being fooled by e.g. or 0.5 */
   function sentences(t) {
     var parts = t.replace(/([.!?؟])\s+/g, '$1\n').split('\n'), out = [];
@@ -102,7 +102,28 @@
     return out;
   }
   function line(l, cls) {
-    return EQ.test(l) ? '<p class="tch-eq" dir="ltr">' + esc(l.replace(/\.$/, '')) + '</p>' : '<p class="' + cls + '">' + esc(l) + '</p>';
+    var f = l.replace(/\.$/, '').trim(), key = window.FKEYS && window.FKEYS[f];
+    /* a formula, and under it what each letter stands for, where that is certain */
+    if (EQ.test(l) || key) return '<div class="tch-f"><p class="tch-eq" dir="ltr">' + esc(f) + '</p>' + (key ? '<dl class="tch-sym">' + key.map(function (k) { return '<div><dt dir="ltr">' + esc(k[0]) + '</dt><dd>' + esc(L([k[1], k[2]])) + '</dd></div>'; }).join('') + '</dl>' : '') + '</div>';
+    return '<p class="' + cls + '">' + esc(l) + '</p>';
+  }
+  /* formulas that stand together (the three equations of motion) share one key of letters, after the last of them */
+  function group(ls) {
+    var out = '', run = [];
+    function flush() {
+      if (!run.length) return;
+      var seen = {}, rows = [];
+      run.forEach(function (f) { (window.FKEYS[f] || []).forEach(function (k) { if (!seen[k[0]]) { seen[k[0]] = 1; rows.push(k); } }); });
+      out += '<div class="tch-f">' + run.map(function (f) { return '<p class="tch-eq" dir="ltr">' + esc(f) + '</p>'; }).join('') + (rows.length ? '<dl class="tch-sym">' + rows.map(function (k) { return '<div><dt dir="ltr">' + esc(k[0]) + '</dt><dd>' + esc(L([k[1], k[2]])) + '</dd></div>'; }).join('') + '</dl>' : '') + '</div>';
+      run = [];
+    }
+    ls.forEach(function (l, i) {
+      var f = l.replace(/\.$/, '').trim();
+      if (window.FKEYS && window.FKEYS[f]) { run.push(f); return; }
+      flush(); out += line(l, i ? 'tch-l' : 'tch-key');
+    });
+    flush();
+    return out;
   }
   function titleOf(c) { var sk = c.skillId && C.skill(c.skillId); return sk && sk.title ? L(sk.title) : ''; }
 
@@ -123,7 +144,8 @@
     var title = titleOf(c);
     if (pr) { if (title) pr.textContent = title; else pr.remove(); }
     c.el.innerHTML = '<div class="tch">' + (s.tag ? '<small class="tch-tag">' + esc(L(s.tag)) + '</small>' : '') + (s.art ? '<div class="tch-art">' + A.art(s.art, 84) + '</div>' : '') + (s.dia ? '<div class="dia-w">' + s.dia + '</div>' : '') + (s.big ? '<p class="tch-eq" dir="ltr">' + esc(s.big) + '</p>' : '') +
-      lines.map(function (l, i) { return line(l, i ? 'tch-l' : 'tch-key'); }).join('') + '</div>';
+      group([].concat.apply([], lines.map(I.splitFormulas || function (x) { return [x]; }))) +
+      (I.simButton && I.simFor ? I.simButton(I.simFor(c.skillId)) : '') + '</div>';
     c.done();
   };
   /* a sound the app cannot play yet: a grown-up becomes the voice, and the screen says so */

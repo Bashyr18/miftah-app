@@ -16,6 +16,7 @@
     var sc = d.screen || {}, time = 0, bars = []; for (var i = 6; i >= 0; i--) { var k = A.day(new Date(A.now().getTime() - i * DAY)), ms = (sc[k] || 0) + ((d.time || {})[k] || 0); time += ms; bars.push(ms); }
     return { pl: pl, done: done, total: pl.stops.length, week: time, bars: bars, recall: ret.of >= 3 ? Math.round(ret.ok / ret.of * 100) : null, keys: c.forged, proven: c.proven, deep: c.deep, fresh: fresh, need: Flow.inbox(pid).length, due: M.due(pid).length };
   }
+  var UPD = '<svg class="ic" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V5M7 9.5l5-5 5 5M5 20h14"/></svg>';
   function appbar(title, sub, back, right) { return '<header class="abar"><a class="abtn" href="#/' + back + '" aria-label="' + esc(L(['Back', 'رجوع'])) + '">' + A.icon('back', 20) + '</a><div class="abar-t"><h1>' + esc(title) + '</h1>' + (sub ? '<small>' + esc(sub) + '</small>' : '') + '</div>' + (right || '') + '</header>'; }
   /* ---------- the family ---------- */
   /* what a parent needs ready today, from every child's real plan */
@@ -47,14 +48,23 @@
         (fresh ? '<a class="fc-go fc-lvl" href="#/parent/' + p.id + '/rooms">' + A.icon('flag', 16) + '<span class="grow">' + esc(L(['Find their level first', 'حدد مستواه أولًا'])) + '</span>' + A.icon('next', 14) + '</a>' : '') +
         '<button class="fc-go' + (nx.done || nx.off ? ' quiet' : '') + '" data-a="fam-go" data-id="' + p.id + '"><span class="grow"><small>' + esc(st <= 1 ? L(['Next, sit with them', 'التالي، اجلس معه']) : L(['Next', 'التالي'])) + '</small><b>' + esc(nx.text) + '</b></span>' + A.icon('next', 16) + '</button></div>';
     }).join('');
-    var tile = function (href, ic, t) { return '<a class="tl-b" href="#/parent/' + href + '">' + A.icon(ic, 24) + '<span>' + esc(L(t)) + '</span></a>'; };
+    var tile = function (href, ic, t, extra) { return '<a class="tl-b" href="#/parent/' + href + '">' + A.icon(ic, 24) + '<span>' + esc(L(t)) + '</span>' + (extra || '') + '</a>'; };
+    var btile = function (act, svg, t) { return '<button class="tl-b" data-a="' + act + '">' + svg + '<span>' + esc(L(t)) + '</span></button>'; };
     var created = A.S.created ? new Date(A.S.created + 'T12:00:00').getTime() : A.now().getTime();
     var stale = kids.length && A.now().getTime() - Math.max(A.S.lastBackup || 0, A.S.lastSync || 0, created) > 30 * DAY;
     var nudge = stale ? '<a class="bkp" href="#/parent/settings">' + A.icon('flag', 18) + '<span class="grow">' + esc(L(['Time to back up', 'حان وقت النسخ الاحتياطي'])) + '</span>' + A.icon('next', 16) + '</a>' : '';
-    if (!A.S.pin && kids.some(function (p) { return A.age(p) >= 8; })) nudge += '<a class="bkp" href="#/parent/settings">' + A.icon('flag', 18) + '<span class="grow">' + esc(L(['Set a parent PIN', 'عيّن رمز الوالدين'])) + '</span>' + A.icon('next', 16) + '</a>';
+    if (!A.S.pin && kids.some(function (p) { return A.age(p) >= 8; })) nudge += '<a class="bkp" href="#/parent/settings">' + A.icon('flag', 18) + '<span class="grow">' + esc(L(A.grown() && A.grown().role !== 'parent' ? ['Set a PIN for grown-ups', 'عيّن رمزًا للكبار'] : ['Set a parent PIN', 'عيّن رمز الوالدين'])) + '</span>' + A.icon('next', 16) + '</a>';
     var ready = kids.length ? haveReady() : [], allOff = kids.length && kids.every(function (p) { return Flow.isOff(p.id); });
     var day = '<div class="fday"><div class="fday-h"><b class="dates">' + Voice.dateLine() + '</b><button class="chip2' + (allOff ? ' on' : '') + '" data-a="fam-off">' + esc(L(['Day off', 'يوم راحة'])) + '</button></div>' + (ready.length && !allOff ? '<div class="fday-r"><small>' + esc(L(['Have ready', 'جهّز'])) + '</small>' + ready.slice(0, 5).map(function (m) { return '<span>' + esc(m) + '</span>'; }).join('') + '</div>' : '') + '</div>';
-    return { html: appbar(L(['Family', 'الأسرة']), '', 'home', A.dn() + '<a class="abtn" href="#/parent/settings" aria-label="' + esc(L(['Settings', 'الإعدادات'])) + '">' + A.icon('gear', 20) + '</a>') + '<div class="dwrap">' + nudge + day + '<div class="fgrid">' + cards + '<a class="fc fc-add" href="#/parent/add">' + PLUS + '<span>' + esc(L(['Add a child', 'أضف طفلًا'])) + '</span></a></div><div class="tl-grid">' + tile('media', 'video', ['Media', 'الوسائط']) + tile('books', 'book', ['Arabic books', 'كتب العربية']) + tile('voices', 'mic', ['My voice', 'صوتي']) + '<button class="tl-b" data-a="s-sync">' + SYNC + '<span>' + esc(L(['Devices', 'الأجهزة'])) + '</span></button>' + '<button class="tl-b" data-a="grp-open">' + A.icon('talk', 24) + '<span>' + esc(L(['Group', 'المجموعة'])) + '</span></button>' + tile('about', 'help', ['Guide', 'الدليل']) + '</div></div>' };
+    var g = A.grown(), teach = g && g.role === 'teacher';
+    /* the grown-up's own card: who they are, and the two things a grown-up looks for first, Settings and Updates */
+    var updNew = window.Upd && (Upd.state === 'ready' || Upd.state === 'allow');
+    var me = '<section class="gp"><a class="gp-me" href="#/parent/me">' + A.grownAvatar(46) + '<span class="grow"><small>' + esc(g ? L(A.ROLES[g.role] || A.ROLES.parent) + (g.org ? ' · ' + g.org : '') : L(['Your profile', 'ملفّك'])) + '</small><b>' + esc(g ? g.name : L(['Who teaches here?', 'من يعلّم هنا؟'])) + '</b></span>' + A.icon('next', 18) + '</a>' +
+      '<div class="gp-acts"><a class="gp-b" href="#/parent/settings">' + A.icon('gear', 22) + '<span>' + esc(L(['Settings', 'الإعدادات'])) + '</span></a>' +
+      '<a class="gp-b' + (updNew ? ' new' : '') + '" href="#/parent/updates">' + UPD + '<span>' + esc(L(['Updates', 'التحديثات'])) + '</span>' + (updNew ? '<i class="gp-dot"></i>' : '') + '</a></div></section>';
+    var tools = '<h2 class="tl-h">' + esc(L(['Teach with your own', 'علّم بما عندك'])) + '</h2><div class="tl-grid">' + tile('books', 'book', ['Courses', 'المقررات']) + tile('media', 'video', ['Media', 'الوسائط']) + tile('voices', 'mic', ['My voice', 'صوتي']) + tile('about', 'help', ['Guide', 'الدليل']) + '</div>' +
+      '<h2 class="tl-h">' + esc(L(['Share', 'شارك'])) + '</h2><div class="tl-grid">' + btile('s-sync', SYNC, ['Devices', 'الأجهزة']) + btile('grp-open', A.icon('talk', 24), ['Group', 'المجموعة']) + '</div>';
+    return { html: appbar(L(teach ? ['Class', 'الصف'] : ['Family', 'الأسرة']), '', 'home', A.dn()) + '<div class="dwrap"><div class="upd-band-slot">' + (window.Upd ? Upd.band() : '') + '</div>' + me + nudge + day + '<div class="fgrid">' + cards + '<a class="fc fc-add" href="#/parent/add">' + PLUS + '<span>' + esc(L(teach ? ['Add a learner', 'أضف متعلّمًا'] : ['Add a child', 'أضف طفلًا'])) + '</span></a></div>' + tools + '</div>' };
   }
   /* ---------- one child ---------- */
   function subjectRows(p) {

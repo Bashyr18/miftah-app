@@ -6,6 +6,7 @@
   var isLight = function () { return /^#f/i.test(getComputedStyle(document.documentElement).getPropertyValue('--bg').trim()); };
   /* a sandboxed frame: it can run its own script, and nothing else */
   function frame(src, title) { return '<iframe class="simf" src="' + esc(src) + '" title="' + esc(title || '') + '" sandbox="allow-scripts" referrerpolicy="no-referrer"></iframe>'; }
+  A.simSrc = function (id) { return simSrc(id); };
   function simSrc(id) { return 'sims/index.html#' + id + '|' + (A.ar() ? 'ar' : 'en') + '|' + (isLight() ? 'light' : 'dark'); }
   I.sim = function (c) { var s = c.step; c.el.innerHTML = frame(simSrc(s.sim), L(s.p)); c.done(); };
   /* parents' own HTML lesson aids */
@@ -17,6 +18,19 @@
   A.acts['c-reload'] = function () { var f = $('#simstage iframe'); if (f) { var u = f.src; f.src = 'about:blank'; setTimeout(function () { f.src = u; }, 40); } };
   var watch0 = A.V.watch; A.V.watch = function (args) { var m = Media.get(args[0]); if (m && m.kind === 'html') return { redirect: 'lab/h-' + m.id }; return watch0(args); };
   /* ---------- the lab ---------- */
+  /* a simulation in the list: its idea in a line, how many investigations it guides, and a tick once they are done */
+  function firstSentence(t) { var m = String(t).match(/^.*?[.!?؟](\s|$)/); return m ? m[0].trim() : String(t); }
+  function labRow(sm) {
+    var g = window.GUIDE && GUIDE[sm.id], done = (A.D().lab || {})[sm.id], R = C.rooms[sm.room];
+    return '<a class="ti lab-i' + (done ? ' done' : '') + '" href="#/lab/' + sm.id + '"><span class="lab-ic h-' + R.hue + '">' + A.art(R.art, 30) + '</span><span class="grow"><b>' + esc(L(sm.t)) + '</b>' +
+      (g ? '<small>' + esc(firstSentence(L(g.idea))) + '</small><em>' + esc(done ? L(['Investigated', 'تمت التجربة']) : A.num(g.steps.length) + ' ' + L(['investigations', 'تجارب'])) + '</em>' : '') + '</span>' + (done ? '<span class="lab-ok">' + A.icon('check', 18) + '</span>' : '') + '</a>';
+  }
+  /* a simulation says when its guided investigation is finished */
+  addEventListener('message', function (e) {
+    var d = e.data; if (!d || typeof d !== 'object' || typeof d.miftahLab !== 'string' || !d.done || !A.P()) return;
+    if (!(C.SIMBY && C.SIMBY[d.miftahLab])) return;
+    var D = A.D(); D.lab = D.lab || {}; if (!D.lab[d.miftahLab]) { D.lab[d.miftahLab] = A.now().getTime(); A.saveNow(); }
+  });
   A.V.lab = function (args) {
     if (!A.P()) return { redirect: 'home' };
     var id = args[0];
@@ -29,8 +43,8 @@
     mine.forEach(function (s) { (groups[s.room] = groups[s.room] || []).push(s); });
     var ownH = Media.list().filter(function (m) { return m.kind === 'html' && Media.visible(m); });
     var body = (ownH.length ? '<div class="tsec">' + esc(L(['From your family', 'من أسرتك'])) + '</div><div class="tl">' + ownH.map(function (m) { return '<a class="ti" href="#/lab/h-' + m.id + '"><span class="grow"><b>' + esc(m.title) + '</b></span></a>'; }).join('') + '</div>' : '') +
-      C.order.filter(function (r) { return groups[r]; }).map(function (r) { return '<div class="tsec">' + esc(L(C.rooms[r].name)) + '</div><div class="tl">' + groups[r].map(function (s) { return '<a class="ti" href="#/lab/' + s.id + '"><span class="grow"><b>' + esc(L(s.t)) + '</b></span></a>'; }).join('') + '</div>'; }).join('');
-    return { html: '<header class="th"><div class="grow"><a class="backp" href="#/rooms">' + A.icon('back', 18) + '<span>' + esc(L(['Back', 'رجوع'])) + '</span></a><h1>' + esc(L(['The Lab', 'المختبر'])) + '</h1><p>' + esc(L(['Change things, and see what happens. Nothing here can break.', 'غيّر الأشياء وانظر ماذا يحدث. لا شيء هنا ينكسر.'])) + '</p></div></header><div class="tw">' + (body || '<p>' + esc(L(['The lab opens as you grow.', 'يفتح المختبر كلما كبرت.'])) + '</p>') + '</div>' };
+      C.order.filter(function (r) { return groups[r]; }).map(function (r) { return '<div class="tsec">' + esc(L(C.rooms[r].name)) + '</div><div class="tl">' + groups[r].map(labRow).join('') + '</div>'; }).join('');
+    return { html: '<header class="th"><div class="grow"><a class="backp" href="#/rooms">' + A.icon('back', 18) + '<span>' + esc(L(['Back', 'رجوع'])) + '</span></a><h1>' + esc(L(['The Lab', 'المختبر'])) + '</h1><p>' + esc(L(['Predict, then test it, then see why. Each simulation guides a few investigations; you can always just play.', 'توقّع ثم اختبر ثم افهم السبب. كل محاكاة تقودك في تجارب قليلة، ويمكنك دائمًا أن تلعب بحرية.'])) + '</p></div></header><div class="tw">' + (body || '<p>' + esc(L(['The lab opens as you grow.', 'يفتح المختبر كلما كبرت.'])) + '</p>') + '</div>' };
   };
 
   /* ---------- cross-subject analysis ---------- */
@@ -91,7 +105,7 @@
   };
   A.acts['c-cert'] = function (t) {
     var p = A.P(), R = C.rooms[t.dataset.r], y = +t.dataset.y, c = (A.D().certs || []).filter(function (x) { return x.r === t.dataset.r && x.y === y; })[0]; if (!c) return;
-    var html = '<div style="border:3pt double #8a6a22;padding:44pt 30pt;text-align:center;min-height:560pt;font-family:Quicksand,sans-serif"><p style="font-size:13pt;letter-spacing:.14em;color:#8a6a22;margin:0 0 40pt">MIFTĀḤ</p><p style="font-size:14pt;margin:0 0 14pt">' + esc(L(['This certifies that', 'نشهد أن'])) + '</p><h1 style="font-size:34pt;margin:0 0 18pt">' + esc(p.name) + '</h1><p style="font-size:14pt;margin:0 0 10pt">' + esc(L(['has shown mastery of', 'أتقن'])) + '</p><h2 style="font-size:22pt;margin:0 0 8pt">' + esc(L(R.name)) + ', ' + esc(L(C.yearName(y))) + '</h2><p style="font-size:13pt;margin:0 0 70pt">' + N(c.p) + '% · ' + dayOf(c.t) + '</p><p style="font-size:12pt">' + esc(L(['Signed by a parent: ', 'توقيع ولي الأمر: '])) + '____________________</p></div>';
+    var html = '<div style="border:3pt double #8a6a22;padding:44pt 30pt;text-align:center;min-height:560pt;font-family:Quicksand,sans-serif"><p style="font-size:13pt;letter-spacing:.14em;color:#8a6a22;margin:0 0 40pt">MIFTĀḤ</p><p style="font-size:14pt;margin:0 0 14pt">' + esc(L(['This certifies that', 'نشهد أن'])) + '</p><h1 style="font-size:34pt;margin:0 0 18pt">' + esc(p.name) + '</h1><p style="font-size:14pt;margin:0 0 10pt">' + esc(L(['has shown mastery of', 'أتقن'])) + '</p><h2 style="font-size:22pt;margin:0 0 8pt">' + esc(L(R.name)) + ', ' + esc(L(C.yearName(y))) + '</h2><p style="font-size:13pt;margin:0 0 70pt">' + N(c.p) + '% · ' + dayOf(c.t) + '</p>' + (function () { var g = A.grown && A.grown(), role = L(g ? (A.ROLES[g.role] || A.ROLES.parent) : ['parent', 'ولي الأمر']); return '<p style="font-size:12pt">' + esc(L(['Signed by the ' + role.toLowerCase() + ': ', 'توقيع ' + role + ': '])) + '____________________</p>' + (g ? '<p style="font-size:12pt;margin-top:4pt">' + esc(g.name) + (g.org ? ' · ' + esc(g.org) : '') + '</p>' : ''); })() + '</div>';
     if (window.Print && Print.send) Print.send(html, 'Miftah-certificate');
   };
   var pOf = Flow.progressOf; Flow.progressOf = function (kind, pid) { return kind === 'cert' ? (A.D(pid).certs || []).length : pOf(kind, pid); };

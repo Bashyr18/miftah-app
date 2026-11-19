@@ -43,7 +43,7 @@
   /* ---------- physics, Year 13 ---------- */
   U('science', 'a13ph', ['A level physics: fields and the atom', 'فيزياء: المجالات والذرة'], 4, 13);
   Topic('a13ph.grav', ['Gravitational fields and orbits', 'مجالات الجاذبية والمدارات'], 'planet', [['F = GMm/r². Double the distance, a quarter of the force. For orbits, Kepler’s third law: T² is proportional to r³. A geostationary satellite orbits once a day, about 36,000 km up.', 'F = GMm/r². ضعف البعد ربع القوة. ولكبلر: T² تتناسب مع r³.']], [
-    function (r) { var k = r.int(2, 5); return P(['Force is divided by?', 'تقسم القوة على؟'], 'r × ' + k, k * k); },
+    function (r) { var k = r.int(2, 5); return P(['A satellite moves to ' + k + ' times its distance from the planet’s centre. Gravity follows 1/r², so the force is divided by ' + k + '². By what number?', 'ينتقل قمر صناعي إلى ' + k + ' أضعاف بعده عن مركز الكوكب. الجاذبية تتبع ١/ر²، فتُقسم القوة على ' + k + '². على أي عدد؟'], k + '²', k * k); },
     function (r) { var k = r.pick([4, 9, 16]); return P(['Period is multiplied by?', 'يضرب الزمن في؟'], 'r × ' + k, Math.pow(Math.sqrt(k), 3)); },
     [['A geostationary orbit has a period of:', 'الزمن الدوري للمدار الثابت:'], ['One day', 'يوم واحد'], ['One hour', 'ساعة'], ['One year', 'سنة']]
   ]);

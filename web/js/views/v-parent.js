@@ -99,6 +99,8 @@
   A.V.parent = function (args) {
     if (!open()) return gate();
     if (args[0] === 'settings') return settings();
+    if (args[0] === 'me') return mePage();
+    if (args[0] === 'updates') return updatesPage();
     if (args[0] === 'voices') return voices();
     if (args[0] === 'add') return addChild();
     if (args[0] === 'about') return about();
@@ -381,7 +383,7 @@
         $$('[data-st]', v).forEach(function (b) { b.onclick = function () { p.stage = +b.dataset.st; A.D(p.id).path = null; A.placeDefault(p); A.saveNow(); A.rerender(); }; });
         bindPlan(p, v);
         $$('[data-lim]', v).forEach(function (b) { b.onclick = function () { p.limit = +b.dataset.lim; A.D(p.id).path = null; A.saveNow(); A.rerender(); }; });
-        $$('[data-room]', v).forEach(function (b) { b.onclick = function () { p.off = p.off || {}; p.off[b.dataset.room] = !p.off[b.dataset.room]; A.D(p.id).path = null; A.saveNow(); A.rerender(); }; });
+        $$('[data-room]', v).forEach(function (b) { b.onclick = function () { p.off = p.off || {}; p.off[b.dataset.room] = !p.off[b.dataset.room]; A.D(p.id).path = null; A.saveNow(); var sw = $('.switch', b); if (sw) sw.classList.toggle('on', !p.off[b.dataset.room]); else A.rerender(); }; });
         $('#del-c', v).onclick = function () {
           var el = this; if (el.dataset.arm !== '1') { el.dataset.arm = '1'; el.textContent = T('Tap again to remove for good'); return; }
           A.S.profiles = A.S.profiles.filter(function (x) { return x.id !== p.id; }); delete A.S.data[p.id]; if (A.S.cur === p.id) A.S.cur = A.S.profiles[0] ? A.S.profiles[0].id : null; A.saveNow(); A.go('parent');
@@ -409,18 +411,64 @@
     var add = $('#pr-add', v); if (add) add.onclick = function () { var w = $('#pr-w', v).value.trim(), n = Math.max(1, +$('#pr-n', v).value || 1); if (!w) { $('#pr-w', v).focus(); return; } p.promises = p.promises || []; p.promises.push({ id: 'p' + Date.now().toString(36), what: w, n: n, kind: $('#pr-k', v).value }); Flow.checkPromises(p.id); A.saveNow(); A.rerender(); };
   }
 
+  /* ===== the grown-up: a parent, a teacher or a tutor, with a name the app can use ===== */
+  A.ROLES = { parent: ['Parent', 'وليّ أمر'], teacher: ['Teacher', 'معلّم'], tutor: ['Tutor', 'مدرّس خاص'] };
+  A.grown = function () { var g = A.S.grown; return g && typeof g === 'object' && g.name ? g : null; };
+  A.grownAvatar = function (size) {
+    var g = A.grown(), t = g ? g.name.trim().charAt(0).toUpperCase() : '';
+    return '<span class="gp-av" style="width:' + size + 'px;height:' + size + 'px;font-size:' + Math.round(size * .42) + 'px">' + (t ? esc(t) : A.icon('grown', Math.round(size * .5))) + '</span>';
+  };
+  function mePage() {
+    var g = A.S.grown && typeof A.S.grown === 'object' ? A.S.grown : {}, role = g.role || 'parent';
+    var roles = Object.keys(A.ROLES).map(function (k) { return '<button class="seg' + (role === k ? ' on' : '') + '" data-role="' + k + '">' + esc(L(A.ROLES[k])) + '</button>'; }).join('');
+    return {
+      html: head(L(['Your profile', 'ملفّك']), L(['Only on this family’s devices. It names you on reports and sheets, and greets you here.', 'على أجهزة هذه الأسرة فقط. يظهر اسمك في التقارير والأوراق ويرحّب بك هنا.']), 'parent', T('Parents')) +
+        '<div class="wrap" style="margin-top:14px"><div class="card me-card">' + A.grownAvatar(64) +
+        '<label class="fld"><span>' + esc(L(['Your name', 'اسمك'])) + '</span><input class="input" id="me-n" dir="auto" maxlength="40" value="' + esc(g.name || '') + '" placeholder="' + esc(L(['For example, Umm Yusuf', 'مثلًا: أم يوسف'])) + '"></label>' +
+        '<div class="fld"><span>' + esc(L(['You are', 'أنت'])) + '</span><div class="segs">' + roles + '</div></div>' +
+        '<label class="fld" id="me-org-f"' + (role === 'parent' ? ' hidden' : '') + '><span>' + esc(L(['School, class or circle (optional)', 'المدرسة أو الصف أو الحلقة (اختياري)'])) + '</span><input class="input" id="me-o" dir="auto" maxlength="50" value="' + esc(g.org || '') + '"></label>' +
+        '<button class="btn pri wide" id="me-save">' + esc(L(['Save', 'احفظ'])) + '</button></div>' +
+        '<div class="card"><div class="lst"><a class="li" href="#/parent/settings"><span class="grow"><b>' + esc(T('Settings')) + '</b><small>' + esc(L(['Language, theme, sounds, PIN, backup', 'اللغة والمظهر والأصوات والرمز والنسخ الاحتياطي'])) + '</small></span>' + A.icon('next', 18) + '</a></div></div></div>',
+      mount: function (v) {
+        var cur = role;
+        $$('[data-role]', v).forEach(function (b) { b.onclick = function () { cur = b.dataset.role; $$('[data-role]', v).forEach(function (x) { x.classList.toggle('on', x === b); }); $('#me-org-f', v).hidden = cur === 'parent'; }; });
+        $('#me-save', v).onclick = function () {
+          var n = $('#me-n', v).value.trim(); if (!n) { $('#me-n', v).focus(); return; }
+          A.S.grown = { name: n, role: cur, org: cur === 'parent' ? '' : $('#me-o', v).value.trim(), at: A.now().getTime() };
+          A.saveNow(); A.toast(T('Saved')); A.go('parent');
+        };
+      }
+    };
+  }
+  /* ===== updates: the version on this device, and the check, on a page of their own ===== */
+  function updatesPage() {
+    var can = window.Upd && Upd.can();
+    return {
+      html: head(L(['Updates', 'التحديثات']), L(['Miftāḥ checks only when you ask, or once a week if you turn that on. Your family’s record is never touched by an update.', 'لا يتحقق مفتاح إلا حين تطلب، أو مرة في الأسبوع إن فعّلت ذلك. التحديث لا يمسّ سجل أسرتك.']), 'parent', T('Parents')) +
+        '<div class="wrap" style="margin-top:14px">' + (can ? Upd.card('updates') : '<div class="card"><p>' + esc(L(['In a web browser Miftāḥ is always the newest version. Updates are for the Android and Windows apps.', 'في المتصفح يكون مفتاح دائمًا بأحدث إصدار. التحديثات لتطبيقَي أندرويد وويندوز.'])) + '</p></div>') + '</div>',
+      mount: function () { if (can) Upd.bind(); }
+    };
+  }
+
   /* ===== settings ===== */
   function settings() {
     var S = A.S, seg = function (k, opts) { return '<div class="segs">' + opts.map(function (o) { return '<button class="seg ' + (S[k] === o[0] ? 'on' : '') + '" data-k="' + k + '" data-v="' + o[0] + '">' + esc(o[1]) + '</button>'; }).join('') + '</div>'; };
     return {
-      html: head(T('Settings'), '', 'parent', T('Parents')) + '<div class="wrap" style="margin-top:14px"><div class="card"><h3>' + esc(T('Language')) + '</h3>' + seg('lang', [['en', 'English'], ['ar', 'العربية']]) + '</div><div class="card"><h3>' + esc(T('Look')) + '</h3>' + seg('theme', [['auto', T('Follows the sun')], ['light', T('Day')], ['dark', T('Night')]]) + '</div><div class="card"><h3>' + esc(T('Reciter for memorising')) + '</h3>' + seg('reciter', [['h', T('Al-Ḥuṣarī, teaching pace')], ['a', T('Al-ʿAfāsī, flowing')]]) + '</div>' +
+      html: head(T('Settings'), '', 'parent', T('Parents')) + '<div class="wrap" style="margin-top:14px"><div class="card"><div class="lst"><a class="li" href="#/parent/me">' + A.grownAvatar(36) + '<span class="grow"><b>' + esc(A.grown() ? A.grown().name : L(['Your profile', 'ملفّك'])) + '</b><small>' + esc(A.grown() ? L(A.ROLES[A.grown().role] || A.ROLES.parent) : L(['Your name and role, parent or teacher', 'اسمك ودورك: وليّ أمر أو معلّم'])) + '</small></span>' + A.icon('next', 18) + '</a></div></div><div class="card"><h3>' + esc(T('Language')) + '</h3>' + seg('lang', [['en', 'English'], ['ar', 'العربية']]) + '</div><div class="card"><h3>' + esc(T('Look')) + '</h3>' + seg('theme', [['auto', T('Follows the sun')], ['light', T('Day')], ['dark', T('Night')]]) + '</div><div class="card"><h3>' + esc(T('Reciter for memorising')) + '</h3>' + seg('reciter', [['h', T('Al-Ḥuṣarī, teaching pace')], ['a', T('Al-ʿAfāsī, flowing')]]) + '</div>' +
         '<div class="card"><div class="lst"><button class="li" id="s-sound"><span class="grow"><b>' + esc(T('Touch sounds')) + '</b><small>' + esc(T('Soft clicks only. Never music.')) + '</small></span><span class="switch ' + (S.sound ? 'on' : '') + '"></span></button><div class="li" style="display:none"><input type="range" id="s-rate"></div>' +
         (A.N.has() ? '<button class="li" id="s-rem"><span class="grow"><b>' + esc(T('School-time reminder')) + '</b><small>' + esc(T(S.remind.on ? 'Quiet, once a day' : 'Off')) + '</small></span><span class="switch ' + (S.remind.on ? 'on' : '') + '"></span></button>' + (S.remind.on ? '<div class="li"><span class="grow"><b>' + esc(T('At')) + '</b></span><input type="time" id="s-time" class="input" style="width:130px;height:46px;font-size:16px" value="' + ('0' + S.remind.h).slice(-2) + ':' + ('0' + S.remind.m).slice(-2) + '"></div>' : '') + '<button class="li" id="s-wid"><span class="grow"><b>' + esc(T('Add to the home screen')) + '</b><small>' + esc(T('Today’s path as a widget')) + '</small></span></button>' : '') + '</div></div>' +
         (window.Upd && Upd.can() ? Upd.card('settings') : '') +
         '<div class="card"><h3>' + esc(T('Your family’s data')) + '</h3><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn sec sm" id="s-exp">' + esc(T('Back up')) + '</button><button class="btn sec sm" id="s-imp">' + esc(T('Restore')) + '</button></div></div></div>',
       mount: function (v) {
-        $$('[data-k]', v).forEach(function (b) { b.onclick = function () { S[b.dataset.k] = b.dataset.v; A.applyTheme(); A.saveNow(); A.rerender(); }; });
-        $('#s-sound', v).onclick = function () { S.sound = !S.sound; A.saveNow(); A.rerender(); };
+        /* a choice changes in place; only a new language redraws the page, since every word on it changes */
+        $$('[data-k]', v).forEach(function (b) { b.onclick = function () {
+          var k = b.dataset.k; if (S[k] === b.dataset.v) return;
+          S[k] = b.dataset.v; A.applyTheme(); A.saveNow();
+          if (k === 'lang') { A.rerender(); return; }
+          $$('[data-k="' + k + '"]', v).forEach(function (x) { x.classList.toggle('on', x === b); });
+        }; });
+        var flip = function (btn, on, sub) { var sw = $('.switch', btn); if (sw) sw.classList.toggle('on', on); var sm = $('small', btn); if (sm && sub) sm.textContent = sub; };
+        $('#s-sound', v).onclick = function () { S.sound = !S.sound; A.saveNow(); flip(this, S.sound); };
         if (window.Upd) Upd.bind();
         
         var rem = $('#s-rem', v); if (rem) rem.onclick = function () { S.remind.on = !S.remind.on; if (S.remind.on) A.N.call('requestNotifications'); A.saveNow(); A.rerender(); };

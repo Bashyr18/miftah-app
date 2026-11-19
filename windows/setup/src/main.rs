@@ -27,6 +27,24 @@ const VERSION: &str = env!("MIFTAH_VERSION");
 static PAYLOAD: &[u8] = include_bytes!(env!("MIFTAH_PAYLOAD"));
 static ICON: &[u8] = include_bytes!("../../icon.png");
 static PAGE: &str = include_str!("page.html");
+/* the app's own fonts (web/fonts), so the installer reads like Miftah itself: Quicksand, Plex Arabic, and Amiri for the name */
+static FONTS: &[(&str, u32, &[u8])] = &[
+    ("Quicksand", 400, include_bytes!("../../../web/fonts/Quicksand-400-700-latin.woff2")),
+    ("Quicksand", 400, include_bytes!("../../../web/fonts/Quicksand-400-700-latin-ext.woff2")),
+    ("Plex Arabic", 400, include_bytes!("../../../web/fonts/PlexArabic-400.woff2")),
+    ("Plex Arabic", 600, include_bytes!("../../../web/fonts/PlexArabic-600.woff2")),
+    ("Plex Arabic", 700, include_bytes!("../../../web/fonts/PlexArabic-700.woff2")),
+    ("Amiri", 400, include_bytes!("../../../web/fonts/Amiri-400-arabic.woff2")),
+];
+fn page() -> String {
+    let b64 = base64::engine::general_purpose::STANDARD;
+    let faces: String = FONTS.iter().map(|(f, w, d)| {
+        /* Quicksand is one variable file for 400 to 700 */
+        let weight = if *f == "Quicksand" { "400 700".to_string() } else { w.to_string() };
+        format!("@font-face{{font-family:'{}';font-weight:{};font-display:block;src:url(data:font/woff2;base64,{}) format('woff2')}}", f, weight, b64.encode(d))
+    }).collect();
+    PAGE.replace("/*FONTS*/", &faces)
+}
 
 struct St { web: RefCell<Option<Web>>, copying: Cell<bool>, dark: bool }
 thread_local! { static ST: RefCell<Option<Rc<St>>> = const { RefCell::new(None) }; }
@@ -193,7 +211,7 @@ fn main() {
         "icon": format!("data:image/png;base64,{}", base64::engine::general_purpose::STANDARD.encode(ICON)),
     });
     mc::add_script(&web.view, &format!("window.SETUP={};", info));
-    unsafe { let _ = web.view.NavigateToString(&h(PAGE)); }
+    unsafe { let _ = web.view.NavigateToString(&h(&page())); }
     *s.web.borrow_mut() = Some(web);
     unsafe { let _ = ShowWindow(hwnd, SW_SHOWNORMAL); let _ = UpdateWindow(hwnd); }
     let code = mc::pump();

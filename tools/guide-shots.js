@@ -29,6 +29,9 @@ module.exports = async (p) => {
   const shot = async (id, sels) => {
     if (only && !only.includes(id)) return;
     await wait(500);
+    /* never a door caught half open: wait for its animation to end, then clear anything left of it */
+    for (let k = 0; k < 20 && await p.eval(`!!document.querySelector('.dr')`); k++) await wait(200);
+    await p.eval(`document.querySelectorAll('.dr').forEach(function(e){e.remove()});1`);
     const b = JSON.parse(await box(sels || []));
     const r = await p.send('Page.captureScreenshot', { format: 'png' });
     fs.writeFileSync(path.join(out, id + '.png'), Buffer.from(r.result.data, 'base64'));
@@ -83,21 +86,27 @@ module.exports = async (p) => {
     }
     if (want('p-book')) {
       await unlock();
-      await p.eval(`(function(){
-        var ls=[]; for (var i=1;i<=23;i++) ls.push({n:i,title:'',words:[],grammar:[],sents:[]});
-        var w=[[['بَيْتٌ','a house'],['مَسْجِدٌ','a mosque'],['بَابٌ','a door'],['كِتَابٌ','a book'],['قَلَمٌ','a pen']],[['مِفْتَاحٌ','a key'],['سَرِيرٌ','a bed'],['كُرْسِيٌّ','a chair']],[['وَلَدٌ','a boy'],['بِنْتٌ','a girl'],['طَالِبٌ','a student']],[['قَمَرٌ','a moon'],['نَجْمٌ','a star']]];
-        w.forEach(function(x,i){ls[i].words=x});
-        A.S.books=[{id:'bkdemo',kind:'madinah1',name:A.L(['Madinah Arabic, Book 1','دروس اللغة العربية، الكتاب الأول']),lessons:ls}];
-        A.profile('u9').arBook='bkdemo'; A.Books.register(); A.saveNow(); return 1 })()`);
+      /* a physics course a family entered from its own revision guide: terms, a fact and questions per lesson */
+      const course = ['# 1 Forces', 'force = a push or a pull', 'newton = the unit of force', 'mass = how much matter an object has', '! Weight = mass × gravitational field strength',
+        '? A 2 kg bag on Earth (g = 10 N/kg) weighs how many newtons? = 20 | 2 | 200', '# 2 Motion', 'speed = distance ÷ time', 'acceleration = change in velocity ÷ time', '? A car goes 100 m in 5 s. Its speed in m/s? = 20',
+        '# 3 Energy', 'kinetic energy = energy of movement', 'efficiency = useful energy out ÷ total energy in', '# 4 Waves', 'wavelength = distance from one crest to the next', 'frequency = waves passing each second'].join('\n');
+      await p.eval(`(function(t){ var ls=[]; for (var i=1;i<=12;i++) ls.push({n:i,title:'',words:[],grammar:[],sents:[],qs:[]});
+        A.Books.parse(t).forEach(function(g){ var at=ls.filter(function(x){return x.n===g.n})[0]; Object.assign(at,g); });
+        A.S.books=[{id:'bkdemo',kind:'course',room:'science',y:10,name:A.L(['GCSE Physics · our revision guide','فيزياء · دليل المراجعة']),lessons:ls}];
+        A.Books.follows(A.profile('t13')).science='bkdemo'; A.Books.register(); A.saveNow(); return 1 })(${JSON.stringify(course)})`);
       await go('parent/books/bkdemo', 1400); await shot('p-book', ['.bk-grid', '[data-follow]']);
-      await p.eval(`A.S.books=[];A.profile('u9').arBook=null;A.Books.register();A.saveNow();1`);
+      await p.eval(`A.S.books=[];delete A.Books.follows(A.profile('t13')).science;A.Books.register();A.saveNow();1`);
     }
+    /* the Lab: a simulation with its guided investigation beside it */
+    if (want('p-lab')) { await who('u9'); await go('lab/pendulum', 2600); await shot('p-lab', ['.simstage iframe']); }
     const les = JSON.parse(await p.eval(`JSON.stringify((function(){var o={};['math','arabic'].forEach(function(r){C.rooms[r].units.forEach(function(u){u.skills.forEach(function(s){if(!o[r]&&!M.met(s.id,'u9')&&C.open(s,'u9'))o[r]=s.id})})});return o})())`));
     await go('lesson/' + les.math, 1800); await shot('p-lesson', ['.pl-top', '.pl-prompt', '.pad', '.pl-foot']);
     await who('t13'); await go('home', 1200); await shot('p-teen', ['.th', '.tnext', '.tl', '.nav']);
+    /* the deep end: an A-level physics lesson on a phone */
+    if (want('p-adv')) { await who('s16'); await go('lesson/a13ph.grav', 1800); for (let k = 0; k < 8 && !(await p.eval(`!!document.querySelector('.step .pad, .step .opt, .step input, .step .expr')`)); k++) { await p.eval(`var n=document.querySelector('.pl-next');n&&n.click();1`); await wait(700); } await shot('p-adv', ['.pl-prompt, .step', '.pad, .step .opt, .pl-foot']); await who('u9'); }
     await go('study', 1200); await shot('p-study', ['.th', '.tw']);
     await who('u9'); await family('en', 'light'); await unlock();
-    await shot('p-family', ['.fgrid > *:first-child', '.tl-grid', '.abar .dn']);
+    await shot('p-family', ['.fgrid > *:first-child', '.gp', '.abar .dn']);
     await go('parent/u9/today', 1400); await shot('p-dash', ['.tabs', '.kpis', '.li-acts']);
     await go('parent/u9/make', 1200); await shot('p-make', ['.tabs', '.pk-list, .card']);
     await go('parent/u9/sheet/practice-math/1000', 1600); await shot('p-sheet', ['.pp-acts', '.ppv']);
@@ -131,6 +140,8 @@ module.exports = async (p) => {
     for (let k = 0; k < 6 && !(await p.eval(`document.querySelectorAll('.step .opt').length>1`)); k++) { await p.eval(`var n=document.querySelector('.pl-next');n&&n.click();1`); await wait(700); }
     await shot('d-lesson', ['.step', '.pl-foot']);
     await who('t13'); await go('home', 1300); await shot('d-teen', ['.tnext', '.dk-main', '.dk-side']);
+    /* the deep end: further maths on the computer, the working beside the answer */
+    if (want('d-adv')) { await who('s16'); await go('lesson/a13f.demoivre', 1800); for (let k = 0; k < 8 && !(await p.eval(`!!document.querySelector('.step .pad, .step .opt, .step input, .step .expr')`)); k++) { await p.eval(`var n=document.querySelector('.pl-next');n&&n.click();1`); await wait(700); } await shot('d-adv', ['.step', '.pl-foot, .pad']); }
     await family('en', 'light'); await unlock();
     await shot('d-family', ['.fgrid', '.dk-chart', '.dk-fam .card:last-child']);
     await go('parent/u9/today', 1500); await shot('d-dash', ['.tabs', '.kpis', '.dcols']);
@@ -141,7 +152,7 @@ module.exports = async (p) => {
     await p.eval(`var s=document.querySelector('[data-set=link]');if(s&&!s.checked){s.checked=true;s.dispatchEvent(new Event('change'))}1`); await wait(1500);
     await p.eval(`var b=document.querySelector('#lk-new');b&&b.click();1`); await wait(800);
     await shot('d-link', ['.dk-hero2', '[data-set=link]', '.dk-digits', '.dk-steps']);
-    await go('desk/pc', 1300); await shot('d-pc', ['.dk-install', '.dk-sw', '.dk-zoom', '.dk-bk']);
+    await go('desk/pc', 1300); await shot('d-pc', ['[data-upd]', '.dk-sw', '.dk-zoom', '.dk-bk']);
     const dc = await p.eval(`Print.toScreen(Print.make('practice-math','u9',4243),'u9').id`);
     await p.eval(`A.S.cur='u9';A.saveNow();location.hash='#/sheet/${dc}';1`); await wait(1600); await writeAnswers(dc); await wait(500);
     await shot('d-ink', ['.ink-box', '.ink-tools', '#ink-fin']);

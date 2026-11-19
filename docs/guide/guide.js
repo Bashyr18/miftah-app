@@ -48,7 +48,7 @@ var CH = [
     spreads: [
       { shots: { p: 'p-rooms' }, h: 'Ten rooms', drop: true, p: 'Qurʾān, Arabic, Living Islam, maths, English, science, our world, computing, engineering and Thinking. Each opens at the child’s level and grows with them.',
         steps: [
-          { b: 'The Lab', x: 'Live simulations for every subject, to explore after the lesson. Nothing here can break.', m: { p: 0 } },
+          { b: 'The Lab', x: 'Live simulations for every subject. Each one guides a few investigations: predict first, try one precise thing, then see why it happened. Free play is always there too.', m: { p: 0 } },
           { b: 'A room', x: 'Each door shows what comes next in it and how far the child has come.', m: { p: 1 } },
           { b: 'Sections', x: 'Today, rooms and what is remembered, always one tap away.', m: { p: 2 } } ] },
       { shots: { d: 'd-room', p: 'p-room' }, flip: true, h: 'A subject’s path', p: 'A winding path of lessons, unit by unit. The glowing stop is the next one; locked stops open as the ones before them are mastered.',
@@ -61,6 +61,9 @@ var CH = [
           { b: 'Three levels', x: 'Learned and shown; still right after a break; kept for months. The real state of the child’s memory, not points.', m: { p: 0 } },
           { b: 'Lanterns', x: 'A lantern lights when a whole unit can be shown again, together.', m: { p: 1 } },
           { b: 'Everything learned', x: 'Every skill, by subject. Skills that start to fade come back into the day by themselves.', m: { p: 2 } } ] },
+      { shots: { p: 'p-lab' }, h: 'The Lab', p: 'Forty-four simulations, from fractions and the pendulum to enzymes, logic gates and gradient descent. Each one leads a few short investigations: commit to a prediction, try one precise thing (the simulation itself notices when it is done), then read what happened and why, and where it shows up in real life.',
+        steps: [
+          { b: 'Predict, try, see why', x: 'A wrong prediction is not marked down: it is what an experiment is for. A tick appears in the Lab when every investigation is done.', m: { p: 0 } } ] },
       { shots: { p: 'p-think' }, flip: true, h: 'Thinking', p: 'Verbal, number and pattern reasoning from five to eleven, a unit a year: the odd one out, what comes next, balances, analogies, words from one root, number machines, codes and logic. Every question is made fresh, in English and in Arabic, so practice never runs out.',
         steps: [
           { b: 'One idea a question', x: 'Plain words and big pictures; a young child is never asked to read a paragraph.', m: { p: 0 } },
@@ -75,12 +78,17 @@ var CH = [
           { b: 'The week, the Qurʾān and every subject', x: 'On the computer: reviews due, their goal, the āyah they are memorising and each subject’s progress, beside the plan.', m: { d: 2 } },
           { b: 'Sections', x: 'Today, subjects, study and their record.', m: { p: 3 } } ] },
       { shots: { p: 'p-study' }, flip: true, h: 'Study', p: 'Cards that come back at the right time, past papers, and a place to write. What they revise is evidence a parent can see.',
-        steps: [ { b: 'Revision tools', x: 'Cards, papers and writing, each kept with their record.', m: { p: 1 } } ] } ] },
+        steps: [ { b: 'Revision tools', x: 'Cards, papers and writing, each kept with their record.', m: { p: 1 } } ] },
+      { shots: { d: 'd-adv', p: 'p-adv' }, h: 'All the way to university', p: 'The same rooms go on through GCSE and A level into first-year university: calculus, complex numbers, matrices and differential equations in maths; mechanics, fields, waves, circuits and quantum ideas in physics, with chemistry and biology beside them. Every lesson is taught step by step, every line of its working is checked for correctness before it ships, and nothing is a video to sit through.',
+        steps: [
+          { b: 'Taught, not just tested', x: 'Each idea is built in steps: why it works, a worked example, then one to do together before one alone.', m: { p: 0, d: 0 } },
+          { b: 'Real working', x: 'The learner works the answer out and enters it; a slip brings a hint and the worked method, and the idea comes back in review.', m: { p: 1, d: 1 } } ] } ] },
 
   { id: 'parents', kicker: 'Behind a door only a grown-up opens', title: 'For parents', dek: 'What each child did, what they remember, and where they are stuck.', thumb: 'd-family',
     spreads: [
       { shots: { d: 'd-family', p: 'p-family' }, h: 'The whole family', drop: true, p: 'A small sum keeps young children out, or a PIN if you set one. Inside, every child on one page; on the computer, the week in minutes and the paper waiting for you.',
         steps: [
+          { b: 'You, Settings and Updates', x: 'Your own profile as parent, teacher or tutor, with Settings and Updates beside it, always at the top.', m: { p: 1 } },
           { b: 'Each child', x: 'Today’s progress, minutes this week, what is mastered and remembered, and what to do next together.', m: { p: 0, d: 0 } },
           { b: 'The week, in minutes', x: 'On the computer: real learning time for every child, day by day.', m: { d: 1 } },
           { b: 'Paper waiting', x: 'On the computer: every sheet still to be marked or ticked, for every child.', m: { d: 2 } },
@@ -90,10 +98,10 @@ var CH = [
           { b: 'Tabs', x: 'Today, Lessons, Print, Qurʾān, and More: plan, rooms, record and settings for this child.', m: { p: 0, d: 0 } },
           { b: 'At a glance', x: 'Today’s stops, minutes, what is remembered and everything mastered.', m: { p: 1, d: 1 } },
           { b: 'Sheets waiting for you', x: 'Practice to mark, which is the evidence, and worksheets to tick.', m: { p: 2, d: 2 } } ] },
-      { shots: { p: 'p-book' }, flip: true, h: 'Arabic from the book you use', p: 'Parent area › Arabic books: the Madinah books, al-ʿArabiyyah Bayna Yadayk, or any course. Each lesson has its square, so gaps show until they are filled. Enter its words, rules and sentences from your own copy, or paste a whole book a teacher shared.',
+      { shots: { p: 'p-book' }, flip: true, h: 'Your own course, in any subject', p: 'Parent area › Courses: the Madinah books or al-ʿArabiyyah Bayna Yadayk for Arabic, or a textbook, revision guide or teacher’s notes in any other subject. Each lesson has its square, so gaps show until they are filled. Enter its terms, facts and questions from your own copy, or paste a whole course a teacher shared.',
         steps: [
-          { b: 'Every lesson in its place', x: 'A filled square is a lesson ready to learn: the words, the rule, practice both ways and the book’s sentences with a word missing.', m: { p: 0 } },
-          { b: 'Who follows it', x: 'Switch a child on and their Arabic path comes from this book, lesson by lesson. Books travel between phone and computer.', m: { p: 1 } } ] } ] },
+          { b: 'Every lesson in its place', x: 'A filled square is a lesson ready to learn: the terms met one by one, the facts, practice both ways, the course’s own questions as a quiz, and review that comes back before it fades.', m: { p: 0 } },
+          { b: 'Who follows it', x: 'Switch a child on and that subject’s path comes from this course, lesson by lesson. Courses travel between phone and computer.', m: { p: 1 } } ] } ] },
 
   { id: 'paper', kicker: 'Printed, or done on screen', title: 'Paper and pen', dek: 'Sheets made fresh from what the child knows today, on A4 or on the screen, and marked by a grown-up.', thumb: 'p-ink',
     spreads: [
@@ -123,9 +131,9 @@ var CH = [
           { b: 'Grouped results', x: 'Children, subjects, lessons, grown-up tools, and actions such as day or night, Focus and the language.', m: { d: 1 } } ] },
       { shots: { d: 'd-lab' }, flip: true, h: 'The Lab, full size', p: 'On the computer each simulation takes the space beside its controls, drawn sharp at any size.',
         steps: [ { b: 'Change things, see what happens', x: 'Drag, slide and watch the numbers answer. Nothing here can break.', m: { d: 0 } } ] },
-      { shots: { d: 'd-pc' }, h: 'This computer', p: 'Install, start with Windows, the tray, the size of everything, your data and thirty days of backups, in one page.',
+      { shots: { d: 'd-pc' }, h: 'This computer', p: 'Updates, start with Windows, the tray, the size of everything, your data and thirty days of backups, in one page.',
         steps: [
-          { b: 'Install, if you like', x: 'Adds Miftāḥ to Start, the desktop and Settings › Apps. No administrator needed; remove it like any program and your record stays.', m: { d: 0 } },
+          { b: 'Updates', x: 'The version on this computer, and a check when you ask (or once a week). A new version installs over this one; your record stays. When one is ready, a small Update chip also appears in the side rail.', m: { d: 0 } },
           { b: 'Start with Windows, keep in the tray', x: 'So a paired phone can join records whenever it is home, and the daily reminder arrives.', m: { d: 1 } },
           { b: 'Size of everything', x: 'From 70% to 200%, for a small laptop or a television across the room.', m: { d: 2 } },
           { b: 'Backups', x: 'One copy each day for thirty days. Going back saves today first, so nothing is lost.', m: { d: 3 } } ] } ] },

@@ -7,6 +7,22 @@
   I.pic = pic;
 
   /* a calm scene: picture, words, spoken */
+  /* ---------- for Learn pages (laid out by the teach card in web/js/lesson/lesson-aids.js) ----------
+     A formula hidden inside a sentence ("For steady acceleration: v = u + at, s = ut + ½at²") is split out, so each sits on
+     its own line; and a lesson the Lab shows moving gets a way to see it. */
+  var FORM = /^[\s(]*[A-Za-zΑ-Ωα-ωθλμρσωΔΣπ√∫∑]{1,8}[₀-₉⁰-⁹²³ⁿ'′\s]*(\([^)]{0,12}\))?\s*(=|≈|∝|≥|≤)\s*\S/;
+  I.isFormula = function (t) { t = String(t).trim().replace(/[.;]$/, ''); return t.length <= 64 && FORM.test(t) && (t.match(/[a-z]{4,}/g) || []).length <= 1; };
+  I.splitFormulas = function (line) {
+    var cut = line.indexOf(': '); if (cut <= 0) return [line];
+    var bits = line.slice(cut + 2).replace(/[.]$/, '').split(/,\s+|;\s+/);
+    return bits.length && bits.every(I.isFormula) ? [line.slice(0, cut) + ':'].concat(bits.map(function (b) { return b.trim(); })) : [line];
+  };
+  I.simFor = function (skillId) { var C = window.C, sim = null; if (skillId && C && C.SIMS) C.SIMS.forEach(function (x) { if (!sim && x.skills && x.skills.indexOf(skillId) >= 0) sim = x; }); return sim; };
+  I.simButton = function (sim) { return sim ? '<button class="lp-sim" data-a="lp-sim" data-sim="' + esc(sim.id) + '">' + A.icon('play', 18) + '<span><b>' + esc(L(['See it move', 'شاهده يتحرك'])) + '</b><small>' + esc(L(sim.t)) + '</small></span></button>' : ''; };
+  A.acts['lp-sim'] = function (t) {
+    var sm = window.C.SIMBY && window.C.SIMBY[t.dataset.sim]; if (!sm || !A.simSrc) return;
+    A.sheet(L(sm.t), '<iframe class="simf lp-frame" src="' + esc(A.simSrc(sm.id)) + '" title="' + esc(L(sm.t)) + '" sandbox="allow-scripts" referrerpolicy="no-referrer"></iframe>');
+  };
   I.say = function (c) {
     var s = c.step;
     var html = '';

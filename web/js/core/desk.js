@@ -73,7 +73,7 @@
     var dot = linkState.on ? '<i class="rl-dot' + (linkState.phones.length ? ' ok' : '') + '"></i>' : '';
     rail.innerHTML =
       '<div class="rl-top"><a class="rl-brand" href="#/' + (parent ? 'parent' : 'home') + '"><img class="rl-mark" src="icon.svg" alt="" width="36" height="36"><span class="rl-word"><b>Miftāḥ</b><small dir="rtl">مِفْتَاح</small></span></a><button class="rl-fold" data-desk="fold" title="' + esc(L(['Narrow the rail', 'ضيّق الشريط'])) + '">' + ic('collapse', 18) + '</button></div>' +
-      '<button class="rl-search" data-desk="palette">' + ic('search', 18) + '<span>' + esc(L(['Search or jump', 'ابحث أو انتقل'])) + '</span>' + kbd('Ctrl K') + '</button>' +
+      '<button class="rl-search" data-desk="palette">' + ic('search', 18) + '<span>' + esc(L(['Search or jump', 'ابحث أو انتقل'])) + '</span>' + kbd('Ctrl K') + '</button>' + '<div class="upd-slot rl-up">' + (window.Upd ? Upd.chip() : '') + '</div>' +
       (parent ? '<div class="rl-sec">' + esc(L(['Family', 'العائلة'])) + '</div><nav class="rl-nav"><a class="rl-i' + (location.hash === '#/parent' ? ' on' : '') + '" href="#/parent">' + A.icon('grown', 20) + '<span>' + esc(L(['Everyone', 'الجميع'])) + '</span></a>' + pkids + '</nav>'
         : (who + (items ? '<nav class="rl-nav">' + items + '</nav>' : ''))) +
       '<div class="rl-sec">' + esc(L(['Grown-ups', 'للكبار'])) + '</div><nav class="rl-nav">' +

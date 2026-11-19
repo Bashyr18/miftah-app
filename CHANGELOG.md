@@ -2,6 +2,32 @@
 
 The version is set in `version.txt`.
 
+## 2.3 (code 6), November 2026
+
+### Courses in any subject
+- Parent area › Courses (it was Arabic books): besides the Madinah books and al-ʿArabiyyah Bayna Yadayk, a course in maths, science, English, Our World, Living Islam, computing, engineering or Thinking, from a textbook, a revision guide or a teacher’s notes. Each has a level, a grid of lessons and the children who follow it; that subject’s path then comes from it.
+- A lesson takes terms (`term = meaning`), facts (`! …`), sentences from the book (`> …`) and now questions: `? question = right | wrong | wrong`. With no wrong answers given, Miftāḥ draws them from the same lesson, like for like: other terms for a term, nearby numbers for a number.
+- Every practice and review step is a quiz from the course itself, and its lessons come back for review like any other key. Courses and who follows them travel between phone and computer.
+
+### Learn pages that teach
+- A Learn page sets each formula on a line of its own, pulled out of the sentence it was in, with the rest as points.
+- Under 37 of the formulas the lessons use (v = u + at, pV = nRT, F = GMm/r², d sin θ = nλ, y = mx + c and more), a key says what every letter stands for and its unit, in English and Arabic. Formulas that belong together share one key.
+- Where the Lab has the same idea moving, the page offers See it move.
+
+### The Lab, guided
+- All 44 simulations now lead 104 short investigations: the idea in plain words; a prediction to commit to; one precise thing to try, which the simulation checks for itself; what happened and why; and where it shows up in real life. Free play stays.
+- The Lab lists each simulation with its idea, its investigations and a tick once they are done.
+- On a phone the simulation comes first and the guide under it; formulas and units read the right way round in Arabic.
+
+### Grown-ups
+- A profile for the parent, teacher or tutor (with a class or school for a teacher): it greets you on the family page and signs certificates. A teacher’s family page is called Class.
+- Settings and Updates sit beside your profile at the top of the family page, on every device; Updates has a page of its own.
+- When a new version is ready, a small Update chip appears under the date on Home and a band at the top of the family page; both open what is new, with one Update button. It stays until the new version is installed.
+- The Updates card no longer flashes when it checks; Settings switches, subject switches and course switches change in place instead of redrawing the page.
+
+### Windows
+- The installer is set in the app’s own fonts: Quicksand, Plex Arabic, and Amiri for the name.
+
 ## 2.2 (code 5), November 2026
 
 **Thinking: a new subject for ages 5 to 11**

@@ -174,3 +174,30 @@ body[data-view=parent] .linkb.kn:active{background:var(--gold-soft);color:var(--
 .bk-del{display:block;margin:6px auto 0;color:var(--t3)}
 .bk-help{color:var(--t2);font-size:13.5px;line-height:1.5;margin-bottom:10px}
 .bk-ta{width:100%;min-height:200px;margin:10px 0 12px;font-size:16px;line-height:1.7;resize:vertical}.bk-ta.big{min-height:320px}
+
+/* the grown-up's card at the top of Family: who they are, then Settings and Updates, always in plain sight */
+.gp{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:stretch;margin-bottom:var(--sp3)}
+.gp-me{display:flex;align-items:center;gap:12px;min-height:66px;padding:10px 14px;border-radius:var(--r3);background:var(--s1);border:1px solid var(--line);color:var(--t1);min-width:0}
+.gp-me .grow{min-width:0}.gp-me small{display:block;font-size:12.5px;color:var(--t3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.gp-me b{display:block;font-size:16.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gp-me>svg:last-child{color:var(--t3);flex:none}
+.gp-av{flex:none;display:grid;place-items:center;border-radius:50%;background:linear-gradient(145deg,color-mix(in srgb,var(--gold2) 34%,var(--s2)),var(--s2));color:var(--gold2);font-weight:800;border:1.5px solid color-mix(in srgb,var(--gold2) 40%,transparent)}
+.gp-acts{display:flex;gap:8px}
+.gp-b{position:relative;display:grid;justify-items:center;align-content:center;gap:4px;min-width:74px;padding:8px 10px;border-radius:var(--r3);background:var(--s1);border:1px solid var(--line);color:var(--t1);font-size:12.5px;font-weight:700}
+.gp-b>svg{color:var(--gold2)}.gp-b.new{border-color:color-mix(in srgb,var(--gold2) 55%,transparent);background:color-mix(in srgb,var(--gold2) 12%,var(--s1))}
+.gp-dot{position:absolute;top:8px;inset-inline-end:10px;width:9px;height:9px;border-radius:50%;background:var(--gold2);box-shadow:0 0 0 2px var(--s1)}
+@media (max-width:620px){.gp{grid-template-columns:1fr;gap:8px}.gp-acts .gp-b{flex:1;display:flex;justify-content:center;gap:8px;min-height:50px;font-size:14px}.gp-dot{top:50%;margin-top:-4.5px}}
+.tl-h{margin:var(--sp4,22px) 2px 8px;font-size:12.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--t3)}
+.tl-h+.tl-grid{margin-top:0}
+.me-card{display:grid;gap:14px;justify-items:start}.me-card .fld,.me-card .btn{width:100%}
+.fld{display:grid;gap:6px}.fld>span{font-size:13px;font-weight:700;color:var(--t2)}
+
+/* courses in any subject */
+.bk-intro{color:var(--t2);font-size:14.5px;line-height:1.55;margin:2px 2px var(--sp3)}
+.bk-row .bk-ic{flex:none;width:44px;height:44px;display:grid;place-items:center;border-radius:12px;background:color-mix(in srgb,var(--h2,var(--gold2)) 16%,var(--s2))}
+.bk-subjs{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:8px}
+.bk-subj{display:grid;justify-items:center;gap:6px;padding:12px 6px;border-radius:var(--r3);background:color-mix(in srgb,var(--h2,var(--gold2)) 10%,var(--s1));border:1px solid color-mix(in srgb,var(--h2,var(--gold2)) 26%,transparent);color:var(--t1);font-size:13px;font-weight:700;text-align:center}
+.bk-name{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:end;margin-bottom:10px}.bk-name .input{font-weight:700}
+.bk-y{display:grid;gap:4px}.bk-y span{font-size:12px;font-weight:700;color:var(--t3)}.bk-y select{min-width:120px}
+@media (max-width:420px){.bk-name{grid-template-columns:1fr}}
+.bk-help ul{margin:6px 0 0;padding:0;list-style:none;display:grid;gap:4px}.bk-help p{margin:0}
+.bk-help code{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;padding:1px 6px;border-radius:6px;background:var(--s2);color:var(--t1);direction:ltr;unicode-bidi:isolate}

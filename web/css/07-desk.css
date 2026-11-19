@@ -412,3 +412,4 @@ html.is-desk .dk-pal-in input:focus-visible,html.is-desk .dk-pal-in input:focus{
 
 /* on a big screen the dates under the name read at a comfortable size */
 html.is-desk .hello .hello-d.dates{font-size:13.5px!important;margin-top:4px}
+body.rail-mini #rail .rl-up .up-chip span{display:none}
