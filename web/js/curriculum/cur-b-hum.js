@@ -5,7 +5,7 @@
   /* ---------- history and geography ---------- */
   U('world', 'x8w', ['Empires, trade and the land', 'الإمبراطوريات والتجارة والأرض'], 3, 8, true);
   Topic('x8w.crusade', ['The Crusades and Ṣalāḥ ad-Dīn', 'الحروب الصليبية وصلاح الدين'], 'worldmap', [['Crusaders took Jerusalem in 1099, with great slaughter. Ṣalāḥ ad-Dīn won at Ḥaṭṭīn in 1187, and retook the city. Even his enemies recorded his mercy to its people. Read both sides’ chronicles.', 'أخذ الصليبيون القدس سنة ١٠٩٩ بمذبحة كبيرة. وانتصر صلاح الدين في حطين سنة ١١٨٧ واستردها. وسجل أعداؤه رحمته بأهلها.']], [
-    function () { return P(['Year of Ḥaṭṭīn.', 'سنة حطين.'], '', 1187); },
+    function () { return P(['In which year did Ṣalāḥ ad-Dīn win at Ḥaṭṭīn?', 'في أي سنة انتصر صلاح الدين في حطين؟'], '', 1187); },
     [['Why do historians read chronicles from both sides?', 'لماذا تُقرأ مدونات الطرفين؟'], ['Each has its own bias and detail', 'لكل منهما تحيز وتفاصيل'], ['One is always false', 'أحدهما كاذب دائمًا'], ['To save time', 'لتوفير الوقت']],
     [['What set Ṣalāḥ ad-Dīn’s retaking of Jerusalem apart?', 'ما الذي ميز استرداد صلاح الدين للقدس؟'], ['Its restraint toward the people', 'رفقه بأهلها'], ['Destroying the city', 'تدمير المدينة'], ['Leaving at once', 'الرحيل فورًا']]
   ]);

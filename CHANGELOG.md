@@ -2,6 +2,18 @@
 
 The version is set in `version.txt`.
 
+## 2.4 (code 7), November 2026
+
+### Years 8 to 14 taught in full
+- Every lesson from Year 8 to 14 that had one short Learn page, 205 in all, now has two more: a worked example, shown one step at a time, and a page on the usual mistake and where the idea is used. That covers physics, chemistry, biology, maths, computing, engineering, Our World, English, Arabic, Living Islam and life skills, in English and Arabic.
+- Living Islam pages keep to what is well established, give Qurʾān references by sūrah and āyah, and send the student to a scholar where scholars differ.
+
+### Clearer questions
+- 130 practice questions that were one or two words (“Mean.”, “Kc.”, “Value.”, “Output.”) now ask a full question, often with the rule to use: “Use ½ab sin C. What is the triangle’s area?”
+
+### Letters
+- The letter names ط, ظ and ع now have a native speaker’s recording, from Lingua Libre.
+
 ## 2.3 (code 6), November 2026
 
 ### Courses in any subject

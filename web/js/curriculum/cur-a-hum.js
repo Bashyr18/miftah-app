@@ -14,7 +14,7 @@
     function (r) { var a = r.int(2, 9), b = r.int(1, 5); return P(['Social cost per unit.', 'الكلفة الاجتماعية للوحدة.'], 'private cost ' + a + ', harm to others ' + b, a + b); }
   ]);
   Topic('a12w.trade', ['Trade and exchange rates', 'التجارة وأسعار الصرف'], 'worldmap', [['Comparative advantage: each country gains by making what it gives up least to make. If a currency falls, exports get cheaper and imports dearer. Fair trade, without deceit, is praised in Islam.', 'الميزة النسبية: يكسب كل بلد بإنتاج ما يضحي لأجله بأقل. وانخفاض العملة يرخص الصادرات ويغلي الواردات.']], [
-    function (r) { var x = r.int(2, 9), e = r.pick([2, 5, 10]); return P(['Price abroad.', 'السعر في الخارج.'], (x * e) + ' at home, ' + e + ' at home = 1 abroad', x); },
+    function (r) { var x = r.int(2, 9), e = r.pick([2, 5, 10]); return P(['What does the good cost abroad, in the foreign currency?', 'كم ثمن السلعة في الخارج بالعملة الأجنبية؟'], (x * e) + ' at home, ' + e + ' at home = 1 abroad', x); },
     [['A weaker currency tends to make imports:', 'العملة الأضعف تجعل الواردات:'], ['More expensive', 'أغلى'], ['Cheaper', 'أرخص'], ['Unchanged', 'بلا تغير']]
   ]);
   U('world', 'a13w', ['History and geography, advanced', 'التاريخ والجغرافيا المتقدمة'], 4, 13);
@@ -27,7 +27,7 @@
     [['Colonial borders often:', 'الحدود الاستعمارية غالبًا:'], ['Ignored peoples on the ground', 'تجاهلت الشعوب'], ['Followed every language', 'اتبعت كل لغة'], ['Solved all conflicts', 'حلت كل نزاع']]
   ]);
   Topic('a13w.water', ['Water and the future', 'الماء والمستقبل'], 'drop', [['Most of the earth’s fresh water is ice or underground. Rivers such as the Nile cross borders. Wasting water is discouraged even when beside a flowing river, as the wuḍūʾ teaching reminds us.', 'معظم الماء العذب جليد أو جوفي. والأنهار كالنيل تعبر الحدود. والإسراف مكروه ولو على نهر جارٍ.']], [
-    function (r) { var l = r.int(2, 9) * 10, d = r.int(2, 7); return P(['Litres used.', 'اللترات المستعملة.'], l + ' L a day for ' + d + ' days', l * d); },
+    function (r) { var l = r.int(2, 9) * 10, d = r.int(2, 7); return P(['How many litres are used in all?', 'كم لترًا تُستعمل في المجموع؟'], l + ' L a day for ' + d + ' days', l * d); },
     [['Most fresh water is found in:', 'معظم الماء العذب في:'], ['Ice and groundwater', 'الجليد والمياه الجوفية'], ['Rivers', 'الأنهار'], ['Clouds', 'السحب']]
   ]);
   Topic('a13w.hazard', ['Hazards and resilience', 'الأخطار والصمود'], 'mountain', [['A hazard turns into a disaster where people are poor and unprepared. Japan and Haiti show it: similar quakes, very different death tolls. Building rules and warning systems save lives.', 'يصير الخطر كارثة حيث الفقر وقلة الاستعداد. وأنظمة البناء والإنذار تنقذ الأرواح.']], [

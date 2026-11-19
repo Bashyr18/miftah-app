@@ -28,16 +28,16 @@
   Topic('a12ph.kirch', ['Kirchhoff’s laws', 'قانونا كيرشوف'], 'plug', [['First law: current in at a junction equals current out, because charge is conserved. Second law: voltages round a loop add to zero, because energy is conserved. Between them, any circuit can be solved.', 'الأول: التيار الداخل يساوي الخارج لحفظ الشحنة. والثاني: مجموع الجهود في الحلقة صفر لحفظ الطاقة.']], [
     function (r) { var a = r.int(1, 9), b = r.int(1, 9); return P(['Third current, in A.', 'التيار الثالث.'], (a + b) + ' A in; ' + a + ' A out one way', b); },
     function (r) { var e = r.int(6, 24), a = r.int(1, 5); return P(['Voltage across the second resistor.', 'الجهد على المقاومة الثانية.'], e + ' V cell; ' + a + ' V across the first', e - a); },
-    function (r) { var R = r.pick([12, 18, 36]), n = r.pick([2, 3]); return P(['Total Ω.', 'الكلية بالأوم.'], n + ' × ' + R + ' Ω in parallel', R / n); }
+    function (r) { var R = r.pick([12, 18, 36]), n = r.pick([2, 3]); return P(['What is the total resistance, in Ω?', 'ما المقاومة الكلية بالأوم؟'], n + ' × ' + R + ' Ω in parallel', R / n); }
   ]);
   Topic('a12ph.particle', ['Quarks and leptons', 'الكواركات واللبتونات'], 'star', [['Protons and neutrons are made of quarks: up has charge +2/3, down has −1/3. Proton uud, neutron udd. Electrons are leptons, with no known parts.', 'البروتون والنيوترون من كواركات: العلوي +٢/٣ والسفلي −١/٣. البروتون uud والنيوترون udd.']], [
-    function () { return P(['Charge of uud.', 'شحنة uud.'], '2/3 + 2/3 − 1/3', 1); },
-    function () { return P(['Charge of udd.', 'شحنة udd.'], '2/3 − 1/3 − 1/3', 0); },
+    function () { return P(['Add the quark charges. What is the total charge of uud?', 'اجمع شحنات الكواركات. ما الشحنة الكلية لـuud؟'], '2/3 + 2/3 − 1/3', 1); },
+    function () { return P(['Add the quark charges. What is the total charge of udd?', 'اجمع شحنات الكواركات. ما الشحنة الكلية لـudd؟'], '2/3 − 1/3 − 1/3', 0); },
     [['Beta-minus decay turns a neutron into:', 'يحول اضمحلال بيتا النيوترون إلى:'], ['A proton, an electron and an antineutrino', 'بروتون وإلكترون ومضاد نيوترينو'], ['Two protons', 'بروتونين'], ['Light only', 'ضوء فقط']]
   ]);
   Topic('a12ph.latent', ['Latent heat and density', 'الحرارة الكامنة والكثافة'], 'thermo', [['Boiling needs energy with no change of temperature: E = mL. Density = mass ÷ volume. Upthrust equals the weight of fluid displaced, as Archimedes found.', 'الغليان يحتاج طاقة بلا تغير حرارة: E = mL. والكثافة = الكتلة ÷ الحجم. والدفع يساوي وزن المائع المزاح.']], [
-    function (r) { var m = r.int(2, 9), l = r.pick([300, 2000]); return P(['Energy in kJ.', 'الطاقة كيلوجول.'], m + ' kg, L = ' + l + ' kJ/kg', m * l); },
-    function (r) { var v = r.int(2, 9), d = r.int(2, 9); return P(['Density, g/cm³.', 'الكثافة.'], (v * d) + ' g in ' + v + ' cm³', d); },
+    function (r) { var m = r.int(2, 9), l = r.pick([300, 2000]); return P(['How much energy changes the state, in kJ?', 'كم الطاقة اللازمة لتغيير الحالة بالكيلوجول؟'], m + ' kg, L = ' + l + ' kJ/kg', m * l); },
+    function (r) { var v = r.int(2, 9), d = r.int(2, 9); return P(['What is the density, in g/cm³?', 'ما الكثافة بالغرام لكل سم³؟'], (v * d) + ' g in ' + v + ' cm³', d); },
     function (r) { var v = r.int(2, 9); return P(['Upthrust in N (water 1,000 kg/m³, g = 10), for this many litres.', 'الدفع بالنيوتن لهذا الحجم باللتر.'], v + ' L submerged', v * 10); }
   ]);
   /* ---------- physics, Year 13 ---------- */
@@ -48,7 +48,7 @@
     [['A geostationary orbit has a period of:', 'الزمن الدوري للمدار الثابت:'], ['One day', 'يوم واحد'], ['One hour', 'ساعة'], ['One year', 'سنة']]
   ]);
   Topic('a13ph.mag', ['Magnetic forces', 'القوى المغناطيسية'], 'magnet', [['A current in a field feels F = BIL. A moving charge feels F = BQv, always at right angles, so it travels in a circle. Motors, speakers and particle accelerators all use this.', 'التيار في مجال يتأثر بـ F = BIL. والشحنة المتحركة بـ F = BQv عموديًا فتتحرك في دائرة.']], [
-    function (r) { var b = r.int(1, 5), i = r.int(2, 9), l = r.int(1, 4); return P(['Force in N.', 'القوة.'], 'B = ' + b + ' T, I = ' + i + ' A, L = ' + l + ' m', b * i * l); },
+    function (r) { var b = r.int(1, 5), i = r.int(2, 9), l = r.int(1, 4); return P(['What force acts on the wire, in N?', 'ما القوة على السلك بالنيوتن؟'], 'B = ' + b + ' T, I = ' + i + ' A, L = ' + l + ' m', b * i * l); },
     [['Which rule gives the force direction on a current?', 'أي قاعدة تعطي الاتجاه؟'], ['Fleming’s left hand', 'يد فليمنج اليسرى'], ['Newton’s first', 'قانون نيوتن الأول'], ['Ohm’s law', 'قانون أوم']],
     [['Does a magnetic force do work on a moving charge?', 'هل تبذل القوة المغناطيسية شغلًا على الشحنة؟'], ['No: it is always at right angles', 'لا، فهي عمودية دائمًا'], ['Yes, always', 'نعم دائمًا'], ['Only at rest', 'عند السكون فقط']]
   ]);
@@ -58,18 +58,18 @@
   ]);
   Topic('a13ph.ac', ['Alternating current and rms', 'التيار المتناوب والقيمة الفعالة'], 'wave', [['The rms value gives the same heating as that steady value: V_rms = V₀/√2. Mains at 230 V rms peaks near 325 V. A diode rectifies it, and a capacitor smooths it.', 'القيمة الفعالة تعطي التسخين نفسه: V_rms = V₀/√2. والـ٢٣٠ فولت قمتها نحو ٣٢٥.']], [
     function (r) { var k = r.pick([1, 2, 3, 4]); return P(['rms voltage, V (peak is √2 × this).', 'الجهد الفعال.'], 'peak ' + (k * 100) + '√2 V', k * 100); },
-    function (r) { var f = r.pick([50, 60]); return P(['Peaks per second.', 'القمم في الثانية.'], f + ' Hz', f); },
+    function (r) { var f = r.pick([50, 60]); return P(['How many peaks per second come through a single diode?', 'كم قمة في الثانية تمر عبر صمام ثنائي واحد؟'], f + ' Hz', f); },
     [['A single diode gives:', 'الصمام الواحد يعطي:'], ['Half-wave rectification', 'تقويم نصف موجي'], ['Full-wave rectification', 'تقويم موجي كامل'], ['More voltage', 'جهدًا أعلى']]
   ]);
   Topic('a13ph.bind', ['Binding energy', 'طاقة الربط'], 'star', [['A nucleus weighs less than its parts. That mass difference is the binding energy, E = mc². Iron is near the peak of binding energy per nucleon, so fusing light nuclei or splitting heavy ones releases energy.', 'النواة أخف من مكوناتها، والفرق طاقة الربط. والحديد قرب القمة، فيطلق الاندماج في الخفيف والانشطار في الثقيل طاقة.']], [
     [['Fission of uranium releases energy because the products have:', 'يطلق انشطار اليورانيوم طاقة لأن النواتج:'], ['More binding energy per nucleon', 'طاقة ربط أعلى لكل نوية'], ['More mass', 'كتلة أكبر'], ['More electrons', 'إلكترونات أكثر']],
-    function (r) { var a = r.int(20, 240), z = r.int(8, 19); return P(['Neutrons.', 'النيوترونات.'], 'A = ' + a + ', Z = ' + z, a - z); },
+    function (r) { var a = r.int(20, 240), z = r.int(8, 19); return P(['How many neutrons are in the nucleus?', 'كم نيوترونًا في النواة؟'], 'A = ' + a + ', Z = ' + z, a - z); },
     function (r) { var a = r.int(4, 12) * 4; return P(['Mass number after one alpha decay.', 'العدد الكتلي بعد ألفا.'], 'A = ' + (a + 200), a + 196); }
   ]);
   Topic('a13ph.thermo', ['The first law of thermodynamics', 'القانون الأول للديناميكا الحرارية'], 'fire', [['ΔU = Q + W: internal energy rises with heat in and work done on the gas. Pump a tyre and it warms. Absolute zero is where the particles have least energy, 0 K.', 'ΔU = Q + W. ينفخ الإطار فيدفأ. والصفر المطلق أدنى طاقة للجسيمات.']], [
     function (r) { var q = r.int(10, 90), w = r.int(10, 90); return P(['Rise in internal energy, J.', 'زيادة الطاقة الداخلية.'], q + ' J heat in, ' + w + ' J work done on it', q + w); },
     function (r) { var q = r.int(50, 90), w = r.int(10, 40); return P(['Rise in internal energy, J.', 'زيادة الطاقة الداخلية.'], q + ' J heat in, gas does ' + w + ' J of work', q - w); },
-    function (r) { var c = r.int(1, 99); return P(['In kelvin.', 'بالكلفن.'], c + '°C', c + 273); }
+    function (r) { var c = r.int(1, 99); return P(['What is this temperature in kelvin?', 'كم هذه الحرارة بالكلفن؟'], c + '°C', c + 273); }
   ]);
   Topic('a13ph.med', ['Medical physics', 'الفيزياء الطبية'], 'hospital', [['X-rays are absorbed more by bone. CT builds slices. Ultrasound reflects at boundaries, safely for a baby. MRI uses radio waves and strong magnets on hydrogen nuclei. Each trades detail, dose and cost.', 'تمتص العظام الأشعة السينية أكثر. والموجات فوق الصوتية آمنة للجنين. والرنين يستعمل نوى الهيدروجين.']], [
     [['Which is preferred to scan an unborn baby?', 'أيها يفضل لفحص الجنين؟'], ['Ultrasound', 'الموجات فوق الصوتية'], ['CT', 'الأشعة المقطعية'], ['X-ray', 'الأشعة السينية']],
@@ -99,17 +99,17 @@
     [['Which fills first?', 'أيها يمتلئ أولًا؟'], ['4s', '4s'], ['3d', '3d'], ['4p', '4p']]
   ]);
   Topic('a12ch.hess', ['Hess’s law', 'قانون هيس'], 'fire', [['The enthalpy change is the same by any route. So combine known reactions. Using bond energies: ΔH = bonds broken − bonds made.', 'تغير المحتوى الحراري واحد في أي مسار. وبطاقات الروابط: ΔH = المكسور − المتكون.']], [
-    function (r) { var a = r.int(1, 9) * 100, b = r.int(1, 9) * 100; return X(['ΔH in kJ.', 'ΔH.'], 'broken ' + a + ', made ' + b, a - b); },
+    function (r) { var a = r.int(1, 9) * 100, b = r.int(1, 9) * 100; return X(['Bonds broken minus bonds made: what is ΔH, in kJ?', 'الروابط المكسورة ناقص المتكونة: ما ΔH بالكيلوجول؟'], 'broken ' + a + ', made ' + b, a - b); },
     function (r) { var a = r.int(1, 9) * 10, b = r.int(1, 9) * 10; return X(['ΔH of the overall route, in kJ.', 'ΔH الكلي.'], 'step 1: −' + a + '; step 2: −' + b, -(a + b)); },
     function (r) { var m = r.pick([100, 200, 250]), t = r.int(2, 10); return P(['Heat in J, q = mcΔT, with c = 4 for simplicity.', 'الحرارة، c = 4.'], m + ' g, up ' + t + '°C', m * 4 * t); }
   ]);
   Topic('a12ch.redox', ['Oxidation states', 'حالات الأكسدة'], 'lemon', [['Oxygen is usually −2, hydrogen +1, and they sum to the charge. In H₂SO₄: 2 + S − 8 = 0, so S is +6. Oxidation is loss of electrons, and reduction is gain.', 'الأكسجين −٢ عادة والهيدروجين +١. في H₂SO₄ الكبريت +٦. والأكسدة فقد إلكترونات والاختزال كسبها.']], [
-    function (r) { var q = r.pick([['S in SO₃', 6], ['N in HNO₃', 5], ['C in CO₂', 4], ['Mn in KMnO₄', 7], ['Cr in K₂Cr₂O₇', 6]]); return P(['Oxidation state.', 'حالة الأكسدة.'], q[0], q[1]); },
-    function (r) { var q = r.pick([['Cl in HCl', -1], ['O in H₂O', -2], ['N in NH₃', -3]]); return X(['Oxidation state.', 'حالة الأكسدة.'], q[0], q[1]); },
+    function (r) { var q = r.pick([['S in SO₃', 6], ['N in HNO₃', 5], ['C in CO₂', 4], ['Mn in KMnO₄', 7], ['Cr in K₂Cr₂O₇', 6]]); return P(['What is the oxidation state of the named atom?', 'ما حالة أكسدة الذرة المذكورة؟'], q[0], q[1]); },
+    function (r) { var q = r.pick([['Cl in HCl', -1], ['O in H₂O', -2], ['N in NH₃', -3]]); return X(['What is the oxidation state of the named atom?', 'ما حالة أكسدة الذرة المذكورة؟'], q[0], q[1]); },
     [['Zn + Cu²⁺ → Zn²⁺ + Cu. What is oxidised?', 'ما الذي تأكسد؟'], ['Zinc', 'الزنك'], ['Copper', 'النحاس'], ['Nothing', 'لا شيء']]
   ]);
   Topic('a12ch.kc', ['The equilibrium constant', 'ثابت الاتزان'], 'scale', [['For aA + bB ⇌ cC: Kc = [C]^c ÷ ([A]^a [B]^b). Only temperature changes Kc. A large Kc means products dominate.', 'لـ aA + bB ⇌ cC: Kc = [C]^c ÷ ([A]^a [B]^b). والحرارة وحدها تغير Kc.']], [
-    function (r) { var a = r.int(1, 5), b = r.int(1, 5), k = r.int(2, 6); return P(['Kc.', 'Kc.'], '[C] = ' + (a * b * k) + ', [A] = ' + a + ', [B] = ' + b + ' (A + B ⇌ C)', k); },
+    function (r) { var a = r.int(1, 5), b = r.int(1, 5), k = r.int(2, 6); return P(['Work out Kc = [C] ÷ ([A][B]).', 'احسب Kc = [C] ÷ ([A][B]).'], '[C] = ' + (a * b * k) + ', [A] = ' + a + ', [B] = ' + b + ' (A + B ⇌ C)', k); },
     [['Which changes Kc?', 'أيها يغير Kc؟'], ['Temperature', 'الحرارة'], ['A catalyst', 'الحفاز'], ['Pressure', 'الضغط']]
   ]);
   Topic('a12ch.hal', ['Halogenoalkanes and alcohols', 'هاليدات الألكيل والكحولات'], 'drop', [['A nucleophile attacks the δ+ carbon, and replaces the halogen. C–I is weakest, so iodoalkanes react fastest. Alcohols oxidise: primary to aldehyde then acid, secondary to ketone, tertiary not easily.', 'يهاجم النيوكليوفيل الكربون ويحل محل الهالوجين. والرابطة C–I أضعف فتتفاعل أسرع. والكحولات تتأكسد: الأولي إلى ألدهيد فحمض، والثانوي إلى كيتون.']], [
@@ -126,21 +126,21 @@
   Topic('a13ch.buffer', ['Buffers', 'المحاليل المنظمة'], 'drop', [['A weak acid with its salt resists pH change: added acid meets the salt ion, and added base meets the acid. Your blood is held near pH 7.4 this way, by carbonic acid and hydrogencarbonate.', 'حمض ضعيف مع ملحه يقاوم تغير pH. ويبقى الدم قرب ٧٫٤ بهذا.']], [
     [['A buffer is typically a:', 'المحلول المنظم عادة:'], ['Weak acid and its salt', 'حمض ضعيف وملحه'], ['Strong acid and water', 'حمض قوي وماء'], ['Salt and sugar', 'ملح وسكر']],
     function () { return P(['pH of a neutral solution at 25°C.', 'pH المتعادل.'], '', 7); },
-    function (r) { var p = r.int(2, 6); return P(['pOH at 25°C.', 'pOH.'], 'pH = ' + p, 14 - p); }
+    function (r) { var p = r.int(2, 6); return P(['At 25°C, pH + pOH = 14. What is the pOH?', 'عند ٢٥°: pH + pOH = 14. ما pOH؟'], 'pH = ' + p, 14 - p); }
   ]);
   Topic('a13ch.lattice', ['Lattice energy', 'طاقة الشبكة'], 'gem', [['Born-Haber cycles apply Hess’s law to forming an ionic solid. Lattice energy is greater for smaller, more highly charged ions. So MgO melts far above NaCl.', 'تطبق دورة بورن هابر قانون هيس على المركب الأيوني. وتكبر طاقة الشبكة مع صغر الأيونات وزيادة شحنتها.']], [
     [['Which has the larger lattice energy?', 'أيها أكبر طاقة شبكة؟'], ['MgO', 'MgO'], ['NaCl', 'NaCl'], ['KBr', 'KBr']],
     function () { return P(['Product of ion charges in MgO.', 'حاصل ضرب شحنتي الأيونين في MgO.'], '2+ and 2−', 4); }
   ]);
   Topic('a13ch.tm', ['Transition metals', 'العناصر الانتقالية'], 'rainbow', [['They have many oxidation states and coloured ions, and make good catalysts. Ligands donate electron pairs to form complexes. [Cu(H₂O)₆]²⁺ is pale blue, and copper’s coordination number there is 6.', 'لها حالات أكسدة كثيرة وأيونات ملونة وهي حفازات جيدة. وتعطي الليجندات أزواجًا إلكترونية.']], [
-    function () { return P(['Coordination number.', 'عدد التناسق.'], '[Fe(H₂O)₆]³⁺', 6); },
-    function (r) { var q = r.pick([['Fe in Fe³⁺', 3], ['Cu in Cu²⁺', 2], ['Mn in MnO₄⁻', 7]]); return P(['Oxidation state.', 'حالة الأكسدة.'], q[0], q[1]); },
+    function () { return P(['How many bonds to ligands does the metal ion make?', 'كم رابطة تكوّن أيون الفلز مع الليغندات؟'], '[Fe(H₂O)₆]³⁺', 6); },
+    function (r) { var q = r.pick([['Fe in Fe³⁺', 3], ['Cu in Cu²⁺', 2], ['Mn in MnO₄⁻', 7]]); return P(['What is the oxidation state of the metal?', 'ما حالة أكسدة الفلز؟'], q[0], q[1]); },
     [['Colour in these ions comes from:', 'اللون ينشأ من:'], ['Electrons moving between split d levels', 'انتقال إلكترونات بين مستويات d'], ['Their mass', 'الكتلة'], ['The nucleus', 'النواة']]
   ]);
   Topic('a13ch.nmr', ['NMR and chromatography', 'الرنين النووي والفصل اللوني'], 'microscope', [['Proton NMR: each peak is a hydrogen environment, area gives the count, and a peak split into n + 1 lines has n neighbours. Chromatography separates by how strongly each substance holds to the phases.', 'كل قمة بيئة هيدروجين، والمساحة العدد، والانقسام n + 1 يعني n جيرانًا. والفصل اللوني بحسب تعلق المادة بالطورين.']], [
-    function (r) { var n = r.int(1, 4); return P(['Number of lines.', 'عدد الخطوط.'], n + ' neighbouring H', n + 1); },
+    function (r) { var n = r.int(1, 4); return P(['By the n + 1 rule, how many lines does the peak split into?', 'بقاعدة n + 1: إلى كم خطًا تنقسم القمة؟'], n + ' neighbouring H', n + 1); },
     function () { return P(['Hydrogen environments in ethanol, CH₃CH₂OH.', 'بيئات الهيدروجين في الإيثانول.'], '', 3); },
-    function (r) { var b = r.int(2, 9) * 10, a = r.int(1, 4); return P(['Rf × 10.', 'Rf × ١٠.'], 'spot ' + (b * a / 5) + ' cm; solvent ' + b + ' cm', a * 2); }
+    function (r) { var b = r.int(2, 9) * 10, a = r.int(1, 4); return P(['What is the Rf value, times 10?', 'ما قيمة Rf مضروبة في ١٠؟'], 'spot ' + (b * a / 5) + ' cm; solvent ' + b + ' cm', a * 2); }
   ]);
   Topic('a13ch.amines', ['Amines, amides and proteins', 'الأمينات والأميدات والبروتينات'], 'plant', [['Amines are bases, thanks to nitrogen’s lone pair. Amino acid + amino acid join by a peptide bond, releasing water. Nylon uses the same link, so proteins and nylon are chemical cousins.', 'الأمينات قواعد بفضل زوج النيتروجين. وتتحد الأحماض الأمينية برابطة ببتيدية مع خروج الماء.']], [
     function (r) { var n = r.int(3, 30); return P(['Peptide bonds in the chain.', 'الروابط الببتيدية.'], n + ' amino acids', n - 1); },
@@ -148,7 +148,7 @@
   ]);
   U('science', 'a14ch', ['Chemistry beyond the syllabus', 'كيمياء بعد المنهج'], 4, 14);
   Topic('a14sc.green', ['Green chemistry', 'الكيمياء الخضراء'], 'tree', [['Prevent waste, use safer solvents, and prefer catalysts. A khalīfah on earth weighs what a process leaves behind. Atom economy and energy per kilogram are the first numbers to check.', 'امنع الهدر واستعمل مذيبات آمنة وفضل الحفازات. والخليفة في الأرض يزن ما يخلفه التصنيع.']], [
-    function (r) { var u = r.int(1, 9) * 10; return P(['Atom economy, %.', 'الاقتصاد الذري.'], u + ' of 100 product mass useful', u); },
+    function (r) { var u = r.int(1, 9) * 10; return P(['What is the atom economy, as a percentage?', 'ما الاقتصاد الذري كنسبة مئوية؟'], u + ' of 100 product mass useful', u); },
     [['Catalysts are favoured because they:', 'تفضل الحفازات لأنها:'], ['Save energy and are reused', 'توفر الطاقة ويعاد استعمالها'], ['Are used up', 'تستهلك'], ['Add waste', 'تزيد الهدر']]
   ]);
 
@@ -156,11 +156,11 @@
   U('science', 'a12bi', ['A level biology: cells to systems', 'الأحياء: من الخلية إلى الأجهزة'], 4, 12);
   Topic('a12bi.cell', ['Cell organelles and microscopes', 'عضيات الخلية والمجهر'], 'microscope', [['Magnification = image size ÷ actual size. Keep units the same: 1 mm = 1,000 µm. Mitochondria release energy, ribosomes make protein, and electron microscopes resolve far finer detail than light.', 'التكبير = حجم الصورة ÷ الحجم الحقيقي. وحد الوحدات. والميتوكوندريا تطلق الطاقة والريبوسومات تصنع البروتين.']], [
     function (r) { var a = r.pick([10, 20, 50]), m = r.pick([100, 200, 400]); return P(['Image size in mm.', 'حجم الصورة بالمليمتر.'], a + ' µm at × ' + m, a * m / 1000); },
-    function (r) { var k = r.int(1, 9); return P(['In µm.', 'بالميكرومتر.'], k + ' mm', k * 1000); },
+    function (r) { var k = r.int(1, 9); return P(['What is this length in micrometres?', 'كم هذا الطول بالميكرومتر؟'], k + ' mm', k * 1000); },
     [['Which organelle packages proteins?', 'أي عضي يعبئ البروتينات؟'], ['The Golgi', 'جهاز جولجي'], ['The nucleus', 'النواة'], ['The vacuole', 'الفجوة']]
   ]);
   Topic('a12bi.heart', ['The cardiac cycle', 'الدورة القلبية'], 'heart', [['Atria contract, then ventricles, then the heart relaxes. Valves open and close with pressure, not muscle. The SAN sets the rhythm. Cardiac output = stroke volume × heart rate.', 'يتقلص الأذينان ثم البطينان ثم يسترخي القلب. والصمامات تعمل بالضغط. والعقدة الجيبية تضبط الإيقاع.']], [
-    function (r) { var s = r.int(6, 9) * 10, h = r.int(6, 9) * 10; return P(['Cardiac output, mL/min.', 'النتاج القلبي.'], s + ' mL × ' + h + ' beats/min', s * h); },
+    function (r) { var s = r.int(6, 9) * 10, h = r.int(6, 9) * 10; return P(['Stroke volume × heart rate: what is the cardiac output, in mL/min?', 'حجم الضربة × معدل القلب: ما النتاج القلبي بالمليلتر في الدقيقة؟'], s + ' mL × ' + h + ' beats/min', s * h); },
     function (r) { var c = r.pick([60, 75, 100]); return P(['Beats per minute, if a cycle lasts this many hundredths of a second.', 'النبضات في الدقيقة.'], 'cycle ' + (6000 / c) + ' hundredths of a second', c); },
     [['What closes the valves?', 'ما الذي يغلق الصمامات؟'], ['Pressure differences', 'فروق الضغط'], ['Nerves directly', 'الأعصاب مباشرة'], ['Hormones', 'الهرمونات']]
   ]);
@@ -186,11 +186,11 @@
   Topic('a13bi.hw', ['Population genetics', 'وراثة العشائر'], 'plant', [['Hardy-Weinberg: p + q = 1, and p² + 2pq + q² = 1. If 4% show a recessive condition, q² = 0.04, so q = 0.2, p = 0.8, and carriers are 2pq = 32%.', 'هاردي واينبرغ: p + q = 1 وp² + 2pq + q² = 1. إذا ظهر المتنحي في ٤٪ فـ q = ٠٫٢ وp = ٠٫٨ والحاملون ٣٢٪.']], [
     function (r) { var q = r.pick([1, 2, 3, 4, 5]); return P(['% who carry it, 2pq.', 'نسبة الحاملين.'], 'q = 0.' + q, 2 * q * (10 - q)); },
     function (r) { var q = r.pick([1, 2, 3, 4, 5]); return P(['% showing the recessive trait, q².', 'نسبة المتنحي.'], 'q = 0.' + q, q * q); },
-    function (r) { var q = r.pick([1, 2, 3, 4]); return P(['p, in tenths.', 'p بالأعشار.'], 'q = 0.' + q, 10 - q); }
+    function (r) { var q = r.pick([1, 2, 3, 4]); return P(['Use p + q = 1. What is p, in tenths?', 'استعمل p + q = 1. ما p بالأعشار؟'], 'q = 0.' + q, 10 - q); }
   ]);
   Topic('a13bi.div', ['Classifying and measuring biodiversity', 'التصنيف وقياس التنوع'], 'tree', [['Kingdom, phylum, class, order, family, genus, species. Simpson’s index: D = 1 − Σ(n/N)². A higher D means more diversity. Quadrats and transects give the numbers.', 'مملكة فشعبة فطائفة فرتبة ففصيلة فجنس فنوع. ومؤشر سيمبسون يقيس التنوع.']], [
     [['Which is the smallest group?', 'أيها أصغر مجموعة؟'], ['Species', 'النوع'], ['Family', 'الفصيلة'], ['Order', 'الرتبة']],
-    function (r) { var a = r.int(2, 6), q = r.int(2, 9), t = r.pick([10, 20, 50]); return P(['Estimated total.', 'التقدير الكلي.'], 'average ' + a + ' in a 1 m² quadrat, over ' + (q * t) + ' m²', a * q * t); },
+    function (r) { var a = r.int(2, 6), q = r.int(2, 9), t = r.pick([10, 20, 50]); return P(['How many are estimated across the whole area?', 'كم العدد المقدر في المساحة كلها؟'], 'average ' + a + ' in a 1 m² quadrat, over ' + (q * t) + ' m²', a * q * t); },
     function (r) { var k = r.pick([2, 4, 5, 10]); return P(['D as a percentage, for equal species, 1 − 1/k.', 'D نسبة مئوية.'], k + ' equally common species', 100 - 100 / k); }
   ]);
   U('science', 'a14bi', ['Biology beyond the syllabus', 'أحياء بعد المنهج'], 4, 14);

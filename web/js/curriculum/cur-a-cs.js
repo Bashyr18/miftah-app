@@ -13,8 +13,8 @@
     [['Which register holds the next instruction’s address?', 'أي سجل يحمل عنوان التعليمة التالية؟'], ['The program counter', 'عداد البرنامج'], ['The accumulator', 'المراكم'], ['The stack', 'المكدس']]
   ]);
   Topic('a12k.bool', ['Boolean algebra', 'الجبر البولي'], 'bulb', [['De Morgan: NOT(A AND B) = (NOT A) OR (NOT B). NOT(A OR B) = (NOT A) AND (NOT B). Simplifying a condition saves bugs, and simplifying a circuit saves chips.', 'دي مورجان: NOT(A AND B) = (NOT A) OR (NOT B). وتبسيط الشرط يقلل الأخطاء، وتبسيط الدائرة يقلل الرقائق.']], [
-    function (r) { var a = r.int(0, 1), b = r.int(0, 1); return P(['Output.', 'الخرج.'], 'NOT(' + a + ' AND ' + b + ')', (a & b) ? 0 : 1); },
-    function (r) { var a = r.int(0, 1), b = r.int(0, 1); return P(['Output.', 'الخرج.'], '(NOT ' + a + ') AND (NOT ' + b + ')', (!a && !b) ? 1 : 0); },
+    function (r) { var a = r.int(0, 1), b = r.int(0, 1); return P(['What does this logic expression output?', 'ما خرج هذا التعبير المنطقي؟'], 'NOT(' + a + ' AND ' + b + ')', (a & b) ? 0 : 1); },
+    function (r) { var a = r.int(0, 1), b = r.int(0, 1); return P(['What does this logic expression output?', 'ما خرج هذا التعبير المنطقي؟'], '(NOT ' + a + ') AND (NOT ' + b + ')', (!a && !b) ? 1 : 0); },
     [['NOT(x > 5 and y < 2) equals:', 'NOT(x > 5 and y < 2) تساوي:'], ['x <= 5 or y >= 2', 'x <= 5 or y >= 2'], ['x <= 5 and y >= 2', 'x <= 5 and y >= 2'], ['x > 5 or y < 2', 'x > 5 or y < 2']],
     function (r) { var n = r.int(2, 6); return P(['Rows in the truth table.', 'صفوف جدول الحقيقة.'], n + ' inputs', Math.pow(2, n)); }
   ]);
@@ -66,13 +66,13 @@
     [['Dijkstra can fail when edges are:', 'يفشل ديكسترا إذا كانت الحواف:'], ['Negative', 'سالبة'], ['Very long', 'طويلة جدًا'], ['Few', 'قليلة']]
   ]);
   Topic('a13k.linreg', ['Linear regression, by hand', 'الانحدار الخطي يدويًا'], 'ruler', [['Fit y = mx + c by minimising squared errors. With a mean x̄, ȳ: the line passes through (x̄, ȳ). This small model is still the first thing a careful data scientist tries.', 'نوفق y = mx + c بتقليل مربعات الأخطاء. ويمر الخط بالنقطة (x̄, ȳ).']], [
-    function (r) { var m = r.int(1, 9), c = r.int(1, 9), x = r.int(1, 9); return P(['Prediction.', 'التنبؤ.'], 'y = ' + m + 'x + ' + c + '; x = ' + x, m * x + c); },
+    function (r) { var m = r.int(1, 9), c = r.int(1, 9), x = r.int(1, 9); return P(['What does the model predict for this x?', 'ما تنبؤ النموذج عند قيمة x هذه؟'], 'y = ' + m + 'x + ' + c + '; x = ' + x, m * x + c); },
     function (r) { var e = r.int(1, 9), y = r.int(10, 40); return X(['Error, predicted − actual.', 'الخطأ.'], 'predicted ' + (y + e) + ', actual ' + y, e); },
     function (r) { var a = r.int(1, 9), b = r.int(1, 9); return P(['Sum of squared errors.', 'مجموع مربعات الأخطاء.'], 'errors ' + a + ', ' + b, a * a + b * b); }
   ]);
   U('computing', 'a14k', ['First-year computer science', 'حاسوب السنة الأولى'], 4, 14);
   Topic('a14k.rsa', ['RSA, step by step', 'خوارزمية RSA خطوة بخطوة'], 'lock', [['Pick primes p and q, and publish n = pq and e. Encrypt: c = mᵉ mod n. Decrypt with d, which needs p and q to find. Multiplying is easy, and factoring is hard. All your online banking rests on that gap.', 'اختر أوليين p وq وانشر n = pq وe. التشفير c = mᵉ mod n. والضرب سهل والتحليل صعب.']], [
-    function (r) { var p = r.pick([3, 5, 7, 11]), q = r.pick([13, 17, 19]); return P(['n.', 'n.'], 'p = ' + p + ', q = ' + q, p * q); },
+    function (r) { var p = r.pick([3, 5, 7, 11]), q = r.pick([13, 17, 19]); return P(['Work out the RSA modulus n = p × q.', 'احسب معامل RSA ‏n = p × q.'], 'p = ' + p + ', q = ' + q, p * q); },
     function (r) { var p = r.pick([3, 5, 7, 11]), q = r.pick([13, 17, 19]); return P(['φ(n) = (p − 1)(q − 1).', 'φ(n).'], 'p = ' + p + ', q = ' + q, (p - 1) * (q - 1)); },
     function (r) { var m = r.int(2, 6), e = 3, n = r.pick([33, 35, 55]); return P(['c = m^e mod n.', 'c.'], m + '^' + e + ' mod ' + n, modpow(m, e, n)); }
   ]);
@@ -93,21 +93,21 @@
   /* ---------- engineering, Years 13 and 14 ---------- */
   U('engineering', 'a13e', ['Engineering: machines and circuits', 'الهندسة: الآلات والدوائر'], 4, 13);
   Topic('a13e.gear', ['Gears and torque', 'التروس والعزم'], 'gear', [['Gear ratio = teeth driven ÷ teeth driving. A big gear turned by a small one turns slower, with more torque. Power stays the same, less losses. Al-Jazarī drew gear trains in 1206.', 'نسبة التروس = أسنان المدفوع ÷ الدافع. الكبير أبطأ وأقوى عزمًا. ورسم الجزري قطارات تروس سنة ١٢٠٦.']], [
-    function (r) { var a = r.int(1, 5) * 10, k = r.int(2, 5); return P(['Gear ratio.', 'نسبة التروس.'], a + ' teeth drives ' + (a * k), k); },
-    function (r) { var rpm = r.int(2, 9) * 100, k = r.pick([2, 4, 5]); return P(['Output speed, rpm.', 'سرعة الخرج.'], rpm * k + ' rpm in, ratio ' + k + ':1', rpm); },
+    function (r) { var a = r.int(1, 5) * 10, k = r.int(2, 5); return P(['What is the gear ratio, driven teeth ÷ driver teeth?', 'ما نسبة التروس: أسنان المُدار ÷ أسنان المُدير؟'], a + ' teeth drives ' + (a * k), k); },
+    function (r) { var rpm = r.int(2, 9) * 100, k = r.pick([2, 4, 5]); return P(['What is the output speed, in rpm?', 'ما سرعة الخرج بالدورة في الدقيقة؟'], rpm * k + ' rpm in, ratio ' + k + ':1', rpm); },
     function (r) { var t = r.int(2, 20), k = r.int(2, 5); return P(['Output torque, N m (no losses).', 'عزم الخرج.'], t + ' N m in, ratio ' + k + ':1', t * k); }
   ]);
   Topic('a13e.opamp', ['Operational amplifiers', 'مكبرات العمليات'], 'plug', [['An op-amp compares two inputs, with huge gain. Add feedback and it behaves: an inverting amplifier has gain −Rf/Rin. Sensors, audio and control circuits rely on it.', 'يقارن مدخلين بكسب هائل. ومع التغذية الراجعة: كسب المكبر العاكس −Rf/Rin.']], [
-    function (r) { var g = r.int(2, 20), R = r.int(1, 9); return X(['Gain.', 'الكسب.'], 'inverting, Rf = ' + (g * R) + ' kΩ, Rin = ' + R + ' kΩ', -g); },
-    function (r) { var g = r.int(2, 10), v = r.int(1, 5); return X(['Output, in volts.', 'الخرج.'], 'gain −' + g + ', input ' + v + ' V', -g * v); }
+    function (r) { var g = r.int(2, 20), R = r.int(1, 9); return X(['What is the voltage gain, −Rf ÷ Rin?', 'ما كسب الجهد −Rf ÷ Rin؟'], 'inverting, Rf = ' + (g * R) + ' kΩ, Rin = ' + R + ' kΩ', -g); },
+    function (r) { var g = r.int(2, 10), v = r.int(1, 5); return X(['What is the ideal output, ignoring the supply limit, in volts?', 'ما الخرج المثالي بالفولت، دون اعتبار حد المصدر؟'], 'gain −' + g + ', input ' + v + ' V', -g * v); }
   ]);
   Topic('a13e.vessel', ['Pressure vessels', 'أوعية الضغط'], 'drop', [['In a thin-walled cylinder, hoop stress = pr/t, twice the lengthwise stress. So a sausage splits along its length. Tanks, pipes and rockets are all sized with this line.', 'في الأسطوانة الرقيقة الإجهاد المحيطي = pr/t، ضعف الطولي. لذا تنشق النقانق طوليًا.']], [
     function (r) { var p = r.int(1, 9), R = r.int(1, 9) * 10, t = r.pick([1, 2, 5, 10]); return P(['Hoop stress, MPa (p in MPa, r and t in mm).', 'الإجهاد المحيطي.'], 'p = ' + p + ', r = ' + R + ', t = ' + t, p * R / t); },
     [['A cylinder fails first along its:', 'تفشل الأسطوانة أولًا على:'], ['Length', 'طولها'], ['End caps', 'طرفيها'], ['Base only', 'قاعدتها فقط']]
   ]);
   Topic('a13e.robot', ['Sensors, actuators and robots', 'الحساسات والمشغلات والروبوتات'], 'wrench', [['Sense, decide, act, repeat. Encoders count wheel turns, and noise makes every reading wrong by a little. So filter it, and calibrate. A robot arm’s reach comes from its link lengths and joint angles.', 'استشعر فقرر فنفذ وكرر. وتعد المشفرات الدورات. والضجيج يفسد كل قراءة قليلًا، فصفّها ومعايرها.']], [
-    function (r) { var c = r.pick([20, 30, 40, 50]), n = r.int(2, 20); return P(['Distance in cm.', 'المسافة بالسنتيمتر.'], n + ' turns of a ' + c + ' cm wheel', n * c); },
-    function (r) { var a = r.int(10, 40), b = r.int(10, 40); return P(['Greatest reach, cm.', 'أقصى مدى.'], 'arm links ' + a + ' and ' + b, a + b); },
+    function (r) { var c = r.pick([20, 30, 40, 50]), n = r.int(2, 20); return P(['How far does the robot travel, in cm?', 'كم يقطع الروبوت بالسنتيمتر؟'], n + ' turns of a ' + c + ' cm wheel', n * c); },
+    function (r) { var a = r.int(10, 40), b = r.int(10, 40); return P(['What is the arm’s greatest reach, fully stretched, in cm?', 'ما أقصى مدى للذراع ممدودة بالسنتيمتر؟'], 'arm links ' + a + ' and ' + b, a + b); },
     [['Averaging several sensor readings mainly reduces:', 'متوسط القراءات يقلل أساسًا:'], ['Random noise', 'الضجيج العشوائي'], ['Bias', 'التحيز'], ['Cost', 'الكلفة']]
   ]);
   U('engineering', 'a14e', ['Engineering: judgement', 'الهندسة: الحكم الهندسي'], 4, 14);
@@ -116,8 +116,8 @@
     function (r) { var a = r.pick([90, 80, 50]), b = r.pick([90, 80, 50]); return P(['System reliability in parallel, %.', 'موثوقية التوازي.'], a + '% and ' + b + '%', 100 - (100 - a) * (100 - b) / 100); }
   ]);
   Topic('a14e.econ', ['Engineering economics', 'الاقتصاد الهندسي'], 'scale', [['Payback = cost ÷ yearly saving. A solar install costing 6,000 and saving 1,500 a year pays back in 4 years. Account for upkeep, and compare options over their whole life, honestly.', 'الاسترداد = الكلفة ÷ الوفر السنوي. تركيب بـ٦٠٠٠ يوفر ١٥٠٠ سنويًا يسترد في ٤ سنوات. قارن الخيارات على عمرها كله.']], [
-    function (r) { var s = r.int(2, 9) * 100, y = r.int(2, 9); return P(['Payback, in years.', 'سنوات الاسترداد.'], 'costs ' + (s * y) + ', saves ' + s + ' a year', y); },
-    function (r) { var c = r.int(2, 9) * 100, u = r.int(1, 5) * 10, y = r.int(5, 20); return P(['Whole-life cost.', 'كلفة العمر كله.'], c + ' to buy, ' + u + ' a year for ' + y + ' years', c + u * y); }
+    function (r) { var s = r.int(2, 9) * 100, y = r.int(2, 9); return P(['How many years until the savings repay the cost?', 'بعد كم سنة يسترد التوفير الكلفة؟'], 'costs ' + (s * y) + ', saves ' + s + ' a year', y); },
+    function (r) { var c = r.int(2, 9) * 100, u = r.int(1, 5) * 10, y = r.int(5, 20); return P(['What is the total cost over its whole life?', 'ما الكلفة الكلية على مدى عمره؟'], c + ' to buy, ' + u + ' a year for ' + y + ' years', c + u * y); }
   ]);
   Topic('a14e.fea', ['Modelling, and trusting a model', 'النمذجة والثقة بالنموذج'], 'box', [['Finite element software splits a part into small pieces and solves each. Garbage in, garbage out. Before trusting colour plots, check with a hand calculation, and test a real part where lives depend on it.', 'يقسم الحاسوب القطعة إلى أجزاء صغيرة. والمدخل الفاسد يعطي ناتجًا فاسدًا. تحقق بحساب يدوي واختبر قطعة حقيقية.']], [
     [['A simulation disagrees with your hand estimate by 10 times. First:', 'خالفت المحاكاة تقديرك عشرة أضعاف. أولًا:'], ['Check units, loads and supports', 'افحص الوحدات والأحمال والمساند'], ['Trust the colours', 'ثق بالألوان'], ['Delete the estimate', 'احذف التقدير']],

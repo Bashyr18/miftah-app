@@ -9,7 +9,7 @@
   /* ---------- Year 12: pure ---------- */
   U('math', 'a12p', ['A level pure: technique', 'البحتة: مهارات'], 4, 12);
   Topic('a12p.square', ['Completing the square', 'إكمال المربع'], 'ruler', [['x² + 6x + 2 = (x + 3)² − 9 + 2 = (x + 3)² − 7. Halve the x coefficient, square it, take it away. The minimum is −7, at x = −3.', 'x² + 6x + 2 = (x + 3)² − 9 + 2 = (x + 3)² − 7. نصّف معامل x وربّعه واطرحه. القيمة الدنيا −٧ عند x = −٣.']], [
-    function (r) { var a = r.int(1, 9), c = r.int(1, 30); return X(['Minimum value.', 'القيمة الدنيا.'], 'x^2 + ' + (2 * a) + 'x + ' + c, c - a * a); },
+    function (r) { var a = r.int(1, 9), c = r.int(1, 30); return X(['Complete the square: what is the minimum value?', 'أكمل المربع: ما القيمة الصغرى؟'], 'x^2 + ' + (2 * a) + 'x + ' + c, c - a * a); },
     function (r) { var a = r.int(1, 9), c = r.int(1, 30); return X(['x at the turning point.', 'x عند نقطة التحول.'], 'x^2 + ' + (2 * a) + 'x + ' + c, -a); },
     function (r) { var a = r.int(2, 9); return P(['What number goes in the box?', 'ما العدد في المربع؟'], 'x^2 − ' + (2 * a) + 'x + ? = (x − ' + a + ')^2', a * a); }
   ]);
@@ -19,9 +19,9 @@
     function (r) { var a = r.int(2, 9), b = r.int(1, 9); return X(['New y at the same x.', 'y الجديدة عند x نفسها.'], 'f(2) = ' + a + '; y = 3f(x) + ' + b + ' at x = 2', 3 * a + b); }
   ]);
   Topic('a12p.mod', ['The modulus function', 'دالة القيمة المطلقة'], 'scale', [['|x| is distance from zero, so |x| = 5 has two answers: 5 and −5. To solve |x − 2| < 3, write −3 < x − 2 < 3, so −1 < x < 5.', '|x| هي المسافة من الصفر، فـ|x| = ٥ لها حلان. ولحل |x − 2| < 3 نكتب −٣ < x − ٢ < ٣ فـ −١ < x < ٥.']], [
-    function (r) { var a = r.int(1, 12), b = r.int(13, 30); return P(['Value.', 'القيمة.'], '|' + a + ' − ' + b + '|', b - a); },
-    function (r) { var a = r.int(1, 9), b = r.int(1, 9); return X(['The larger solution.', 'الحل الأكبر.'], '|x − ' + a + '| = ' + b, a + b); },
-    function (r) { var a = r.int(1, 9), b = r.int(1, 9); return X(['The smaller solution.', 'الحل الأصغر.'], '|x − ' + a + '| = ' + b, a - b); }
+    function (r) { var a = r.int(1, 12), b = r.int(13, 30); return P(['Work out the modulus.', 'احسب القيمة المطلقة.'], '|' + a + ' − ' + b + '|', b - a); },
+    function (r) { var a = r.int(1, 9), b = r.int(1, 9); return X(['Solve: what is the larger solution?', 'حل المعادلة: ما الحل الأكبر؟'], '|x − ' + a + '| = ' + b, a + b); },
+    function (r) { var a = r.int(1, 9), b = r.int(1, 9); return X(['Solve: what is the smaller solution?', 'حل المعادلة: ما الحل الأصغر؟'], '|x − ' + a + '| = ' + b, a - b); }
   ]);
   Topic('a12p.double', ['Double angle formulae', 'صيغ ضعف الزاوية'], 'compass', [['sin 2A = 2 sin A cos A. cos 2A = cos²A − sin²A = 1 − 2sin²A. If sin A = 3/5 and cos A = 4/5, sin 2A = 24/25, and cos 2A = 7/25.', 'sin 2A = 2 sin A cos A. وcos 2A = cos²A − sin²A = 1 − 2sin²A. إذا sin A = 3/5 وcos A = 4/5 فـ sin 2A = 24/25 وcos 2A = 7/25.']], [
     function (r) { var t = r.pick([[3, 4, 5], [5, 12, 13], [8, 15, 17]]); return P(['sin 2A = ?/' + (t[2] * t[2]), 'sin 2A = ؟/' + (t[2] * t[2])], 'sin A = ' + t[0] + '/' + t[2] + ', cos A = ' + t[1] + '/' + t[2], 2 * t[0] * t[1]); },
@@ -29,8 +29,8 @@
     [['1 − 2sin²A equals:', '1 − 2sin²A تساوي:'], ['cos 2A', 'cos 2A'], ['sin 2A', 'sin 2A'], ['tan 2A', 'tan 2A']]
   ]);
   Topic('a12p.rform', ['The R-formula', 'صيغة R'], 'wave', [['a sin x + b cos x = R sin(x + α), with R = √(a² + b²) and tan α = b/a. So 3 sin x + 4 cos x has R = 5, and its largest value is 5.', 'a sin x + b cos x = R sin(x + α) مع R = √(a² + b²) وtan α = b/a. إذن 3 sin x + 4 cos x لها R = ٥ وأكبر قيمة ٥.']], [
-    function (r) { var t = r.pick([[3, 4, 5], [6, 8, 10], [5, 12, 13], [8, 15, 17], [9, 12, 15]]); return P(['Largest value.', 'أكبر قيمة.'], t[0] + ' sin x + ' + t[1] + ' cos x', t[2]); },
-    function (r) { var t = r.pick([[3, 4, 5], [6, 8, 10], [5, 12, 13]]); return X(['Smallest value.', 'أصغر قيمة.'], t[0] + ' sin x + ' + t[1] + ' cos x', -t[2]); }
+    function (r) { var t = r.pick([[3, 4, 5], [6, 8, 10], [5, 12, 13], [8, 15, 17], [9, 12, 15]]); return P(['Write it as R sin(x + α): what is its largest value?', 'اكتبه على صورة R sin(x + α): ما أكبر قيمة له؟'], t[0] + ' sin x + ' + t[1] + ' cos x', t[2]); },
+    function (r) { var t = r.pick([[3, 4, 5], [6, 8, 10], [5, 12, 13]]); return X(['Write it as R sin(x + α): what is its smallest value?', 'اكتبه على صورة R sin(x + α): ما أصغر قيمة له؟'], t[0] + ' sin x + ' + t[1] + ' cos x', -t[2]); }
   ]);
   Topic('a12p.trap', ['The trapezium rule', 'قاعدة شبه المنحرف'], 'plate', [['Split the area into strips of width h. Area ≈ h/2 × (first + last + 2 × the middle ones). A curve bending upward gives an overestimate. More strips, better answer.', 'قسّم المساحة شرائح عرضها h. المساحة ≈ h/2 × (الأول + الأخير + ٢ × الوسطى). والمنحنى المقعر لأعلى يعطي تقديرًا زائدًا.']], [
     function (r) { var a = r.int(1, 9), b = r.int(1, 9), c = r.int(1, 9); return P(['Area estimate, with h = 2.', 'تقدير المساحة مع h = 2.'], 'y-values ' + a + ', ' + b + ', ' + c, a + c + 2 * b); },
@@ -39,13 +39,13 @@
   /* ---------- Year 12: statistics and mechanics ---------- */
   U('math', 'a12s', ['A level statistics and mechanics', 'الإحصاء والميكانيكا'], 4, 12);
   Topic('a12s.drv', ['Random variables and expectation', 'المتغيرات العشوائية والتوقع'], 'stone', [['E(X) = Σ x·P(x). If X is 0, 10 or 20 with probabilities 1/2, 1/4, 1/4, then E(X) = 0 + 2.5 + 5 = 7.5. Over many trials, that is the average.', 'E(X) = Σ x·P(x). إذا كانت X تساوي ٠، ١٠، ٢٠ باحتمالات ١/٢، ١/٤، ١/٤ فـ E(X) = ٧٫٥.']], [
-    function (r) { var a = r.int(1, 9) * 4, b = r.int(1, 9) * 4; return P(['E(X).', 'E(X).'], 'X = ' + a + ' or ' + b + ', probability 1/2 each', (a + b) / 2); },
-    function (r) { var m = r.int(2, 9), a = r.int(2, 5), b = r.int(1, 9); return P(['E(aX + b).', 'E(aX + b).'], 'E(X) = ' + m + '; E(' + a + 'X + ' + b + ')', a * m + b); },
+    function (r) { var a = r.int(1, 9) * 4, b = r.int(1, 9) * 4; return P(['What is the expected value, E(X)?', 'ما القيمة المتوقعة E(X)؟'], 'X = ' + a + ' or ' + b + ', probability 1/2 each', (a + b) / 2); },
+    function (r) { var m = r.int(2, 9), a = r.int(2, 5), b = r.int(1, 9); return P(['Use E(aX + b) = aE(X) + b. What is it?', 'استعمل E(aX + b) = aE(X) + b. كم تساوي؟'], 'E(X) = ' + m + '; E(' + a + 'X + ' + b + ')', a * m + b); },
     function (r) { var v = r.int(2, 9), a = r.int(2, 4), b = r.int(1, 9); return P(['Var(aX + b). The b does not matter.', 'Var(aX + b). لا أثر لـb.'], 'Var(X) = ' + v + '; Var(' + a + 'X + ' + b + ')', a * a * v); }
   ]);
   Topic('a12s.binmv', ['Binomial mean and variance', 'متوسط وتباين ذي الحدين'], 'stone', [['For X ~ B(n, p): mean = np, variance = np(1 − p). 100 tosses of a fair coin: mean 50, variance 25, standard deviation 5.', 'لـ X ~ B(n, p): المتوسط np والتباين np(1 − p). ١٠٠ رمية عادلة: متوسط ٥٠ وتباين ٢٥ وانحراف ٥.']], [
-    function (r) { var p = r.pick([2, 4, 5]), n = p * r.int(3, 30); return P(['Mean.', 'المتوسط.'], 'B(' + n + ', 1/' + p + ')', n / p); },
-    function (r) { var n = r.pick([100, 200, 400]); return P(['Variance.', 'التباين.'], 'B(' + n + ', 1/2)', n / 4); }
+    function (r) { var p = r.pick([2, 4, 5]), n = p * r.int(3, 30); return P(['What is the mean of this binomial distribution, np?', 'ما متوسط هذا التوزيع ذي الحدين np؟'], 'B(' + n + ', 1/' + p + ')', n / p); },
+    function (r) { var n = r.pick([100, 200, 400]); return P(['What is the variance, np(1 − p)?', 'ما التباين np(1 − p)؟'], 'B(' + n + ', 1/2)', n / 4); }
   ]);
   Topic('a12s.poisson', ['The Poisson distribution', 'توزيع بواسون'], 'stopwatch', [['Counts of rare, independent events in a fixed interval, such as calls per hour. Mean and variance are both λ. Two independent Poissons add: Po(3) + Po(4) = Po(7). P(X = 0) = e^(−λ).', 'عدد أحداث نادرة مستقلة في فترة، كالمكالمات في الساعة. المتوسط والتباين كلاهما λ. ومجموع المستقلين: Po(3) + Po(4) = Po(7).']], [
     function (r) { var a = r.int(1, 9), b = r.int(1, 9); return P(['λ of the total.', 'λ للمجموع.'], 'Po(' + a + ') + Po(' + b + ')', a + b); },
@@ -58,7 +58,7 @@
     function (r) { var m1 = r.int(1, 6), m2 = r.int(1, 6), v = r.int(2, 8); return X(['Speed of the second, if the first stops dead.', 'سرعة الثاني إذا توقف الأول تمامًا.'], m1 + ' kg at ' + (m2 * v) + ' m/s hits ' + m2 + ' kg at rest', m1 * v); }
   ]);
   Topic('a12s.wep', ['Work, energy and power', 'الشغل والطاقة والقدرة'], 'car', [['Power = force × velocity. A car at 20 m/s with a 500 N driving force delivers 10 kW. At top speed, driving force equals resistance.', 'القدرة = القوة × السرعة. سيارة ٢٠ م/ث بقوة دفع ٥٠٠ نيوتن قدرتها ١٠ ك.واط. وعند أقصى سرعة تساوي القوة المقاومة.']], [
-    function (r) { var f = r.int(2, 9) * 100, v = r.int(5, 30); return P(['Power in watts.', 'القدرة واط.'], f + ' N at ' + v + ' m/s', f * v); },
+    function (r) { var f = r.int(2, 9) * 100, v = r.int(5, 30); return P(['What power is being delivered, in watts?', 'ما القدرة المبذولة بالواط؟'], f + ' N at ' + v + ' m/s', f * v); },
     function (r) { var p = r.int(2, 9) * 1000, v = r.pick([10, 20, 25, 50]); return P(['Resistance at top speed, in N.', 'المقاومة عند أقصى سرعة.'], p + ' W, top speed ' + v + ' m/s', p / v); },
     function (r) { var f = r.int(2, 20), d = r.int(2, 20), w = r.int(1, 5); return P(['Energy lost to the resistance, in J.', 'الطاقة المفقودة.'], f + ' N resistance over ' + (d * w) + ' m', f * d * w); }
   ]);
@@ -74,7 +74,7 @@
     function (r) { var k = r.pick([4, 9, 16, 25]); return P(['The standard error is divided by?', 'يُقسم الخطأ المعياري على؟'], 'n × ' + k, Math.sqrt(k)); }
   ]);
   Topic('a13s.ci', ['Confidence intervals', 'فترات الثقة'], 'ruler', [['95% interval for a mean: x̄ ± 1.96 σ/√n. It says how the method behaves over many samples. It does not say there is a 95% chance this interval holds the truth once you have it.', 'فترة ٩٥٪: x̄ ± 1.96 σ/√n. وهي تصف سلوك الطريقة عبر عينات كثيرة.']], [
-    function (r) { var m = r.int(40, 90), e = r.int(2, 9); return P(['The interval’s width.', 'عرض الفترة.'], m + ' ± ' + e, 2 * e); },
+    function (r) { var m = r.int(40, 90), e = r.int(2, 9); return P(['How wide is the whole interval?', 'ما عرض الفترة كلها؟'], m + ' ± ' + e, 2 * e); },
     [['To narrow an interval, you can:', 'لتضييق الفترة يمكنك:'], ['Take a larger sample', 'أخذ عينة أكبر'], ['Raise the confidence level', 'رفع مستوى الثقة'], ['Round the answer', 'تقريب الجواب']],
     [['A wider interval goes with:', 'الفترة الأعرض تقترن بـ:'], ['Higher confidence', 'ثقة أعلى'], ['Larger samples', 'عينات أكبر'], ['Smaller σ', 'σ أصغر']]
   ]);
@@ -85,25 +85,25 @@
   ]);
   U('math', 'a13f', ['Further maths: more', 'رياضيات متقدمة: مزيد'], 4, 13);
   Topic('a13f.dot', ['Scalar product and angles', 'الضرب القياسي والزوايا'], 'compass', [['a·b = a₁b₁ + a₂b₂ + a₃b₃ = |a||b| cos θ. If the product is 0, the vectors are perpendicular. That one line finds every angle in 3D.', 'a·b = a₁b₁ + a₂b₂ + a₃b₃ = |a||b| cos θ. وإذا كان صفرًا فهما متعامدان.']], [
-    function (r) { var a = r.int(1, 5), b = r.int(1, 5), c = r.int(1, 5), d = r.int(1, 5), e = r.int(1, 5), f = r.int(1, 5); return P(['a·b.', 'a·b.'], '(' + a + ',' + b + ',' + c + ')·(' + d + ',' + e + ',' + f + ')', a * d + b * e + c * f); },
-    function (r) { var t = r.pick([[1, 2, 2, 3], [2, 3, 6, 7], [1, 4, 8, 9], [2, 6, 9, 11]]); return P(['|a|.', '|a|.'], 'a = (' + t[0] + ',' + t[1] + ',' + t[2] + ')', t[3]); },
+    function (r) { var a = r.int(1, 5), b = r.int(1, 5), c = r.int(1, 5), d = r.int(1, 5), e = r.int(1, 5), f = r.int(1, 5); return P(['Work out the scalar product a·b.', 'احسب الضرب القياسي a·b.'], '(' + a + ',' + b + ',' + c + ')·(' + d + ',' + e + ',' + f + ')', a * d + b * e + c * f); },
+    function (r) { var t = r.pick([[1, 2, 2, 3], [2, 3, 6, 7], [1, 4, 8, 9], [2, 6, 9, 11]]); return P(['How long is the vector, |a|?', 'ما طول المتجه |a|؟'], 'a = (' + t[0] + ',' + t[1] + ',' + t[2] + ')', t[3]); },
     function (r) { var a = r.int(1, 6), b = r.int(1, 6); return X(['k making them perpendicular.', 'k التي تجعلهما متعامدين.'], '(' + a + ',' + b + ')·(' + b + ',k) = 0', -a); }
   ]);
   Topic('a13f.demoivre', ['De Moivre’s theorem', 'نظرية دي موافر'], 'star', [['(cos θ + i sin θ)ⁿ = cos nθ + i sin nθ. Multiply complex numbers by multiplying moduli and adding arguments. (2∠30°)³ = 8∠90° = 8i.', '(cos θ + i sin θ)ⁿ = cos nθ + i sin nθ. عند الضرب تُضرب الأطوال وتُجمع الزوايا. (2∠30°)³ = 8∠90° = 8i.']], [
     function (r) { var m = r.int(2, 3), n = r.int(2, 4); return P(['Modulus of the result.', 'طول الناتج.'], '(' + m + '∠θ)^' + n, Math.pow(m, n)); },
-    function (r) { var a = r.pick([10, 15, 20, 30]), n = r.int(2, 6); return P(['Argument in degrees.', 'الزاوية بالدرجات.'], '(r∠' + a + '°)^' + n, a * n); },
+    function (r) { var a = r.pick([10, 15, 20, 30]), n = r.int(2, 6); return P(['By De Moivre, what is the argument, in degrees?', 'بقاعدة دي موافر: ما السعة بالدرجات؟'], '(r∠' + a + '°)^' + n, a * n); },
     function (r) { var a = r.int(2, 5), b = r.int(2, 5), c = r.pick([20, 30, 40]), d = r.pick([10, 50, 60]); return P(['Modulus of the product.', 'طول حاصل الضرب.'], a + '∠' + c + '° × ' + b + '∠' + d + '°', a * b); },
     function () { return P(['How many complex cube roots does 1 have?', 'كم جذرًا تكعيبيًا مركبًا للواحد؟'], '', 3); }
   ]);
   Topic('a13f.hyper', ['Hyperbolic functions', 'الدوال الزائدية'], 'bridge', [['cosh x = (eˣ + e⁻ˣ)/2 and sinh x = (eˣ − e⁻ˣ)/2. A hanging chain takes the cosh shape, a catenary. cosh²x − sinh²x = 1, with a minus where trig has a plus.', 'cosh x = (eˣ + e⁻ˣ)/2 وsinh x = (eˣ − e⁻ˣ)/2. والسلسلة المعلقة تأخذ شكل cosh.']], [
-    function () { return P(['Value.', 'القيمة.'], 'cosh 0', 1); },
-    function () { return P(['Value.', 'القيمة.'], 'sinh 0', 0); },
-    function () { return P(['Value.', 'القيمة.'], 'cosh^2 x − sinh^2 x', 1); },
+    function () { return P(['From the definition with eˣ, what is this worth?', 'من التعريف بـeˣ: كم تساوي؟'], 'cosh 0', 1); },
+    function () { return P(['From the definition with eˣ, what is this worth?', 'من التعريف بـeˣ: كم تساوي؟'], 'sinh 0', 0); },
+    function () { return P(['This identity holds for every x. What is it equal to?', 'هذه المتطابقة صحيحة لكل x. كم تساوي؟'], 'cosh^2 x − sinh^2 x', 1); },
     [['The derivative of sinh x is:', 'مشتقة sinh x:'], ['cosh x', 'cosh x'], ['−cosh x', '−cosh x'], ['sinh x', 'sinh x']]
   ]);
   Topic('a13f.shm', ['Circular and oscillating motion, mathematically', 'الحركة الدائرية والتذبذب رياضيًا'], 'wave', [['ẍ = −ω²x gives x = A cos ωt. Maximum speed is Aω, and maximum acceleration is Aω². In a circle: a = rω² = v²/r.', 'ẍ = −ω²x تعطي x = A cos ωt. أقصى سرعة Aω وأقصى تسارع Aω². وفي الدائرة: a = rω² = v²/r.']], [
-    function (r) { var a = r.int(2, 9), w = r.int(2, 9); return P(['Maximum speed.', 'أقصى سرعة.'], 'A = ' + a + ', ω = ' + w, a * w); },
-    function (r) { var a = r.int(2, 9), w = r.int(2, 6); return P(['Maximum acceleration.', 'أقصى تسارع.'], 'A = ' + a + ', ω = ' + w, a * w * w); },
+    function (r) { var a = r.int(2, 9), w = r.int(2, 9); return P(['What is the maximum speed, Aω?', 'ما السرعة القصوى Aω؟'], 'A = ' + a + ', ω = ' + w, a * w); },
+    function (r) { var a = r.int(2, 9), w = r.int(2, 6); return P(['What is the maximum acceleration, Aω²?', 'ما التسارع الأقصى Aω²؟'], 'A = ' + a + ', ω = ' + w, a * w * w); },
     function (r) { var v = r.pick([2, 4, 6, 8, 10]), R = r.pick([1, 2, 4]); return P(['Acceleration toward the centre.', 'التسارع نحو المركز.'], 'v = ' + v + ', r = ' + R, v * v / R); }
   ]);
   /* ---------- Year 14: first-year university ---------- */
@@ -115,13 +115,13 @@
   ]);
   Topic('a14.series', ['Does a series converge?', 'هل تتقارب المتسلسلة؟'], 'wave', [['1/2 + 1/4 + 1/8 + … = 1. But 1 + 1/2 + 1/3 + … grows without limit, though its terms shrink. Terms tending to zero is needed, and not enough. Ratio test: if |aₙ₊₁/aₙ| → r < 1, it converges.', '١/٢ + ١/٤ + … = ١. لكن ١ + ١/٢ + ١/٣ + … تتباعد رغم صغر حدودها. فاقتراب الحدود من الصفر شرط غير كافٍ.']], [
     [['The harmonic series 1 + 1/2 + 1/3 + …', 'المتسلسلة التوافقية:'], ['Diverges', 'تتباعد'], ['Equals 2', 'تساوي ٢'], ['Equals e', 'تساوي e']],
-    function (r) { var a = r.int(1, 9), k = r.pick([2, 3, 5]), first = a * (k - 1); return P(['Sum to infinity.', 'المجموع إلى ما لا نهاية.'], 'first term ' + first + ', ratio 1/' + k, a * k); },
+    function (r) { var a = r.int(1, 9), k = r.pick([2, 3, 5]), first = a * (k - 1); return P(['What is the sum to infinity, a ÷ (1 − r)?', 'ما المجموع إلى ما لا نهاية a ÷ (1 − r)؟'], 'first term ' + first + ', ratio 1/' + k, a * k); },
     [['Σ 1/n² :', 'Σ 1/n² :'], ['Converges', 'تتقارب'], ['Diverges', 'تتباعد'], ['Is undefined', 'غير معرفة']]
   ]);
   Topic('a14.det', ['Determinants', 'المحددات'], 'box', [['For [a b; c d], det = ad − bc. It is the area scale of the transformation. If det = 0, space is squashed flat, so there is no inverse.', 'لـ[a b; c d] المحدد = ad − bc. وهو معامل المساحة. وإذا كان صفرًا فلا معكوس.']], [
-    function (r) { var a = r.int(1, 9), b = r.int(1, 9), c = r.int(1, 9), d = r.int(1, 9); return X(['Determinant.', 'المحدد.'], '[' + a + ' ' + b + '; ' + c + ' ' + d + ']', a * d - b * c); },
+    function (r) { var a = r.int(1, 9), b = r.int(1, 9), c = r.int(1, 9), d = r.int(1, 9); return X(['What is the determinant, ad − bc?', 'ما المحدد ad − bc؟'], '[' + a + ' ' + b + '; ' + c + ' ' + d + ']', a * d - b * c); },
     function (r) { var a = r.int(2, 6), b = r.int(2, 6); return P(['k that leaves no inverse.', 'k التي تلغي المعكوس.'], '[' + a + ' ' + (a * b) + '; 1 k]', b); },
-    function (r) { var a = r.int(2, 6), s = r.int(2, 9); return P(['New area.', 'المساحة الجديدة.'], 'det = ' + a + ', area ' + s, a * s); }
+    function (r) { var a = r.int(2, 6), s = r.int(2, 9); return P(['The matrix scales area by its determinant. What is the new area?', 'المصفوفة تضرب المساحة في محددها. ما المساحة الجديدة؟'], 'det = ' + a + ', area ' + s, a * s); }
   ]);
   Topic('a14.indep', ['Independence, basis and dimension', 'الاستقلال والأساس والبعد'], 'box', [['Vectors are independent if none is built from the others. A basis is an independent set that reaches everything. Three independent vectors reach all of 3D, and a fourth adds nothing new.', 'المتجهات مستقلة إذا لم يُبنَ أحدها من غيره. والأساس مجموعة مستقلة تصل إلى الكل.']], [
     [['(1,2) and (2,4) are:', '(1,2) و(2,4):'], ['Dependent', 'مرتبطان'], ['Independent', 'مستقلان'], ['Perpendicular', 'متعامدان']],
@@ -134,9 +134,9 @@
     [['To reduce a loss fastest, step:', 'لخفض الخسارة أسرع، تحرك:'], ['Against the gradient', 'عكس التدرج'], ['Along the gradient', 'مع التدرج'], ['Sideways', 'جانبيًا']]
   ]);
   Topic('a14.mod', ['Modular arithmetic', 'الحساب النمطي'], 'gear', [['Clock arithmetic: 17 ≡ 2 (mod 5). Work with remainders. 7¹⁰⁰ mod 6: 7 ≡ 1, so the answer is 1. Euclid’s algorithm finds a gcd fast: gcd(48, 18) = gcd(18, 12) = gcd(12, 6) = 6.', 'حساب الساعة: 17 ≡ 2 (mod 5). وخوارزمية إقليدس تجد القاسم المشترك بسرعة.']], [
-    function (r) { var a = r.int(20, 200), m = r.int(3, 12); return P(['Remainder.', 'الباقي.'], a + ' mod ' + m, a % m); },
-    function (r) { var a = r.int(2, 9) * 6, b = r.int(2, 9) * 6; return P(['gcd.', 'القاسم المشترك الأكبر.'], 'gcd(' + a + ', ' + b + ')', gcd(a, b)); },
-    function (r) { var m = r.pick([3, 5, 7, 9]), e = r.int(20, 99); return P(['Remainder.', 'الباقي.'], (m + 1) + '^' + e + ' mod ' + m, 1); }
+    function (r) { var a = r.int(20, 200), m = r.int(3, 12); return P(['What is the remainder?', 'ما الباقي؟'], a + ' mod ' + m, a % m); },
+    function (r) { var a = r.int(2, 9) * 6, b = r.int(2, 9) * 6; return P(['What is the greatest common divisor?', 'ما القاسم المشترك الأكبر؟'], 'gcd(' + a + ', ' + b + ')', gcd(a, b)); },
+    function (r) { var m = r.pick([3, 5, 7, 9]), e = r.int(20, 99); return P(['What is the remainder? Think about what the base is, mod m.', 'ما الباقي؟ فكر في قيمة الأساس بالمقياس m.'], (m + 1) + '^' + e + ' mod ' + m, 1); }
   ]);
   Topic('a14.graph', ['Graph theory', 'نظرية البيان'], 'compass', [['Nodes and edges. Sum of degrees = 2 × edges, since each edge has two ends. A tree with n nodes has n − 1 edges. Euler began the subject with Königsberg’s bridges.', 'رؤوس وحواف. مجموع الدرجات = ٢ × الحواف. والشجرة ذات n رأسًا لها n − ١ حافة.']], [
     function (r) { var n = r.int(3, 30); return P(['Edges in a tree.', 'حواف الشجرة.'], n + ' nodes', n - 1); },
