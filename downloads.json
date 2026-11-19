@@ -1,16 +1,23 @@
 {
- "updated": "2026-11-19T11:44:32Z",
+ "updated": "2026-11-19T15:33:42Z",
  "total": {
-  "android": 20,
+  "android": 21,
   "windows": 27,
-  "all": 47
+  "all": 48
  },
  "releases": [
+  {
+   "tag": "v2.4.1",
+   "name": "Miftāḥ 2.4.1",
+   "published": "2026-11-19",
+   "android": 0,
+   "windows": 0
+  },
   {
    "tag": "v2.4",
    "name": "Miftāḥ 2.4",
    "published": "2026-11-19",
-   "android": 2,
+   "android": 3,
    "windows": 3
   },
   {
@@ -82,7 +89,7 @@
   },
   {
    "date": "2026-11-19",
-   "android": 20,
+   "android": 21,
    "windows": 27
   }
  ]
