@@ -47,11 +47,11 @@
   }
   function recStop() { if (rec && rec.state !== 'inactive') rec.stop(); rec = null; }
 
-  var names = ['ready', 'saveState', 'loadState', 'version', 'haptic', 'lastTheme', 'rememberTheme', 'setSystemBars', 'speak', 'speakStop', 'micAllowed', 'openAppSettings',
+  var names = ['ready', 'saveState', 'loadState', 'version', 'haptic', 'lastTheme', 'rememberTheme', 'setSystemBars', 'speak', 'speakStop', 'speakLangs', 'openVoiceSettings', 'micAllowed', 'openAppSettings',
     'voiceList', 'audioKeep', 'audioStats', 'audioClear', 'sync', 'requestNotifications', 'pinWidget', 'exportFile', 'shareFamily', 'shareImage', 'shareChallenge',
     'exportFamily', 'mediaPickType', 'mediaPick', 'mediaDelete', 'importFile', 'openUrl', 'updateCheck', 'updateInstall'];
   /* what only a computer can do (web/js/core/desk.js) */
-  var desk = ['voiceSave', 'deskInfo', 'deskSet', 'deskZoom', 'pairCode', 'pairEnd', 'forgetPhone', 'rename', 'titleBar', 'openFolder', 'backup',
+  var desk = ['voiceSave', 'speakWav', 'deskInfo', 'deskSet', 'deskZoom', 'pairCode', 'pairEnd', 'forgetPhone', 'rename', 'titleBar', 'openFolder', 'backup',
     'install', 'quit', 'unlocked', 'savePdf', 'reveal', 'openPdf'];
   var B = {}, D = {};
   names.concat(desk).forEach(function (n) { D[n] = B[n] = function () { return call(n, Array.prototype.slice.call(arguments)); }; });

@@ -26,6 +26,13 @@ pub fn call(name: &str, body: &[u8]) -> Option<Value> {
     match name {
         /* ---------- the same as the phone ---------- */
         "ready" | "haptic" | "setSystemBars" | "speak" | "speakStop" | "recStop" => None,
+        /* the computer's own voice: which languages it has, and (desk only) a letter's name as a WAV the page plays */
+        "speakLangs" => Some(json!(crate::speech::langs().join(","))),
+        "openVoiceSettings" => { mc::shell_open("ms-settings:speech"); None }
+        "speakWav" => {
+            use base64::Engine;
+            Some(json!(crate::speech::wav(s(0), s(1)).map(|w| base64::engine::general_purpose::STANDARD.encode(w)).unwrap_or_default()))
+        }
         "saveState" => { store::save_state(s(0)); None }
         "loadState" => Some(store::load_state().map(Value::String).unwrap_or(Value::Null)),
         "version" => Some(json!(VERSION)),

@@ -76,6 +76,7 @@ public class MainActivity extends Activity {
     private TextToSpeech tts;
     private volatile boolean ttsReady;
     private String ttsLang = "";
+    private volatile String ttsLangs = "";
     private MediaRecorder rec;
     private File recTmp, recDst;
     private static final Map<String, String> MIME = new HashMap<>();
@@ -490,10 +491,21 @@ public class MainActivity extends Activity {
                         @Override public void onDone(String id) { js("__native.onSpeakEnd&&__native.onSpeakEnd()"); }
                         @Override public void onError(String id) { js("__native.onSpeakEnd&&__native.onSpeakEnd()"); }
                     });
+                    ttsLangs = ttsLangsNow();
+                    js("__native.onSpeakLangs&&__native.onSpeakLangs()");
                     then.run();
                 } else js("__native.onSpeakEnd&&__native.onSpeakEnd()");
             });
         }
+    }
+    /* asked afresh each time, so a voice the parent has just added in the phone's settings counts at once */
+    private String ttsLangsNow() {
+        String l = "";
+        try {
+            if (tts.isLanguageAvailable(new Locale("ar")) >= TextToSpeech.LANG_AVAILABLE) l = "ar";
+            if (tts.isLanguageAvailable(Locale.UK) >= TextToSpeech.LANG_AVAILABLE || tts.isLanguageAvailable(Locale.US) >= TextToSpeech.LANG_AVAILABLE) l += (l.isEmpty() ? "" : ",") + "en";
+        } catch (Exception ignored) { }
+        return l;
     }
     private void speakNow(String text, String lang, float rate) {
         ensureTts(() -> {
@@ -704,6 +716,10 @@ public class MainActivity extends Activity {
         }
         /* voice */
         @JavascriptInterface public void speak(String text, String lang, double rate) { if (text != null) ui.post(() -> speakNow(text, lang, (float) rate)); }
+        /* the languages the phone's voice can speak: "ar,en". Starting the voice takes a moment; the page hears onSpeakLangs then. */
+        @JavascriptInterface public String speakLangs() { if (!ttsReady) { ui.post(() -> ensureTts(() -> { })); return ttsLangs; } return ttsLangs = ttsLangsNow(); }
+        /* where a parent adds an Arabic voice: the phone's text-to-speech settings */
+        @JavascriptInterface public void openVoiceSettings() { ui.post(() -> { try { startActivity(new Intent("com.android.settings.TTS_SETTINGS").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)); } catch (Exception e) { try { startActivity(new Intent(android.provider.Settings.ACTION_SETTINGS)); } catch (Exception ignored) { } } }); }
         @JavascriptInterface public void speakStop() { ui.post(() -> { if (tts != null) tts.stop(); }); }
         @JavascriptInterface public boolean recStart(String key) { return startRecording(key); }
         @JavascriptInterface public boolean micAllowed() { return checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED; }

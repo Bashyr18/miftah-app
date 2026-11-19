@@ -2,6 +2,12 @@
 
 The version is set in `version.txt`.
 
+## 2.4.1 (code 8), November 2026
+
+### Every Arabic letter can be heard
+- The ten letter names that still had no real recording (غ ف ق ك ل م ن ه و ي) are now said by the device’s own voice: Android’s text-to-speech on a phone or tablet, Windows’ speech voices on a computer. A real recording, or a parent’s own, always comes first, and the device voice is used for an Arabic letter’s name or sound and nothing else: never Qurʾān, duʿāʾ or dīn.
+- Parent area › My voice says what a child will hear for each letter and sound: your voice, a real voice, the device voice, or silent until you record it. Where the device has no Arabic voice (common on Windows), it lists the letters and offers Add an Arabic voice, which opens the system’s speech settings; the page updates when you come back.
+
 ## 2.4 (code 7), November 2026
 
 ### Years 8 to 14 taught in full

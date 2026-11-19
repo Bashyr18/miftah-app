@@ -492,13 +492,29 @@
   window.__native.onExported = function (ok) { A.toast(T(ok ? 'Saved' : 'Not saved')); };
 
   /* ===== your voice ===== */
+  A.acts['voice-settings'] = function () { A.N.call('openVoiceSettings'); };
   function voices() {
     Voice.refreshVoices();
-    var rows = function (items) { return items.map(function (x) { return '<div class="li"><span class="tile' + (x.en ? ' en' : '') + '" style="height:50px;min-width:50px;font-size:' + (x.en ? 22 : 28) + 'px" ' + (x.en ? '' : 'lang="ar"') + '>' + esc(x.t) + '</span><span class="grow"><small>' + esc(Voice.hasVoice(x.k) ? T('Your voice') : T('Device voice')) + '</small></span><button class="round off" style="width:46px;height:46px" data-play="' + x.k + '" data-say="' + esc(x.say) + '" data-l="' + (x.en ? 'en' : 'ar') + '" aria-label="' + esc(T('Listen')) + '">' + A.icon('play', 20) + '</button><button class="round" style="width:46px;height:46px" data-rec="' + x.k + '" aria-label="' + esc(T('Record')) + '">' + A.icon('mic', 20) + '</button></div>'; }).join(''); };
+    var rows = function (items) { return items.map(function (x) { return '<div class="li"><span class="tile' + (x.en ? ' en' : '') + '" style="height:50px;min-width:50px;font-size:' + (x.en ? 22 : 28) + 'px" ' + (x.en ? '' : 'lang="ar"') + '>' + esc(x.t) + '</span><span class="grow"><small>' + esc(heard(x)) + '</small></span><button class="round off" style="width:46px;height:46px" data-play="' + x.k + '" data-say="' + esc(x.say) + '" data-l="' + (x.en ? 'en' : 'ar') + '" aria-label="' + esc(T('Listen')) + '">' + A.icon('play', 20) + '</button><button class="round" style="width:46px;height:46px" data-rec="' + x.k + '" aria-label="' + esc(T('Record')) + '">' + A.icon('mic', 20) + '</button></div>'; }).join(''); };
     var AL = C.LETTERS.map(function (l) { return { t: l.ch, k: 'ar_' + l.ch, say: l.name }; });
     var EN = Object.keys(I.SND).map(function (g) { return { t: g, k: 'ph_' + g, say: I.SND[g], en: 1 }; });
+    /* what a child will actually hear for each: yours, a real recording, the device's own voice, or nothing yet */
+    function heard(x) {
+      if (Voice.hasVoice(x.k)) return T('Your voice');
+      if (Voice.real(x.k.slice(3)) || Voice.real(x.say)) return L(['A real voice', 'صوت حقيقي']);
+      if (Voice.deviceFor(x.say, { key: x.k })) return T('Device voice');
+      return L(['Silent until you record it', 'صامت حتى تسجّله']);
+    }
+    var gap = AL.filter(function (x) { return !Voice.hasVoice(x.k) && !Voice.real(x.t) && !Voice.real(x.say); });
+    var note = !gap.length ? '' : '<div class="card"><p style="line-height:1.5;margin:0 0 10px">' + esc(Voice.deviceHas('ar')
+      ? L(['This device’s own Arabic voice says the ' + gap.length + ' letter names that have no real recording yet. Record your own over any of them.', 'صوت الجهاز العربي ينطق أسماء الحروف التي ليس لها تسجيل حقيقي بعد، وعددها ' + A.num(gap.length) + '. سجّل صوتك فوق أي منها.'])
+      : L([gap.length + ' letter names have no recording yet. Add an Arabic voice to this device and Miftāḥ will use it for them, or record them yourself.', 'لـ' + A.num(gap.length) + ' من أسماء الحروف لا تسجيل بعد. أضف صوتًا عربيًا إلى الجهاز ليستعمله مفتاح لها، أو سجّلها بصوتك.'])) +
+      '</p><p lang="ar" style="font-size:24px;margin:0 0 10px;letter-spacing:4px">' + esc(gap.map(function (x) { return x.t; }).join(' ')) + '</p>' +
+      (Voice.deviceHas('ar') || !A.N.has() ? '' : '<button class="btn sm sec" data-a="voice-settings">' + esc(L(['Add an Arabic voice', 'أضف صوتًا عربيًا'])) + '</button>') + '</div>';
     return {
-      html: head(T('Your voice'), T('A child learns best from a voice they love. Record over any sound. Qurʾān always stays with the reciters.'), 'parent', T('Parents')) + '<div class="wrap" style="margin-top:14px">' + (A.N.has() ? '' : '<p class="ref">' + esc(T('Recording works in the phone app.')) + '</p>') + '<div class="card"><h3>' + esc(T('Arabic letters')) + '</h3><div class="lst">' + rows(AL) + '</div></div><div class="card"><h3>' + esc(T('English sounds')) + '</h3><div class="lst">' + rows(EN) + '</div></div></div>',
+      html: head(T('Your voice'), T('A child learns best from a voice they love. Record over any sound. Qurʾān always stays with the reciters.'), 'parent', T('Parents')) + '<div class="wrap" style="margin-top:14px">' + (A.N.has() ? '' : '<p class="ref">' + esc(T('Recording works in the phone app.')) + '</p>') + note + '<div class="card"><h3>' + esc(T('Arabic letters')) + '</h3><div class="lst">' + rows(AL) + '</div></div><div class="card"><h3>' + esc(T('English sounds')) + '</h3><div class="lst">' + rows(EN) + '</div></div></div>',
+      /* back from the device's voice settings: a newly added Arabic voice shows at once */
+      resume: function () { Voice.refreshLangs(); A.rerender(); },
       mount: function (v) {
         var cur = null;
         $$('[data-play]', v).forEach(function (b) { b.onclick = function () { Voice.say(b.dataset.say, { lang: b.dataset.l, key: b.dataset.play }); }; });

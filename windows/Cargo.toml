@@ -17,7 +17,8 @@ windows = { version = "0.61.3", features = [
   "Win32_UI_Input_KeyboardAndMouse", "Win32_System_DataExchange", "Win32_System_Memory", "Win32_System_Ole",
   "Win32_System_Diagnostics_ToolHelp", "Win32_NetworkManagement_IpHelper", "Win32_NetworkManagement_Ndis", "Win32_Networking_WinSock",
   "Win32_System_SystemInformation", "Win32_System_SystemServices", "Win32_System_Variant", "Win32_Security", "Win32_UI_Controls",
-  "Win32_System_WindowsProgramming", "Win32_Globalization",
+  "Win32_System_WindowsProgramming", "Win32_Globalization", "Win32_System_WinRT",
+  "Foundation", "Foundation_Collections", "Media", "Media_Core", "Media_SpeechSynthesis", "Storage", "Storage_Streams",
 ] }
 windows-core = "0.61.2"
 serde_json = "1"

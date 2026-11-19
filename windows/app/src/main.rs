@@ -10,6 +10,7 @@ mod bridge;
 mod dialogs;
 mod link;
 mod net;
+mod speech;
 mod store;
 mod web;
 

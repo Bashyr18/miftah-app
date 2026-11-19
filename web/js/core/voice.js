@@ -1,5 +1,6 @@
 /* Voices. Qurʾān and duʿāʾ are only ever real recordings. Everything else speaks with the parent's recording if there is one,
-   otherwise the device voice. Word index skips Tanzil's standalone pause marks, which are not words. */
+   then a real recording of the word; the device voice only fills in an Arabic letter's name or sound. Word index skips Tanzil's
+   standalone pause marks, which are not words. */
 (function () {
   'use strict';
   var A = window.A;
@@ -34,14 +35,22 @@
     var s = A.N.call('voiceList');
     have = {};
     if (s) { try { JSON.parse(s).forEach(function (k) { have[k] = 1; }); } catch (e) { } }
+    V.refreshLangs();
   };
+  /* the device's own voice, by language: a phone's text-to-speech or Windows' speech voices. It is only ever used for the
+     names and sounds of the Arabic letters that have no real recording (see V.deviceFor); never for Qurʾān, duʿāʾ or dīn. */
+  var langs = {};
+  V.refreshLangs = function () { var l = A.N.call('speakLangs'); langs = {}; String(l || '').split(',').forEach(function (k) { if (k) langs[k] = 1; }); return langs; };
+  V.deviceHas = function (lang) { return !!langs[lang || 'ar']; };
+  /* a phone's voice starts up a moment after the app, and says so */
+  window.__native.onSpeakLangs = function () { V.refreshLangs(); };
   V.hasVoice = function (k) { return !!have[k]; };
   V.keyOf = function (text) { var h = 0; for (var i = 0; i < text.length; i++) { h = (h * 31 + text.charCodeAt(i)) | 0; } return 'p' + (h >>> 0).toString(36); };
 
   function stopAudio() { if (audio) { try { audio.pause(); } catch (e) { } audio.onended = audio.onerror = null; audio.removeAttribute('src'); audio = null; } if (endCb) { var c = endCb; endCb = null; c(false); } }
   V.stop = function () {
     stopAudio();
-        if (sayCb) { var c = sayCb; sayCb = null; c(false); }
+    if (sayCb) { var c = sayCb; sayCb = null; A.N.call('speakStop'); c(false); }
   };
   V.play = function (url, opts) {
     opts = opts || {};
@@ -65,12 +74,15 @@
   V.word = function (s, a, i) { return V.play(V.url('w', ('00' + s).slice(-3) + '_' + ('00' + a).slice(-3) + '_' + ('00' + i).slice(-3) + '.mp3')); };
   V.dua = function (id) { return V.play(V.url('d', id + '.mp3')); };
 
-  /* speech is only ever a real person: a parent's recording first, then a real recording of that word, otherwise silence. There is no synthetic voice in this app. */
+  /* speech is a real person wherever there is one: a parent's recording first, then a real recording of that word. Only where
+     neither exists, and only for an Arabic letter's name or sound, the device's own voice; otherwise silence, and a grown-up says it. */
   var probing = null;
   V.real = function (text) { if (!window.SPEECH) return null; var w = String(text).trim().replace(/[.,!?;:،؟“”"]/g, ''); if (!/[؀-ۿ]/.test(w)) w = w.toLowerCase(); return window.SPEECH[w] != null ? 'audio/s/' + window.SPEECH[w] + '.ogg' : null; };
   /* a letter's name (بَاء) is recorded under the letter itself (ب): lessons pass the letter in their key, ar_ب */
   function realOf(text, opts) { var r = V.real(text); if (!r && opts && /^ar_.$/.test(opts.key || '')) r = V.real(opts.key.slice(3)); return r; }
-  V.can = function (text, opts) { if (!text) return false; opts = opts || {}; return !!have[opts.key || V.keyOf(text)] || !!realOf(text, opts); };
+  /* the device may speak a letter's name (key ar_ب) or a letter with its vowel (ar_بَ), and nothing else */
+  V.deviceFor = function (text, opts) { return !!(opts && /^ar_.[ً-ْ]?$/.test(opts.key || '') && langs.ar && String(text).length < 24); };
+  V.can = function (text, opts) { if (!text) return false; opts = opts || {}; return !!have[opts.key || V.keyOf(text)] || !!realOf(text, opts) || V.deviceFor(text, opts); };
   V.say = function (text, opts) {
     opts = opts || {};
     if (!text) return Promise.resolve(false);
@@ -78,7 +90,17 @@
     if (probing) { probing.text = text; probing.ok = V.can(text, opts); return Promise.resolve(false); }
     if (have[key]) return V.play('voice/' + key + '.m4a');
     var real = realOf(text, opts); if (real) return V.play(real);
+    if (V.deviceFor(text, opts)) return V.device(text, 'ar');
     return Promise.resolve(false);
+  };
+  /* Windows hands back a WAV to play like a recording; a phone speaks itself and calls back when it is done */
+  V.device = function (text, lang) {
+    V.stop();
+    if (!V.available()) return Promise.resolve(false);
+    var wav = A.N.call('speakWav', text, lang);
+    if (wav) return V.play('data:audio/wav;base64,' + wav);
+    if (wav === '') return Promise.resolve(false);
+    return new Promise(function (res) { sayCb = res; A.N.call('speak', text, lang, 0.85); });
   };
   /* a question built on hearing, with nothing real to hear: a grown-up becomes the voice */
   V.adapt = function (s) {
