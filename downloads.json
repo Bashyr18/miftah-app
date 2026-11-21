@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-20T11:44:17Z",
+ "updated": "2026-11-21T11:07:40Z",
  "total": {
   "android": 24,
   "windows": 30,
@@ -94,6 +94,11 @@
   },
   {
    "date": "2026-11-20",
+   "android": 24,
+   "windows": 30
+  },
+  {
+   "date": "2026-11-21",
    "android": 24,
    "windows": 30
   }
