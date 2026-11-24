@@ -123,6 +123,20 @@ pub fn read_backup(name: &str) -> Option<String> {
     let n = safe(name)?;
     fs::read_to_string(dirs().backups.join(format!("{}.json", n))).ok()
 }
+fn backup_now_in(dir: &Path, tag: &str, json: &str) -> bool {
+    if serde_json::from_str::<Value>(json).is_err() { return false; }
+    let _ = fs::create_dir_all(dir);
+    let clean: String = tag.chars().filter(|c| c.is_ascii_alphanumeric() || matches!(c, '-' | '_')).take(32).collect();
+    let t = now_local();
+    let stem = format!("{:04}-{:02}-{:02}-before-{}-{:02}{:02}{:02}", t.wYear, t.wMonth, t.wDay, if clean.is_empty() { "restore" } else { &clean }, t.wHour, t.wMinute, t.wSecond);
+    let Some(name) = safe(&format!("{}.json", stem)) else { return false };
+    let path = dir.join(name);
+    if write_atomic(&path, json.as_bytes()).is_err() { return false; }
+    fs::read(&path).map(|b| b == json.as_bytes()).unwrap_or(false)
+}
+pub fn backup_now(tag: &str, json: &str) -> bool {
+    backup_now_in(&dirs().backups, tag, json)
+}
 
 /* ---------- this computer's own settings ---------- */
 fn read_desk_file(path: &Path) -> Result<Map<String, Value>, std::io::Error> {
@@ -241,6 +255,25 @@ const MAX_ZIP_ENTRIES: usize = 5000;
 const MAX_ZIP_JSON: u64 = 60_000_000;
 const MAX_ZIP_TOTAL: u64 = 2 * 1024 * 1024 * 1024;
 
+fn extract_zip_entry_capped<R: Read>(reader: R, expected_len: u64, dst: &Path, budget: u64) -> Option<u64> {
+    if expected_len > budget { return None; }
+    let mut tmp = dst.as_os_str().to_owned();
+    tmp.push(".tmp");
+    let tmp = PathBuf::from(tmp);
+    let mut o = fs::File::create(&tmp).ok()?;
+    let limit = budget.saturating_add(1);
+    let res = std::io::copy(&mut reader.take(limit), &mut o);
+    let sync = o.sync_all();
+    drop(o);
+    match (res, sync) {
+        (Ok(copied), Ok(())) if copied <= budget && copied == expected_len && fs::rename(&tmp, dst).is_ok() => Some(copied),
+        _ => {
+            let _ = fs::remove_file(&tmp);
+            None
+        }
+    }
+}
+
 /* reads a family file, a plain record or a challenge; files land only in their own folder and never replace what is here.
    Answers (the record's text, whether the file was a zip). */
 pub fn read_import(path: &Path) -> Option<(String, bool)> {
@@ -255,7 +288,7 @@ pub fn read_import(path: &Path) -> Option<(String, bool)> {
             let full = e.name().to_string();
             if full == "family.json" || full == "challenge.json" {
                 let mut s = String::new();
-                if e.take(MAX_ZIP_JSON).read_to_string(&mut s).is_ok() { json = Some(s); }
+                if e.size() <= MAX_ZIP_JSON && e.take(MAX_ZIP_JSON + 1).read_to_string(&mut s).is_ok() && (s.len() as u64) <= MAX_ZIP_JSON { json = Some(s); }
                 continue;
             }
             let (dir, rest, media) = if let Some(r) = full.strip_prefix("media/") { (&dirs().media, r, true) }
@@ -265,16 +298,11 @@ pub fn read_import(path: &Path) -> Option<(String, bool)> {
             if media { if kind_of(Path::new(&n)).is_none() { continue; } }
             else if !n.to_ascii_lowercase().ends_with(".m4a") { continue; }
             let dst = dir.join(&n);
+            let expected = e.size();
             if !dst.exists() && total < MAX_ZIP_TOTAL {
-                let mut tmp = dst.as_os_str().to_owned();
-                tmp.push(".tmp");
-                let tmp = PathBuf::from(tmp);
                 let budget = MAX_ZIP_TOTAL.saturating_sub(total);
-                if let Ok(mut o) = fs::File::create(&tmp) {
-                    match std::io::copy(&mut e.take(budget), &mut o) {
-                        Ok(copied) => { total = total.saturating_add(copied); drop(o); let _ = fs::rename(&tmp, &dst); }
-                        Err(_) => { drop(o); let _ = fs::remove_file(&tmp); }
-                    }
+                if let Some(copied) = extract_zip_entry_capped(e, expected, &dst, budget) {
+                    total = total.saturating_add(copied);
                 }
             }
         }
@@ -398,5 +426,33 @@ mod tests {
         assert!(!valid_audio_rel("h/sub/a.mp3"));
         assert!(!valid_audio_rel("C:/Windows/a.mp3"));
         assert!(!valid_audio_rel("\\\\attacker\\share\\a.mp3"));
+    }
+
+    #[test]
+    fn backup_now_writes_and_verifies_snapshot() {
+        let dir = std::env::temp_dir().join(format!("miftah-bknow-{}-{}", std::process::id(), now_ms()));
+        let payload = "{\"profiles\":[],\"data\":{}}";
+        assert!(backup_now_in(&dir, "2026-11-20", payload));
+        let files = json_files(&dir);
+        assert_eq!(files.len(), 1);
+        assert_eq!(fs::read_to_string(&files[0]).unwrap(), payload);
+        assert!(!backup_now_in(&dir, "2026-11-20", "{broken"));
+        let _ = fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn zip_extraction_rejects_over_budget_and_truncated() {
+        let dir = std::env::temp_dir().join(format!("miftah-zipcap-{}-{}", std::process::id(), now_ms()));
+        fs::create_dir_all(&dir).unwrap();
+        let over = dir.join("over.m4a");
+        assert!(extract_zip_entry_capped(&b"0123456789"[..], 10, &over, 5).is_none());
+        assert!(!over.exists());
+        let trunc = dir.join("trunc.m4a");
+        assert!(extract_zip_entry_capped(&b"0123"[..], 10, &trunc, 20).is_none());
+        assert!(!trunc.exists());
+        let ok = dir.join("ok.m4a");
+        assert_eq!(extract_zip_entry_capped(&b"012345"[..], 6, &ok, 10), Some(6));
+        assert_eq!(fs::read(&ok).unwrap(), b"012345");
+        let _ = fs::remove_dir_all(&dir);
     }
 }

@@ -6,7 +6,10 @@ const R = path.join(__dirname, '..');
 const java = fs.readFileSync(path.join(R, 'android/src/com/miftah/app/MainActivity.java'), 'utf8');
 const rs = fs.readFileSync(path.join(R, 'windows/app/src/bridge.rs'), 'utf8');
 const shim = fs.readFileSync(path.join(R, 'windows/shim.js'), 'utf8');
-const android = [...java.matchAll(/@JavascriptInterface\s+public\s+\S+\s+(\w+)\s*\(/g)].map(m => m[1]);
+const gateBlock = (java.match(/class BridgeGate\b[\s\S]*?private class Bridge\b/) || [''])[0];
+const android = gateBlock
+  ? [...gateBlock.matchAll(/case "(\w+)":/g)].map(m => m[1])
+  : [...java.matchAll(/@JavascriptInterface\s+public\s+\S+\s+(\w+)\s*\(/g)].map(m => m[1]);
 const windows = new Set([...rs.matchAll(/"(\w+)"(?=\s*(?:\||=>))/g)].map(m => m[1]).concat([...shim.matchAll(/B\.(\w+)\s*=/g)].map(m => m[1])));
 const PHONE_ONLY = {
   lanInfo: 'the phone looks for the computer; the computer is the one that answers (windows/app/src/link.rs)',

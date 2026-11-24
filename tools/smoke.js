@@ -584,6 +584,86 @@ const unlock = (TT) => { TT.go('parent'); const qq = TT.A.$('.gate p').textConte
   ok(!A.$('#gp-pin') && A.S.pin === '' && A.S.profiles[0].id === 'g', 'recovery clears the PIN and preserves learning profiles');
   await navigate('parent/settings'); A.$('#c-pin').value = '5678'; await A.pinSet(A.$('#c-pin'));
   ok(A.S.pin.startsWith('v1$') && !!A.$('#gp-recovery-code'), 'setting a new PIN stores a verifier and shows recovery');
+  A.closeSheet();
+  const savedPin = A.S.pin;
+  A.$('#c-pin').value = ''; await A.pinSet(A.$('#c-pin'));
+  ok(A.S.pin === savedPin, 'clicking Save on a blank PIN field keeps the existing PIN');
+  const clearBtn = A.$('[data-a="c-pin-clear"]');
+  ok(!!clearBtn, 'settings shows an explicit Remove PIN button when a PIN is set');
+  A.acts['c-pin-clear'](clearBtn); ok(A.S.pin === savedPin, 'removing PIN asks for a second tap');
+  A.acts['c-pin-clear'](clearBtn); ok(A.S.pin === '', 'second tap removes the PIN');
+
+  /* essay draft flush survives automatic LAN sync replacing A.S */
+  A.D('g').work = [{ title: 'Reflection', text: 'Initial', plan: 'Plan A', t: w.__t - 10000 }];
+  await navigate('write/0');
+  A.$('#t-w-b').value = 'Freshly typed unsaved paragraph';
+  A.$('#t-w-b').oninput();
+  w.__t += 1000;
+  w.__native.onLanSynced(true, JSON.stringify({ profiles: A.S.profiles, data: { g: { work: [{ title: 'Reflection', text: 'Initial', plan: 'Plan A', t: w.__t - 5000 }] } } }), 'HomePC', 0, 0, true);
+  ok(A.D('g').work[0].text === 'Freshly typed unsaved paragraph', 'LAN sync flushes and preserves an active essay draft');
+
+  /* hifz merge preserves a newer lapse rather than reviving stale half-life */
+  const hA = { profiles: A.S.profiles, data: { g: { hifz: { u: { '112:1': { t: 1000, h: 10, last: 2000, lapse: 0, n: 3 } }, i: 0, a: 1, log: [], finished: [] } } } };
+  const hB = { profiles: A.S.profiles, data: { g: { hifz: { u: { '112:1': { t: 1000, h: 4, last: 3000, lapse: 1, n: 4 } }, i: 0, a: 1, log: [], finished: [] } } } };
+  const mAB = A.Sync.merge(hA, hB, false).S.data.g.hifz.u['112:1'];
+  const mBA = A.Sync.merge(hB, hA, false).S.data.g.hifz.u['112:1'];
+  ok(mAB.h === 4 && mAB.last === 3000 && mBA.h === 4 && mBA.last === 3000 && mAB.lapse === 1, 'hifz merge keeps newer lapse half-life paired with last review');
+
+  /* transferred courses register immediately after merge, do not duplicate, and clear on backup restore */
+  const bookPayload = { profiles: A.S.profiles, data: {}, books: [{ id: 'tr1', name: 'Transferred Book', room: 'arabic', kind: 'lang', y: 3, lessons: [{ n: 1, title: 'L1', words: [['قلم', 'pen']], grammar: [], sents: [], qs: [] }] }] };
+  w.__native.onLanSynced(true, JSON.stringify(bookPayload), 'HomePC', 0, 0, true);
+  ok(!!w.C.units['bk-tr1'] && !!w.C.skills['bk.tr1.1'], 'transferred course lessons are usable immediately after sync');
+  w.__native.onLanSynced(true, JSON.stringify(bookPayload), 'HomePC', 0, 0, true);
+  ok(w.C.rooms.arabic.units.filter(u => u.id === 'bk-tr1').length === 1, 'repeated course merge does not duplicate units');
+  await navigate('parent'); const qSum = A.$('.gate p').textContent.split('+').map(x => parseInt(x)); A.$$('.numopt').find(b => +b.dataset.v === qSum[0] + qSum[1]).click();
+  A.__syncIn = false;
+  w.__native.onImport(JSON.stringify({ profiles: A.S.profiles, data: {}, books: [] }));
+  ok(!w.C.units['bk-tr1'] && !w.C.skills['bk.tr1.1'], 'restoring an older backup removes stale course units');
+
+  /* parent tHear distinguishes playable child recording vs missing audio without changing revision dates */
+  A.D('g').recs = { '112:1': w.__t, '112:2': w.__t - 1000 };
+  w.Hifz.mark(112, 1, 2, 'self', 'g');
+  const prevHeard = w.Hifz.state('g').u['112:1'].heard;
+  w.AndroidBridge = { voiceList: () => JSON.stringify(['rec_g_112_1']), speakLangs: () => 'ar' };
+  await navigate('parent/g/hear');
+  ok(!!A.$('[data-a="play-rec"][data-k="rec_g_112_1"]'), 'parent Qurʾān tab plays an available child recording');
+  ok(!!A.$('.hear-na'), 'parent Qurʾān tab honestly flags a missing recording on this device');
+  ok(!!A.$('[data-play-a="112:1"]'), 'parent Qurʾān tab keeps a labelled reference reciter button');
+  ok(w.Hifz.state('g').u['112:1'].heard === prevHeard, 'showing recordings does not alter heard or revision dates');
+
+  /* family card direct parent actions across siblings, respecting teen privacy and PIN gate */
+  A.S.profiles.push(kid(9, 's2'));
+  const rSh = w.Print.make('practice-math', 's2', 1234);
+  const sh1 = w.Print.toScreen(rSh, 's2'); sh1.sub = w.__t;
+  await navigate('parent');
+  ok(!!A.$('.fc-act[href="#/parent/s2/mark/' + sh1.id + '"]'), 'family card links directly to marking a submitted sheet');
+  ok(!!A.$('.fc-act[href="#/parent/g/hear"]'), 'family card links directly to listening when recordings wait');
+  A.D('g').recs = {};
+  A.D('g').work = [{ title: 'Private note', text: 'Only mine', plan: '', t: w.__t, shared: false }];
+  await navigate('parent');
+  ok(!A.$('.fc-act[href="#/marking"]'), 'private teen work does not trigger a parent action');
+  A.D('g').work[0].shared = true;
+  await navigate('parent');
+  ok(!!A.$('.fc-act[href="#/marking"]'), 'shared teen work surfaces a direct Review shared work action');
+  ok(A.$$('.fc-go[data-a="fam-go"]').length === 2, 'Next button stays separate for handing the device to each child');
+  A.S.pin = '9999';
+  await navigate('home'); await navigate('parent');
+  ok(!!A.$('#gp-pin') && !A.$('.fc-act'), 'parent PIN gate still blocks family card actions when locked');
+  A.S.pin = '';
+  await navigate('parent'); const qSum2 = A.$('.gate p').textContent.split('+').map(x => parseInt(x)); A.$$('.numopt').find(b => +b.dataset.v === qSum2[0] + qSum2[1]).click();
+
+  /* learner My sheets reopens reviewed sheets after seenMark and finds a 4th assigned sheet */
+  A.S.cur = 's2';
+  sh1.marked = w.__t; sh1.right = sh1.q.length; sh1.seenMark = w.__t;
+  const assigned = [];
+  for (let i = 0; i < 4; i++) { const rs = w.Print.make('practice-math', 's2', 2000 + i); assigned.push(w.Print.toScreen(rs, 's2')); }
+  await navigate('home');
+  ok(!!A.$('.ink-all[href="#/sheets"]'), 'learner Home links to My sheets');
+  await navigate('sheets');
+  ok(!!A.$('a[href="#/sheet/' + assigned[0].id + '/list"]'), 'My sheets reaches a 4th assigned sheet');
+  ok(!!A.$('a[href="#/sheet/' + sh1.id + '/list"]'), 'My sheets reopens a reviewed sheet even after seenMark cleared Home');
+  await navigate('sheet/' + sh1.id + '/list');
+  ok(A.$('.ink-back')?.getAttribute('href') === '#/sheets' && !A.$('.ink.edit'), 'opening a reviewed sheet from My sheets is read-only and returns to My sheets');
 })().then(() => {
   console.log(pass + ' passed, ' + fail + ' failed');
   process.exit(fail ? 1 : 0);

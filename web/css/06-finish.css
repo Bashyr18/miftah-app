@@ -365,3 +365,18 @@ body[data-view=parent] .linkb.kn{min-height:36px}
 .lab-i em{display:inline-block;margin-top:6px;padding:2px 9px;border-radius:999px;font-style:normal;font-size:11.5px;font-weight:700;color:var(--gold2);background:color-mix(in srgb,var(--gold2) 12%,transparent)}
 .lab-i.done em{color:var(--ok,#5ec8a0);background:color-mix(in srgb,var(--ok,#5ec8a0) 12%,transparent)}
 .lab-ok{flex:none;color:var(--ok,#5ec8a0)}
+
+/* direct parent action on each family card, saved ḥifẓ recordings, and learner My sheets */
+.fc-act{background:color-mix(in srgb,var(--ok,#2e9d6e) 10%,transparent);color:var(--t1);min-height:48px}
+.fc-act>svg:first-child{color:var(--ok,#2e9d6e);flex:none}
+.hear-acts{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:8px}
+.hear-na{font-size:12.5px;color:var(--t3);padding:4px 0}
+.hear-rec{padding:10px 0;border-top:1px solid var(--line)}
+.hear-rec:first-of-type{border-top:0;padding-top:2px}
+.hear-rec-h{display:flex;align-items:center;gap:8px}.hear-rec-h b{display:block;font-size:15px}.hear-rec-h small{display:block;font-size:12.5px;color:var(--t2)}
+.hear-rec .grades{margin-top:8px}
+.ink-all{display:flex;align-items:center;gap:10px;min-height:44px;padding:8px 14px;border-radius:var(--r2);background:var(--s1);border:1px solid var(--line);color:var(--t1);font-size:14px;font-weight:600}
+.ink-all small{color:var(--t3);font-weight:600;font-variant-numeric:tabular-nums}
+.ink-all>svg:first-child{color:var(--gold2);flex:none}
+.ink-sheets{margin-top:14px;display:grid;gap:12px}
+.ink-sec .li.done>svg:first-child{color:var(--ok,#2e9d6e)}

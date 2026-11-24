@@ -40,12 +40,31 @@
   function yearLine(p) { var st = A.stage(p); return (st === 0 ? L(['Early years', 'الطفولة المبكرة']) : L(C.yearName(Flow.yearOf(p)))) + ' · ' + L(['age ', 'العمر ']) + N(A.age(p)); }
   A.acts['fam-go'] = function (t) { A.S.cur = t.dataset.id; A.saveNow(); A.go('home'); };
   A.acts['fam-off'] = function () { var off = A.S.profiles.every(function (p) { return Flow.isOff(p.id); }); A.S.profiles.forEach(function (p) { Flow.setOff(p.id, !off); }); A.rerender(); };
+  function topActionFor(p) {
+    var d = A.D(p.id), st = A.stage(p);
+    var sheets = (d.sheets || []).filter(function (x) { return window.Print ? Print.waiting(x) : x.q && x.q.length && !x.marked; }).reverse();
+    if (sheets.length) {
+      var sh = sheets[0], markable = !!(sh.q || (sh.scr && sh.sub));
+      return { href: markable ? '#/parent/' + p.id + '/mark/' + sh.id : '#/parent/' + p.id + '/today', ic: markable ? 'pen' : 'print', label: markable ? L(['Mark sheet', 'صحّح الورقة']) : L(['Check sheet', 'راجع الورقة']), sub: window.Print ? Print.titleOf(sh) : '' };
+    }
+    if (st > 0) {
+      var hh = Hifz.state(p.id), unrec = Object.keys(d.recs || {}).filter(function (k) { var u = hh.u[k]; return !u || !u.heard || u.heard < d.recs[k]; });
+      if (unrec.length) return { href: '#/parent/' + p.id + '/hear', ic: 'mic', label: L(['Listen to recitation', 'استمع إلى التلاوة']), sub: N(unrec.length) + ' ' + L(['waiting', 'بانتظارك']) };
+    }
+    if ((d.pending || []).length) return { href: '#/parent/' + p.id + '/today', ic: 'check', label: L(['Confirm deed', 'أكّد العمل']), sub: N(d.pending.length) + ' ' + L(['waiting', 'بانتظارك']) };
+    if (st >= 3) {
+      var shared = (d.work || []).filter(function (w) { return w.shared && !w.mark; });
+      if (shared.length) return { href: '#/marking', ic: 'note', label: L(['Review shared work', 'راجع العمل المُشارَك']), sub: shared[0].title };
+    }
+    return null;
+  }
   function family() {
     var kids = A.S.profiles;
     var cards = kids.map(function (p) {
-      var s = stats(p), pct = s.total ? Math.round(s.done / s.total * 100) : 0, nx = nextFor(p), st = A.stage(p), fresh = st >= 2 && !s.keys && !Object.keys(A.D(p.id).placed || {}).length;
+      var s = stats(p), pct = s.total ? Math.round(s.done / s.total * 100) : 0, nx = nextFor(p), st = A.stage(p), fresh = st >= 2 && !s.keys && !Object.keys(A.D(p.id).placed || {}).length, act = topActionFor(p);
       return '<div class="fc"><a class="fc-top" href="#/parent/' + p.id + '"><div class="fc-h">' + avatar(p, 48) + '<div class="fc-n"><b>' + esc(p.name) + '</b><small>' + esc(yearLine(p)) + '</small></div>' + (s.need ? '<span class="need2">' + N(s.need) + ' ' + esc(L(['to check', 'للمراجعة'])) + '</span>' : '') + ring(pct, 46, N(s.done) + '/' + N(s.total)) + '</div><div class="fc-k"><div><b>' + mins(s.week) + '</b><small>' + esc(L(['this week', 'الأسبوع'])) + '</small></div><div><b>' + N(s.keys) + '</b><small>' + esc(L(['mastered', 'أُتقن'])) + '</small></div>' + (s.recall == null ? '' : '<div><b>' + N(s.recall) + '%</b><small>' + esc(L(['remembered', 'محفوظ'])) + '</small></div>') + '</div></a>' +
         (fresh ? '<a class="fc-go fc-lvl" href="#/parent/' + p.id + '/rooms">' + A.icon('flag', 16) + '<span class="grow">' + esc(L(['Find their level first', 'حدد مستواه أولًا'])) + '</span>' + A.icon('next', 14) + '</a>' : '') +
+        (act ? '<a class="fc-go fc-act" href="' + esc(act.href) + '">' + A.icon(act.ic, 16) + '<span class="grow"><small>' + esc(act.label) + '</small><b>' + esc(act.sub) + '</b></span>' + A.icon('next', 14) + '</a>' : '') +
         '<button class="fc-go' + (nx.done || nx.off ? ' quiet' : '') + '" data-a="fam-go" data-id="' + p.id + '"><span class="grow"><small>' + esc(st <= 1 ? L(['Next, sit with them', 'التالي، اجلس معه']) : L(['Next', 'التالي'])) + '</small><b>' + esc(nx.text) + '</b></span>' + A.icon('next', 16) + '</button></div>';
     }).join('');
     var tile = function (href, ic, t, extra) { return '<a class="tl-b" href="#/parent/' + href + '">' + A.icon(ic, 24) + '<span>' + esc(L(t)) + '</span>' + (extra || '') + '</a>'; };

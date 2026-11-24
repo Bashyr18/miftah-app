@@ -1,7 +1,7 @@
 [
- ["Stronger parent PIN security with PBKDF2 hashing, rate-limiting and a private recovery code", "حماية أقوى لرمز الوالدين بالتشفير وتقييد المحاولات ورمز استرداد خاص"],
- ["Signed in-app update manifests verified alongside SHA-256 checksums before installing", "التحقق من توقيع بيان التحديث مع بصمة SHA-256 قبل التثبيت"],
- ["Upgraded home Wi-Fi sync with one-time pairing codes and fresh per-connection keys", "مزامنة أحدث عبر شبكة المنزل برموز اقتران لمرة واحدة ومفاتيح جديدة لكل اتصال"],
- ["Accessibility, RTL and simulation fixes: pinch-to-zoom, sharper contrast, keyboard support and reduced motion", "تحسينات سهولة الوصول والعربية والمحاكاة: التكبير والتباين ولوحة المفاتيح والحركة المخفّضة"],
- ["Reliability and learning-honesty fixes across saving, backups, exams, challenges and Qurʾān sessions", "إصلاحات الموثوقية وصدق التعلّم في الحفظ والنسخ الاحتياطي والاختبارات والتحديات وجلسات القرآن"]
+ ["Transferred courses are immediately ready to open on both Android and Windows after sync or restore", "المقررات المنقولة تصبح جاهزة فورًا للفتح على أندرويد وويندوز بعد المزامنة أو الاستعادة"],
+ ["Parents can play a child’s saved Qurʾān recordings right beside the reference reciter in the Qurʾān tab", "يستطيع الوالدان سماع تسجيلات الطفل المحفوظة للقرآن إلى جانب القارئ المرجعي في تبويب القرآن"],
+ ["Family cards now show direct parent actions (Mark sheet, Listen to recitation, Confirm deed, Review shared work)", "بطاقات الأسرة تعرض الآن إجراءات مباشرة للوالدين (تصحيح الورقة، سماع التلاوة، تأكيد العمل، مراجعة العمل المُشارَك)"],
+ ["Learners get a My sheets page to reopen assigned, submitted and marked on-screen sheets any time", "أضيفت صفحة «أوراقي» للمتعلم لإعادة فتح الأوراق المكلّف بها والمُرسلة والمصحّحة في أي وقت"],
+ ["Reliability & upgrade fixes: safer Windows restore backups, legacy installer handoff, essay draft flush, ḥifẓ sync and PIN safety", "إصلاحات الموثوقية والترقية: نسخ احتياطي آمن قبل الاستعادة على ويندوز، حفظ مسودة المقال عند المزامنة، دمج الحفظ وحماية الرمز"]
 ]

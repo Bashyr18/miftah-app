@@ -193,7 +193,7 @@
     var waiting = [];
     kids.forEach(function (k) { (A.D(k.id).sheets || []).forEach(function (s) { if (Print.waiting(s)) waiting.push({ k: k, s: s }); }); });
     var html = '<div class="dk-fam"><section class="card"><h3>' + esc(L(['This week, in minutes', 'هذا الأسبوع بالدقائق'])) + '</h3><div class="dk-legend">' + kids.map(function (k) { return '<span><i class="h-' + esc(k.hue || 'gold') + '"></i>' + esc(k.name) + '</span>'; }).join('') + '</div><svg class="dk-chart" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + esc(L(['Minutes of learning each day', 'دقائق التعلّم كل يوم'])) + '">' + grid + bars + '</svg><p class="dk-note">' + esc(L(['Only time with a lesson, a stop or the Qurʾān on screen counts.', 'لا يُحسب إلا وقت الدرس أو المحطة أو القرآن على الشاشة.'])) + '</p></section>' +
-      '<section class="card"><h3>' + esc(L(['Paper waiting for you', 'أوراق تنتظرك'])) + '</h3>' + (waiting.length ? waiting.slice(0, 8).map(function (w) { return '<a class="li" href="#/parent/' + esc(w.k.id) + '/today">' + A.icon('print', 20) + '<span class="grow"><b>' + esc(Print.titleOf(w.s)) + '</b><small>' + esc(w.k.name) + ' · ' + esc(Print.status(w.s)) + '</small></span>' + A.icon('next', 16) + '</a>'; }).join('') : '<p class="dk-empty">' + esc(L(['Nothing to mark or tick.', 'لا شيء للتصحيح أو الإنجاز.'])) + '</p>') +
+      '<section class="card"><h3>' + esc(L(['Paper waiting for you', 'أوراق تنتظرك'])) + '</h3>' + (waiting.length ? waiting.slice(0, 8).map(function (w) { var href = (w.s.q || (w.s.scr && w.s.sub)) ? '#/parent/' + esc(w.k.id) + '/mark/' + esc(w.s.id) : '#/parent/' + esc(w.k.id) + '/today'; return '<a class="li" href="' + href + '">' + A.icon('print', 20) + '<span class="grow"><b>' + esc(Print.titleOf(w.s)) + '</b><small>' + esc(w.k.name) + ' · ' + esc(Print.status(w.s)) + '</small></span>' + A.icon('next', 16) + '</a>'; }).join('') : '<p class="dk-empty">' + esc(L(['Nothing to mark or tick.', 'لا شيء للتصحيح أو الإنجاز.'])) + '</p>') +
       '<div class="dk-row2"><a class="btn ghost" href="#/desk/print">' + A.icon('print', 18) + '<span>' + esc(L(['Print Studio', 'استوديو الطباعة'])) + '</span></a></div></section></div>';
     at.insertAdjacentHTML('afterend', html);
   }
@@ -463,8 +463,10 @@
   /* ================= the phone joins its record with this one ================= */
   Desk.lanMerge = function (txt, phone) {
     try {
+      if (A.flushDraft) A.flushDraft();
       var o = A.Sync.parse(txt); if (!o || !Array.isArray(o.profiles)) return null;
       var r = A.Sync.merge(A.S, o, true); A.S = A.shape(r.S);
+      if (A.Books) A.Books.register();
       if (window.Voice && Voice.refreshVoices) Voice.refreshVoices();
       A.saveNow(); A.rerender();
       var got = r.report.reduce(function (s, x) { return s + Math.max(0, x.lessons) + Math.max(0, x.ayat); }, 0);
@@ -597,10 +599,16 @@
     A.sheet(L(['Go back to', 'ارجع إلى']) + ' ' + d, '<p class="dk-note">' + esc(L(['The record returns to how it was that day. Everything after it is set aside, not lost: today is saved as a backup first.', 'يعود السجل كما كان ذلك اليوم. ما بعده يُحفظ جانبًا ولا يضيع: يُحفظ اليوم نسخةً أولًا.'])) + '</p><div class="dk-row2"><button class="btn pri" id="bk-go">' + esc(L(['Go back', 'ارجع'])) + '</button><button class="btn ghost" id="bk-no">' + esc(L(['Keep today', 'أبقِ اليوم'])) + '</button></div>', function (sh) {
       $('#bk-no', sh).onclick = A.closeSheet;
       $('#bk-go', sh).onclick = function () {
+        if (A.flushDraft) A.flushDraft();
         var keep = { lang: A.S.lang, theme: A.S.theme, pin: A.S.pin, gate: A.S.gate, motion: A.S.motion };
         delete o.upd;
-        A.N.call('exportFile', 'Miftah-before-' + name + '.json', JSON.stringify(A.Sync.recordOut()));
-        A.S = A.shape(Object.assign(o, keep)); A.saveNow(); A.closeSheet(); A.go('parent'); A.toast(L(['The record is as it was on', 'السجل كما كان في']) + ' ' + d);
+        if (!B.backupNow || !B.backupNow(name, JSON.stringify(A.Sync.recordOut()))) {
+          A.toast(L(['Could not save today’s backup first', 'تعذّر حفظ نسخة اليوم أولًا']));
+          return;
+        }
+        A.S = A.shape(Object.assign(o, keep));
+        if (A.Books) A.Books.register();
+        A.saveNow(); A.closeSheet(); A.go('parent'); A.toast(L(['The record is as it was on', 'السجل كما كان في']) + ' ' + d);
       };
     });
   }

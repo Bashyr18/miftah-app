@@ -45,6 +45,8 @@
   /* a phone's voice starts up a moment after the app, and says so */
   window.__native.onSpeakLangs = function () { V.refreshLangs(); };
   V.hasVoice = function (k) { return !!have[k]; };
+  V.recKey = function (pid, s, a) { return 'rec_' + pid + '_' + s + '_' + a; };
+  V.hasRec = function (pid, s, a) { return V.hasVoice(V.recKey(pid, s, a)); };
   V.keyOf = function (text) { var h = 0; for (var i = 0; i < text.length; i++) { h = (h * 31 + text.charCodeAt(i)) | 0; } return 'p' + (h >>> 0).toString(36); };
 
   function stopAudio() { if (audio) { try { audio.pause(); } catch (e) { } audio.onended = audio.onerror = null; audio.removeAttribute('src'); audio = null; } if (endCb) { var c = endCb; endCb = null; c(false); } }

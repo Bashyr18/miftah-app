@@ -141,16 +141,16 @@
 
   /* ---------- the child's side ---------- */
   function mineFor(pid) { return (A.D(pid).sheets || []).filter(function (x) { return x.scr && Print.KINDS[x.kind]; }); }
-  /* on the child's home: the sheets sent to them, newest first; a marked one shows its score once */
+  /* on the child's home: the sheets sent to them, newest first; a marked one shows its score once, and My sheets stays reachable */
   function homeCard() {
     var p = A.P(); if (!p) return '';
-    var todo = mineFor(p.id).filter(Print.forChild).reverse(), back = mineFor(p.id).filter(function (x) { return x.marked && !x.seenMark; });
-    if (!todo.length && !back.length) return '';
+    var all = mineFor(p.id); if (!all.length) return '';
+    var todo = all.filter(Print.forChild).reverse(), back = all.filter(function (x) { return x.marked && !x.seenMark; }).reverse();
     return '<div class="ink-home">' + todo.slice(0, 3).map(function (x) {
       return '<a class="ink-hc" href="#/sheet/' + esc(x.id) + '"><span class="ink-hc-i">' + A.icon('pen', 22) + '</span><span class="grow"><small>' + esc(x.again ? L(['Have another go', 'حاول مرة أخرى']) : L(['A sheet for you, on screen', 'ورقة لك على الشاشة'])) + '</small><b>' + esc(Print.titleOf(x)) + '</b></span>' + A.icon('next', 20) + '</a>';
     }).join('') + back.slice(0, 2).map(function (x) {
       return '<a class="ink-hc done" href="#/sheet/' + esc(x.id) + '"><span class="ink-hc-i">' + A.icon('check', 22) + '</span><span class="grow"><small>' + esc(L(['Marked', 'صُحّحت'])) + '</small><b>' + esc(Print.titleOf(x)) + ' · ' + A.num(x.right) + ' / ' + A.num(x.q.length) + '</b></span>' + A.icon('next', 20) + '</a>';
-    }).join('') + '</div>';
+    }).join('') + '<a class="ink-all" href="#/sheets">' + A.icon('print', 18) + '<span class="grow">' + esc(L(['My sheets', 'أوراقي'])) + '</span><small>' + A.num(all.length) + '</small>' + A.icon('next', 16) + '</a></div>';
   }
   var home0 = A.V.home;
   A.V.home = function (a, r) {
@@ -160,15 +160,39 @@
     else if (v.html.indexOf('<div class="tw">') >= 0) v.html = v.html.replace('<div class="tw">', '<div class="tw">' + card);
     return v;
   };
+  function sheetStatus(x) {
+    if (Print.forChild(x)) return x.again ? L(['Have another go', 'حاول مرة أخرى']) : L(['To finish', 'للإكمال']);
+    if (x.marked) return L(['Marked', 'صُحّحت']) + ' · ' + A.num(x.right) + ' / ' + A.num(x.q.length);
+    if (x.done) return L(['Checked', 'تمت المراجعة']);
+    return L(['Sent to your grown-up', 'أُرسلت إلى الكبير']);
+  }
+  A.V.sheets = function () {
+    var p = A.P(); if (!p) return { redirect: 'home' };
+    var all = mineFor(p.id).slice().reverse();
+    var todo = all.filter(Print.forChild);
+    var sent = all.filter(function (x) { return !Print.forChild(x) && !x.marked && !x.done; });
+    var done = all.filter(function (x) { return !Print.forChild(x) && (x.marked || x.done); });
+    var section = function (title, items, ic, cls) {
+      if (!items.length) return '';
+      return '<section class="card ink-sec"><h3>' + esc(title) + '</h3><div class="lst">' + items.map(function (x) {
+        var dt = x.t ? new Date(x.t).toLocaleDateString(A.ar() ? 'ar-u-nu-arab' : 'en', { day: 'numeric', month: 'short' }) : '';
+        return '<a class="li' + (cls ? ' ' + cls : '') + '" href="#/sheet/' + esc(x.id) + '/list">' + A.icon(ic, 20) + '<span class="grow"><b>' + esc(Print.titleOf(x)) + '</b><small>' + esc(sheetStatus(x)) + (dt ? ' · ' + esc(dt) : '') + '</small></span>' + A.icon('next', 16) + '</a>';
+      }).join('') + '</div></section>';
+    };
+    return {
+      html: '<header class="abar"><a class="abtn" href="#/home" aria-label="' + esc(L(['Back', 'رجوع'])) + '">' + A.icon('back', 20) + '</a><div class="abar-t"><h1>' + esc(L(['My sheets', 'أوراقي'])) + '</h1><small>' + esc(L(['Open any sheet to finish it or see your grown-up’s marks', 'افتح أي ورقة لإكمالها أو لرؤية تصحيح وليّ أمرك'])) + '</small></div></header><div class="wrap ink-sheets">' +
+        (all.length ? section(L(['To finish', 'للإكمال']), todo, 'pen', '') + section(L(['With your grown-up', 'عند وليّ أمرك']), sent, 'print', '') + section(L(['Reviewed', 'تمت المراجعة']), done, 'check', 'done') : '<div class="card"><p style="color:var(--t2)">' + esc(L(['No sheets on screen yet.', 'لا أوراق على الشاشة بعد.'])) + '</p></div>') + '</div>'
+    };
+  };
   A.V.sheet = function (args) {
     var p = A.P(); if (!p) return { redirect: 'home' };
     var sh = (A.D(p.id).sheets || []).filter(function (x) { return x.id === args[0] && x.scr; })[0]; if (!sh) return { redirect: 'home' };
-    var open = Print.forChild(sh), stop = null;
+    var open = Print.forChild(sh), stop = null, backHref = args[1] === 'list' ? '#/sheets' : '#/home';
     if (sh.marked && !sh.seenMark) { sh.seenMark = A.now().getTime(); A.save(); }
-    var state = open ? '' : sh.marked ? L(['Marked', 'صُحّحت']) + ' · ' + A.num(sh.right) + ' / ' + A.num(sh.q.length) : L(['Sent to your grown-up', 'أُرسلت إلى الكبير']);
+    var state = open ? '' : sh.marked ? L(['Marked', 'صُحّحت']) + ' · ' + A.num(sh.right) + ' / ' + A.num(sh.q.length) : sh.done ? L(['Checked', 'تمت المراجعة']) : L(['Sent to your grown-up', 'أُرسلت إلى الكبير']);
     return {
       bare: true,
-      html: '<div class="ink-v"><header class="ink-h"><a class="ink-back" href="#/home" aria-label="' + esc(L(['Back', 'رجوع'])) + '">' + A.icon('back', 20) + '</a><div class="grow"><b>' + esc(Print.titleOf(sh)) + '</b><small>' + esc(open ? L(['Write on the page. It saves as you go.', 'اكتب على الصفحة. تُحفظ أولًا بأول.']) : state) + '</small></div>' + (open ? '<button class="btn pri sm" id="ink-fin">' + esc(L(['Finished', 'انتهيت'])) + '</button>' : '<span class="ink-st">' + esc(state) + '</span>') + '</header><div id="ink-host" class="ink-host"></div></div>',
+      html: '<div class="ink-v"><header class="ink-h"><a class="ink-back" href="' + backHref + '" aria-label="' + esc(L(['Back', 'رجوع'])) + '">' + A.icon('back', 20) + '</a><div class="grow"><b>' + esc(Print.titleOf(sh)) + '</b><small>' + esc(open ? L(['Write on the page. It saves as you go.', 'اكتب على الصفحة. تُحفظ أولًا بأول.']) : state) + '</small></div>' + (open ? '<button class="btn pri sm" id="ink-fin">' + esc(L(['Finished', 'انتهيت'])) + '</button>' : '<span class="ink-st">' + esc(state) + '</span>') + '</header><div id="ink-host" class="ink-host"></div></div>',
       mount: function (v) {
         stop = Ink.mount($('#ink-host', v), sh, p.id, open ? 'child' : 'view');
         var f = $('#ink-fin', v);

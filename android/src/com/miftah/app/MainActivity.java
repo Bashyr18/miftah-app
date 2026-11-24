@@ -130,21 +130,22 @@ public class MainActivity extends Activity {
         s.setTextZoom(Math.round(Math.max(1f, Math.min(2f, getResources().getConfiguration().fontScale)) * 100));
         s.setUseWideViewPort(true);    /* the page's viewport is honoured: on a tablet it lays out a little smaller and is shown larger (js/core/form.js) */
         s.setLoadWithOverviewMode(false);
-        s.setSupportZoom(false);
-        s.setBuiltInZoomControls(false);
+        s.setSupportZoom(true);
+        s.setBuiltInZoomControls(true);
+        s.setDisplayZoomControls(false);
         s.setGeolocationEnabled(false);
         if (Build.VERSION.SDK_INT >= 29) s.setForceDark(WebSettings.FORCE_DARK_OFF);
         if (Build.VERSION.SDK_INT >= 33) s.setAlgorithmicDarkeningAllowed(false);
         WebView.setWebContentsDebuggingEnabled((getApplicationInfo().flags & android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE) != 0);
         web.setOverScrollMode(View.OVER_SCROLL_NEVER);
         web.setVerticalScrollBarEnabled(false);
-        web.addJavascriptInterface(new Bridge(), "AndroidBridge");
+        web.addJavascriptInterface(new BridgeGate(), "__miftahGate");
 
         web.setWebViewClient(new WebViewClient() {
             @Override
             public WebResourceResponse shouldInterceptRequest(WebView v, WebResourceRequest r) {
                 Uri u = r.getUrl();
-                if (HOST.equals(u.getHost())) return asset(u.getPath());
+                if (HOST.equals(u.getHost())) return asset(u);
                 if (videoHost(u.getHost()) || simHost(u.getHost())) return null;   /* only a video or simulation a grown-up added ever reaches the network */
                 return blocked();
             }
@@ -368,8 +369,30 @@ public class MainActivity extends Activity {
     }
     private final java.util.concurrent.ExecutorService audioPool = java.util.concurrent.Executors.newFixedThreadPool(3);
 
+    private static String randomHex(int bytes) {
+        byte[] b = new byte[bytes];
+        new java.security.SecureRandom().nextBytes(b);
+        StringBuilder sb = new StringBuilder(bytes * 2);
+        for (byte x : b) sb.append(String.format(Locale.US, "%02x", x & 0xff));
+        return sb.toString();
+    }
+    private final String bridgeToken = randomHex(32);
+    private final java.util.concurrent.atomic.AtomicReference<String> shimNonce = new java.util.concurrent.atomic.AtomicReference<>();
+
     /* ---------- the asset server ---------- */
-    private WebResourceResponse asset(String path) {
+    private WebResourceResponse asset(Uri u) {
+        String path = u == null ? null : u.getPath();
+        if (path != null && path.equals("/__miftah_shim.js")) {
+            String t = u.getQueryParameter("t");
+            String expect = shimNonce.getAndSet(null);
+            if (t == null || expect == null || !java.security.MessageDigest.isEqual(t.getBytes(StandardCharsets.US_ASCII), expect.getBytes(StandardCharsets.US_ASCII))) return blocked();
+            byte[] jsBytes = buildAndroidBridgeShim().getBytes(StandardCharsets.UTF_8);
+            Map<String, String> h = new HashMap<>();
+            h.put("Cache-Control", "no-store");
+            h.put("X-Content-Type-Options", "nosniff");
+            h.put("Content-Length", String.valueOf(jsBytes.length));
+            return new WebResourceResponse("text/javascript", "utf-8", 200, "OK", h, new ByteArrayInputStream(jsBytes));
+        }
         if (path != null && path.startsWith("/media/")) return mediaFile(path);
         try {
             if (path == null || path.isEmpty() || path.equals("/")) path = "/index.html";
@@ -378,7 +401,15 @@ public class MainActivity extends Activity {
             String ext = clean.substring(clean.lastIndexOf('.') + 1).toLowerCase(Locale.US);
             String mime = MIME.containsKey(ext) ? MIME.get(ext) : "application/octet-stream";
             InputStream is; long len = -1;
-            if (clean.startsWith("voice/")) {
+            if (clean.equals("index.html")) {
+                java.io.ByteArrayOutputStream bo = new java.io.ByteArrayOutputStream();
+                try (InputStream raw = getAssets().open("www/index.html")) { byte[] b = new byte[16384]; int n; while ((n = raw.read(b)) > 0) bo.write(b, 0, n); }
+                String nonce = randomHex(16);
+                shimNonce.set(nonce);
+                String html = bo.toString("UTF-8").replaceFirst("<head>", "<head>\n<script src=\"/__miftah_shim.js?t=" + nonce + "\"></script>");
+                byte[] out = html.getBytes(StandardCharsets.UTF_8);
+                is = new ByteArrayInputStream(out); len = out.length;
+            } else if (clean.startsWith("voice/")) {
                 File f = new File(voiceDir(), clean.substring(6));
                 if (!f.isFile() || !f.getCanonicalPath().startsWith(voiceDir().getCanonicalPath() + File.separator)) return blocked();
                 is = new FileInputStream(f); len = f.length();
@@ -394,6 +425,17 @@ public class MainActivity extends Activity {
             if (len >= 0) h.put("Content-Length", String.valueOf(len));
             return new WebResourceResponse(mime, mime.startsWith("text") || ext.equals("js") || ext.equals("json") ? "utf-8" : null, 200, "OK", h, is);
         } catch (IOException e) { return blocked(); }
+    }
+    private String buildAndroidBridgeShim() {
+        return "(function(){'use strict';"
+            + "if(window.top!==window||location.origin!=='https://" + HOST + "'||!window.__miftahGate)return;"
+            + "var tok=" + JSONObject.quote(bridgeToken) + ",g=window.__miftahGate;try{delete window.__miftahGate;}catch(e){}"
+            + "var names=['ready','saveState','loadState','updateCheck','updateInstall','version','haptic','lastTheme','rememberTheme','setSystemBars',"
+            + "'speak','speakLangs','openVoiceSettings','speakStop','recStart','micAllowed','openAppSettings','recStop','audioKeep','audioStats','audioClear',"
+            + "'voiceList','sync','requestNotifications','pinWidget','exportFile','shareFamily','shareImage','shareChallenge','exportFamily','printPage',"
+            + "'mediaPickType','mediaPick','mediaDelete','importFile','lanInfo','lanFind','lanPair','lanSync','lanForget','lanProbe','openUrl'];"
+            + "var B={};names.forEach(function(n){B[n]=function(){try{var o=JSON.parse(g.call(tok,n,JSON.stringify(Array.prototype.slice.call(arguments))));return 'r' in o?o.r:undefined;}catch(e){return undefined;}};});"
+            + "window.AndroidBridge=B;})();";
     }
     private WebResourceResponse blocked() {
         return new WebResourceResponse("text/plain", "utf-8", 404, "Not Found", Collections.<String, String>emptyMap(), new ByteArrayInputStream(new byte[0]));
@@ -773,14 +815,75 @@ public class MainActivity extends Activity {
             }
         } catch (Exception ignored) { }
     }
+    private final Bridge bridgeImpl = new Bridge();
+    private final class BridgeGate {
+        private String wrap(Object v) {
+            try { return new JSONObject().put("r", v == null ? JSONObject.NULL : v).toString(); }
+            catch (Exception e) { return "{}"; }
+        }
+        @JavascriptInterface public String call(String token, String method, String argsJson) {
+            if (token == null || method == null || !java.security.MessageDigest.isEqual(token.getBytes(StandardCharsets.US_ASCII), bridgeToken.getBytes(StandardCharsets.US_ASCII))) return "{}";
+            JSONArray a;
+            try { a = argsJson == null ? new JSONArray() : new JSONArray(argsJson); } catch (Exception e) { a = new JSONArray(); }
+            String s0 = a.isNull(0) ? null : a.optString(0, null);
+            String s1 = a.isNull(1) ? null : a.optString(1, null);
+            String s2 = a.isNull(2) ? null : a.optString(2, null);
+            String s3 = a.isNull(3) ? null : a.optString(3, null);
+            switch (method) {
+                case "ready": bridgeImpl.ready(a.optDouble(0, 0)); return "{}";
+                case "saveState": bridgeImpl.saveState(s0); return "{}";
+                case "loadState": return wrap(bridgeImpl.loadState());
+                case "updateCheck": return wrap(bridgeImpl.updateCheck());
+                case "updateInstall": return wrap(bridgeImpl.updateInstall(s0, s1));
+                case "version": return wrap(bridgeImpl.version());
+                case "haptic": bridgeImpl.haptic(s0); return "{}";
+                case "lastTheme": return wrap(bridgeImpl.lastTheme());
+                case "rememberTheme": bridgeImpl.rememberTheme(s0); return "{}";
+                case "setSystemBars": bridgeImpl.setSystemBars(a.optBoolean(0, false)); return "{}";
+                case "speak": bridgeImpl.speak(s0, s1, a.optDouble(2, 1.0)); return "{}";
+                case "speakLangs": return wrap(bridgeImpl.speakLangs());
+                case "openVoiceSettings": bridgeImpl.openVoiceSettings(); return "{}";
+                case "speakStop": bridgeImpl.speakStop(); return "{}";
+                case "recStart": return wrap(bridgeImpl.recStart(s0));
+                case "micAllowed": return wrap(bridgeImpl.micAllowed());
+                case "openAppSettings": bridgeImpl.openAppSettings(); return "{}";
+                case "recStop": bridgeImpl.recStop(); return "{}";
+                case "audioKeep": bridgeImpl.audioKeep(s0); return "{}";
+                case "audioStats": return wrap(bridgeImpl.audioStats());
+                case "audioClear": bridgeImpl.audioClear(); return "{}";
+                case "voiceList": return wrap(bridgeImpl.voiceList());
+                case "sync": bridgeImpl.sync(s0); return "{}";
+                case "requestNotifications": return wrap(bridgeImpl.requestNotifications());
+                case "pinWidget": return wrap(bridgeImpl.pinWidget());
+                case "exportFile": bridgeImpl.exportFile(s0, s1); return "{}";
+                case "shareFamily": bridgeImpl.shareFamily(s0); return "{}";
+                case "shareImage": bridgeImpl.shareImage(s0, s1, s2); return "{}";
+                case "shareChallenge": bridgeImpl.shareChallenge(s0, s1); return "{}";
+                case "exportFamily": bridgeImpl.exportFamily(s0, s1); return "{}";
+                case "printPage": return wrap(bridgeImpl.printPage(s0));
+                case "mediaPickType": return wrap(bridgeImpl.mediaPickType(s0));
+                case "mediaPick": return wrap(bridgeImpl.mediaPick());
+                case "mediaDelete": bridgeImpl.mediaDelete(s0); return "{}";
+                case "importFile": bridgeImpl.importFile(); return "{}";
+                case "lanInfo": return wrap(bridgeImpl.lanInfo());
+                case "lanFind": bridgeImpl.lanFind(); return "{}";
+                case "lanPair": bridgeImpl.lanPair(s0, a.optInt(1, Link.TCP), s2, s3); return "{}";
+                case "lanSync": bridgeImpl.lanSync(s0, a.optBoolean(1, false)); return "{}";
+                case "lanForget": bridgeImpl.lanForget(); return "{}";
+                case "lanProbe": bridgeImpl.lanProbe(s0); return "{}";
+                case "openUrl": bridgeImpl.openUrl(s0); return "{}";
+                default: return "{}";
+            }
+        }
+    }
     private class Bridge {
-        @JavascriptInterface public void ready(final double ms) { if (ready) return; ready = true; ui.post(() -> root.invalidate()); }
-        @JavascriptInterface public void saveState(final String json) {
+        void ready(final double ms) { if (ready) return; ready = true; ui.post(() -> root.invalidate()); }
+        void saveState(final String json) {
             if (json == null || json.length() > 30_000_000) return;
             File files = getFilesDir();
             if (pendingSave.getAndSet(json) == null) savePool.execute(() -> flushSavedState(files));
         }
-        @JavascriptInterface public String loadState() {
+        String loadState() {
             File f = new File(getFilesDir(), "state.json");
             if (!f.exists()) return null;
             try (InputStream is = new FileInputStream(f)) {
@@ -790,13 +893,13 @@ public class MainActivity extends Activity {
             } catch (Exception e) { return null; }
         }
         /* ---------- updates: only when a grown-up asks (web/js/core/update.js) ---------- */
-        @JavascriptInterface public boolean updateCheck() { updPool.execute(MainActivity.this::updCheck); return true; }
-        @JavascriptInterface public boolean updateInstall(String url, String sha) {
+        boolean updateCheck() { updPool.execute(MainActivity.this::updCheck); return true; }
+        boolean updateInstall(String url, String sha) {
             if (!updBusy.compareAndSet(false, true)) return false;
             updPool.execute(MainActivity.this::updInstall); return true;
         }
-        @JavascriptInterface public String version() { try { return getPackageManager().getPackageInfo(getPackageName(), 0).versionName; } catch (Exception e) { return "android"; } }
-        @JavascriptInterface public void haptic(String k) {
+        String version() { try { return getPackageManager().getPackageInfo(getPackageName(), 0).versionName; } catch (Exception e) { return "android"; } }
+        void haptic(String k) {
             Vibrator vb = getSystemService(Vibrator.class);
             if (vb == null || !vb.hasVibrator()) return;
             try {
@@ -808,9 +911,9 @@ public class MainActivity extends Activity {
             } catch (Exception ignored) { }
         }
         /* the page's theme, kept for the next launch's first frame (the bars alone can't tell: the sky screens use dark bars in either theme) */
-        @JavascriptInterface public String lastTheme() { return getSharedPreferences("m", MODE_PRIVATE).getString("theme", ""); }
-        @JavascriptInterface public void rememberTheme(String t) { if ("light".equals(t) || "dark".equals(t)) getSharedPreferences("m", MODE_PRIVATE).edit().putString("theme", t).apply(); }
-        @JavascriptInterface public void setSystemBars(final boolean light) {
+        String lastTheme() { return getSharedPreferences("m", MODE_PRIVATE).getString("theme", ""); }
+        void rememberTheme(String t) { if ("light".equals(t) || "dark".equals(t)) getSharedPreferences("m", MODE_PRIVATE).edit().putString("theme", t).apply(); }
+        void setSystemBars(final boolean light) {
             ui.post(() -> {
                 int bg = light ? 0xFFF6EFE0 : 0xFF07080D;
                 root.setBackgroundColor(bg); if (web != null) web.setBackgroundColor(bg);
@@ -825,17 +928,17 @@ public class MainActivity extends Activity {
             });
         }
         /* voice */
-        @JavascriptInterface public void speak(String text, String lang, double rate) { if (text != null) ui.post(() -> speakNow(text, lang, (float) rate)); }
+        void speak(String text, String lang, double rate) { if (text != null) ui.post(() -> speakNow(text, lang, (float) rate)); }
         /* the languages the phone's voice can speak: "ar,en". Starting the voice takes a moment; the page hears onSpeakLangs then. */
-        @JavascriptInterface public String speakLangs() { if (!ttsReady) { ui.post(() -> ensureTts(() -> { })); return ttsLangs; } return ttsLangs = ttsLangsNow(); }
+        String speakLangs() { if (!ttsReady) { ui.post(() -> ensureTts(() -> { })); return ttsLangs; } return ttsLangs = ttsLangsNow(); }
         /* where a parent adds an Arabic voice: the phone's text-to-speech settings */
-        @JavascriptInterface public void openVoiceSettings() { ui.post(() -> { try { startActivity(new Intent("com.android.settings.TTS_SETTINGS").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)); } catch (Exception e) { try { startActivity(new Intent(android.provider.Settings.ACTION_SETTINGS)); } catch (Exception ignored) { } } }); }
-        @JavascriptInterface public void speakStop() { ui.post(() -> { if (tts != null) tts.stop(); }); }
-        @JavascriptInterface public boolean recStart(String key) { return startRecording(key); }
-        @JavascriptInterface public boolean micAllowed() { return checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED; }
-        @JavascriptInterface public void openAppSettings() { ui.post(() -> { try { startActivity(new Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + getPackageName()))); } catch (Exception ignored) { } }); }
-        @JavascriptInterface public void recStop() { stopRecording(); }
-        @JavascriptInterface public void audioKeep(final String json) {
+        void openVoiceSettings() { ui.post(() -> { try { startActivity(new Intent("com.android.settings.TTS_SETTINGS").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)); } catch (Exception e) { try { startActivity(new Intent(android.provider.Settings.ACTION_SETTINGS)); } catch (Exception ignored) { } } }); }
+        void speakStop() { ui.post(() -> { if (tts != null) tts.stop(); }); }
+        boolean recStart(String key) { return startRecording(key); }
+        boolean micAllowed() { return checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED; }
+        void openAppSettings() { ui.post(() -> { try { startActivity(new Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + getPackageName()))); } catch (Exception ignored) { } }); }
+        void recStop() { stopRecording(); }
+        void audioKeep(final String json) {
             try {
                 JSONArray a = new JSONArray(json); final int total = a.length(); final java.util.concurrent.atomic.AtomicInteger done = new java.util.concurrent.atomic.AtomicInteger(), bad = new java.util.concurrent.atomic.AtomicInteger();
                 for (int i = 0; i < total; i++) {
@@ -848,37 +951,37 @@ public class MainActivity extends Activity {
                 }
             } catch (Exception ignored) { }
         }
-        @JavascriptInterface public String audioStats() {
+        String audioStats() {
             long bytes = 0; int n = 0; File[] fs = audioDir().listFiles();
             if (fs != null) for (File f : fs) { bytes += f.length(); n++; }
             return "{\"bytes\":" + bytes + ",\"files\":" + n + "}";
         }
-        @JavascriptInterface public void audioClear() { File[] fs = audioDir().listFiles(); if (fs != null) for (File f : fs) f.delete(); }
-        @JavascriptInterface public String voiceList() {
+        void audioClear() { File[] fs = audioDir().listFiles(); if (fs != null) for (File f : fs) f.delete(); }
+        String voiceList() {
             JSONArray a = new JSONArray(); File[] fs = voiceDir().listFiles();
             if (fs != null) for (File f : fs) if (f.getName().endsWith(".m4a")) a.put(f.getName().substring(0, f.getName().length() - 4));
             return a.toString();
         }
         /* the widget and the reminder read this */
-        @JavascriptInterface public void sync(String json) {
+        void sync(String json) {
             getSharedPreferences("m", MODE_PRIVATE).edit().putString("config", json).apply();
             new Thread(() -> { Reminder.schedule(MainActivity.this); PathWidget.refresh(MainActivity.this); }).start();
         }
-        @JavascriptInterface public boolean requestNotifications() {
+        boolean requestNotifications() {
             if (Build.VERSION.SDK_INT >= 33 && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) { ui.post(() -> requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, REQ_NOTIF)); return false; }
             return true;
         }
-        @JavascriptInterface public boolean pinWidget() {
+        boolean pinWidget() {
             AppWidgetManager m = getSystemService(AppWidgetManager.class);
             return m != null && m.isRequestPinAppWidgetSupported() && m.requestPinAppWidget(new ComponentName(MainActivity.this, PathWidget.class), null, null);
         }
-        @JavascriptInterface public void exportFile(String name, String text) {
+        void exportFile(String name, String text) {
             pendingExport = text;
             boolean html = name != null && name.endsWith(".html");
             Intent i = new Intent(Intent.ACTION_CREATE_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE).setType(html ? "text/html" : "application/json").putExtra(Intent.EXTRA_TITLE, name);
             ui.post(() -> { try { startActivityForResult(i, REQ_EXPORT); } catch (Exception e) { toast("No file manager available"); } });
         }
-        @JavascriptInterface public void shareFamily(final String json) {
+        void shareFamily(final String json) {
             new Thread(() -> {
                 try {
                     File dir = new File(getCacheDir(), "share"); dir.mkdirs();
@@ -891,7 +994,7 @@ public class MainActivity extends Activity {
             }).start();
         }
         /* a picture for a homeschool group: the weekly card or a challenge result, made by the page, shared as a PNG with a caption */
-        @JavascriptInterface public void shareImage(final String b64, final String caption, final String name) {
+        void shareImage(final String b64, final String caption, final String name) {
             new Thread(() -> {
                 try {
                     File dir = new File(getCacheDir(), "share"); dir.mkdirs();
@@ -905,7 +1008,7 @@ public class MainActivity extends Activity {
             }).start();
         }
         /* a challenge pack: a tiny file, zipped like the family file so it opens with Miftah when tapped in a chat */
-        @JavascriptInterface public void shareChallenge(final String json, final String caption) {
+        void shareChallenge(final String json, final String caption) {
             new Thread(() -> {
                 try {
                     File dir = new File(getCacheDir(), "share"); dir.mkdirs();
@@ -917,38 +1020,38 @@ public class MainActivity extends Activity {
                 } catch (Exception e) { ui.post(() -> toast("Could not prepare the file")); }
             }).start();
         }
-        @JavascriptInterface public void exportFamily(String name, String json) {
+        void exportFamily(String name, String json) {
             pendingFamily = json;
             Intent i = new Intent(Intent.ACTION_CREATE_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE).setType("application/zip").putExtra(Intent.EXTRA_TITLE, name);
             ui.post(() -> { try { startActivityForResult(i, REQ_FAMILY); } catch (Exception e) { toast("No file manager available"); } });
         }
-        @JavascriptInterface public boolean printPage(String name) { ui.post(() -> { try { printNow(name); } catch (Exception e) { toast("Printing is not available"); } }); return true; }
-        @JavascriptInterface public boolean mediaPickType(String mime) {
+        boolean printPage(String name) { ui.post(() -> { try { printNow(name); } catch (Exception e) { toast("Printing is not available"); } }); return true; }
+        boolean mediaPickType(String mime) {
             Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE).setType(mime == null || mime.isEmpty() ? "*/*" : mime);
             ui.post(() -> { try { startActivityForResult(i, REQ_MEDIA); } catch (Exception e) { toast("No file manager available"); } });
             return true;
         }
-        @JavascriptInterface public boolean mediaPick() {
+        boolean mediaPick() {
             Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE).setType("*/*").putExtra(Intent.EXTRA_MIME_TYPES, new String[]{"video/*", "audio/*", "image/*", "text/html"});
             ui.post(() -> { try { startActivityForResult(i, REQ_MEDIA); } catch (Exception e) { toast("No file manager available"); } });
             return true;
         }
-        @JavascriptInterface public void mediaDelete(String ref) { if (ref != null && !ref.contains("/") && !ref.contains("..")) new File(mediaDir(), ref).delete(); }
-        @JavascriptInterface public void importFile() {
+        void mediaDelete(String ref) { if (ref != null && !ref.contains("/") && !ref.contains("..")) new File(mediaDir(), ref).delete(); }
+        void importFile() {
             Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE).setType("*/*").putExtra(Intent.EXTRA_MIME_TYPES, new String[]{"application/zip", "application/x-zip-compressed", "application/json", "text/plain", "application/octet-stream"});
             ui.post(() -> { try { startActivityForResult(i, REQ_IMPORT); } catch (Exception e) { toast("No file manager available"); } });
         }
-        /* ---------- phone and computer, on the home Wi-Fi (see Link.java and windows/src/Link.cs) ---------- */
+        /* ---------- phone and computer, on the home Wi-Fi (see Link.java and windows/app/src/link.rs) ---------- */
         private Link link() { if (lan == null) lan = new Link(MainActivity.this); return lan; }
         private String phoneName() { String m = Build.MODEL == null ? "Phone" : Build.MODEL; String b = Build.MANUFACTURER == null ? "" : Build.MANUFACTURER; return (m.toLowerCase(Locale.US).startsWith(b.toLowerCase(Locale.US)) ? m : (b.isEmpty() ? m : b.substring(0, 1).toUpperCase(Locale.US) + b.substring(1) + " " + m)); }
-        @JavascriptInterface public String lanInfo() {
+        String lanInfo() {
             try { JSONObject pc = link().paired(); JSONObject o = new JSONObject().put("paired", pc != null).put("last", link().last()).put("phone", phoneName()); if (pc != null) o.put("name", pc.optString("name")).put("ip", pc.optString("ip")); return o.toString(); }
             catch (Exception e) { return "{}"; }
         }
-        @JavascriptInterface public void lanFind() {
+        void lanFind() {
             new Thread(() -> { final String r = link().find(2200).toString(); ui.post(() -> js("window.__native.onLanFound&&__native.onLanFound(" + r + ")")); }).start();
         }
-        @JavascriptInterface public void lanPair(final String ip, final int port, final String pcId, final String code) {
+        void lanPair(final String ip, final int port, final String pcId, final String code) {
             new Thread(() -> {
                 String name = null, err = null;
                 try { name = link().pair(ip, port > 0 ? port : Link.TCP, pcId, code, phoneName()); } catch (Exception e) { err = e.getMessage() == null ? "fail" : e.getMessage(); }
@@ -956,7 +1059,7 @@ public class MainActivity extends Activity {
                 ui.post(() -> js("window.__native.onLanPaired&&__native.onLanPaired(" + (n != null) + "," + JSONObject.quote(n == null ? "" : n) + "," + JSONObject.quote(er == null ? "" : er) + ")"));
             }).start();
         }
-        @JavascriptInterface public void lanSync(final String state, final boolean quiet) {
+        void lanSync(final String state, final boolean quiet) {
             if (state == null || state.length() > 30_000_000) return;
             new Thread(() -> {
                 Link.Result r = null; String err = null;
@@ -969,10 +1072,10 @@ public class MainActivity extends Activity {
                 });
             }).start();
         }
-        @JavascriptInterface public void lanForget() { link().forget(); }
-        @JavascriptInterface public void lanProbe(final String ip) {
+        void lanForget() { link().forget(); }
+        void lanProbe(final String ip) {
             new Thread(() -> { final String r = link().find(1500, ip).toString(); ui.post(() -> js("window.__native.onLanFound&&__native.onLanFound(" + r + ")")); }).start();
         }
-        @JavascriptInterface public void openUrl(String url) { if (url != null && !url.isEmpty()) ui.post(() -> external(Uri.parse(url))); }
+        void openUrl(String url) { if (url != null && !url.isEmpty()) ui.post(() -> external(Uri.parse(url))); }
     }
 }

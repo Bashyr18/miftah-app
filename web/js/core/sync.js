@@ -21,16 +21,21 @@
     return o;
   }
   function newer(a, b) { return (b.t || 0) > (a.t || 0) ? b : a; }
-  /* recitation: each āyah keeps the furthest state either device reached, and (surah, āyah) advance as a pair */
+  /* recitation: each āyah keeps the newer review's (h, last) pair so a newer lapse is never undone, and (surah, āyah) advance as a pair */
   function mergeHifz(a, b) {
     if (!b || !b.u) return a || {}; if (!a || !a.u) return b;
     var u = Object.assign({}, a.u);
     Object.keys(b.u).forEach(function (k) {
       var x = u[k], y = b.u[k]; if (!x) { u[k] = y; return; }
+      var xl = x.last || 0, yl = y.last || 0;
+      var recent = yl > xl ? y : xl > yl ? x : ((y.h != null ? y.h : Infinity) < (x.h != null ? x.h : Infinity) ? y : x);
       var o = Object.assign({}, x, y);
       Object.keys(o).forEach(function (f) {
+        if (f === 'h' || f === 'last') return;
         if (typeof x[f] === 'number' && typeof y[f] === 'number') o[f] = f === 't' ? Math.min(x[f], y[f]) : Math.max(x[f], y[f]);
       });
+      if (recent.h !== undefined) o.h = recent.h;
+      if (recent.last !== undefined) o.last = recent.last;
       u[k] = o;
     });
     var ai = a.i || 0, bi = b.i || 0, ni = bi > ai ? bi : ai;
@@ -104,7 +109,6 @@
         lb.lessons.sort(function (x, y) { return x.n - y.n; });
         if (!lb.room && tb.room) lb.room = tb.room; if (lb.y == null && tb.y != null) lb.y = tb.y;
       });
-      if (A.Books) A.Books.register();
     }
     S.lastSync = A.now().getTime();
     return { S: S, report: report };
@@ -112,7 +116,7 @@
   /* ---------- the phone and the family's computer, on the home Wi-Fi (Android with Miftāḥ for Windows) ---------- */
   var B = function () { return window.AndroidBridge && window.AndroidBridge.lanInfo ? window.AndroidBridge : null; };
   Sync.lan = function () { var b = B(); if (!b) return null; try { return JSON.parse(b.lanInfo()); } catch (e) { return null; } };
-  Sync.recordOut = function () { var c = Object.assign({}, A.S); delete c.pin; delete c.gate; delete c.upd; return c; };
+  Sync.recordOut = function () { if (A.flushDraft) A.flushDraft(); var c = Object.assign({}, A.S); delete c.pin; delete c.gate; delete c.upd; return c; };
   Sync.stateOut = function () { return JSON.stringify(Object.assign(Sync.recordOut(), { familyFile: 1 })); };
   Sync.lanNow = function (quiet) { var b = B(), i = Sync.lan(); if (!b || !i || !i.paired || Sync.busy) return false; Sync.busy = true; b.lanSync(Sync.stateOut(), !!quiet); return true; };
   var WHY = {
@@ -127,7 +131,9 @@
     Sync.busy = false;
     if (!ok) { if (!quiet || name === 'forgotten') A.toast(L(WHY[name] || WHY.fail)); return; }
     try {
+      if (A.flushDraft) A.flushDraft();
       var o = Sync.parse(merged), r = Sync.merge(A.S, o, true); A.S = A.shape(r.S);
+      if (A.Books) A.Books.register();
       if (window.Voice && Voice.refreshVoices) Voice.refreshVoices(); A.saveNow(); A.rerender();
       var gotL = r.report.reduce(function (n, x) { return n + Math.max(0, x.lessons) + Math.max(0, x.ayat); }, 0);
       A.toast(L(['Joined with', 'تم الدمج مع']) + ' ' + name + (gotL ? ' · +' + A.num(gotL) : '') + (got ? ' · ' + A.num(got) + ' ' + L(['files', 'ملفات']) : ''));
@@ -193,8 +199,9 @@
     A.__syncIn = false;
     var doMerge = function () {
       try {
+        if (A.flushDraft) A.flushDraft();
         var o = Sync.parse(txt); if (!o || !Array.isArray(o.profiles)) throw 0;
-        var r = Sync.merge(A.S, o, withFiles); A.S = A.shape(r.S); if (withFiles && window.Voice && Voice.refreshVoices) Voice.refreshVoices(); A.saveNow(); A.rerender();
+        var r = Sync.merge(A.S, o, withFiles); A.S = A.shape(r.S); if (A.Books) A.Books.register(); if (withFiles && window.Voice && Voice.refreshVoices) Voice.refreshVoices(); A.saveNow(); A.rerender();
         var rows = r.report.map(function (x) { return '<div class="row2"><span class="grow"><b>' + esc(x.name) + '</b></span>' + (x.fresh ? '<span class="cnt hot">+</span>' : '') + '<span class="cnt">+' + A.num(Math.max(0, x.lessons)) + ' ' + esc(L(['lessons', 'دروس'])) + '</span>' + (x.ayat > 0 ? '<span class="cnt">+' + A.num(x.ayat) + ' ' + esc(L(['āyāt', 'آيات'])) + '</span>' : '') + '</div>'; }).join('');
         A.go('parent');
         A.sheet(L(['Joined', 'تم الدمج']), '<div class="card" style="box-shadow:none">' + (rows || '') + '</div>');

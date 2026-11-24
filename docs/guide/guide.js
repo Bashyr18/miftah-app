@@ -89,19 +89,19 @@ var CH = [
       { shots: { d: 'd-family', p: 'p-family' }, h: 'The whole family', drop: true, p: 'A small sum keeps young children out, or a PIN with a private recovery code if you set one. Inside, every child on one page; on the computer, the week in minutes and the paper waiting for you.',
         steps: [
           { b: 'You, Settings and Updates', x: 'Your own profile as parent, teacher or tutor, with Settings and Updates beside it, always at the top.', m: { p: 1 } },
-          { b: 'Each child', x: 'Today’s progress, minutes this week, what is mastered and remembered, and what to do next together.', m: { p: 0, d: 0 } },
+          { b: 'Each child', x: 'Today’s progress, minutes this week, what is mastered and remembered, a direct link to what is waiting for you (mark a sheet, listen to a recitation, confirm a deed or review shared work), and what to do next together.', m: { p: 0, d: 0 } },
           { b: 'The week, in minutes', x: 'On the computer: real learning time for every child, day by day.', m: { d: 1 } },
-          { b: 'Paper waiting', x: 'On the computer: every sheet still to be marked or ticked, for every child.', m: { d: 2 } },
+          { b: 'Paper waiting', x: 'On the computer: every sheet still to be marked or ticked, linked straight to the marking page.', m: { d: 2 } },
           { b: 'Day or night', x: 'The sun and moon switch, top right of every screen.', m: { p: 2 } } ] },
       { shots: { d: 'd-dash', p: 'p-dash' }, flip: true, h: 'One child, in depth', p: 'Today, lessons, print, Qurʾān and more, in tabs. On a wide screen the cards spread into three columns, so nothing hides below the fold.',
         steps: [
-          { b: 'Tabs', x: 'Today, Lessons, Print, Qurʾān, and More: plan, rooms, record and settings for this child.', m: { p: 0, d: 0 } },
+          { b: 'Tabs', x: 'Today, Lessons, Print, Qurʾān (with your child’s saved recordings beside the reference reciter), and More: plan, rooms, record and settings for this child.', m: { p: 0, d: 0 } },
           { b: 'At a glance', x: 'Today’s stops, minutes, what is remembered and everything mastered.', m: { p: 1, d: 1 } },
           { b: 'Sheets waiting for you', x: 'Practice to mark, which is the evidence, and worksheets to tick.', m: { p: 2, d: 2 } } ] },
       { shots: { p: 'p-book' }, flip: true, h: 'Your own course, in any subject', p: 'Parent area › Courses: the Madinah books or al-ʿArabiyyah Bayna Yadayk for Arabic, or a textbook, revision guide or teacher’s notes in any other subject. Each lesson has its square, so gaps show until they are filled. Enter its terms, facts and questions from your own copy, or paste a whole course a teacher shared.',
         steps: [
           { b: 'Every lesson in its place', x: 'A filled square is a lesson ready to learn: the terms met one by one, the facts, practice both ways, the course’s own questions as a quiz, and review that comes back before it fades.', m: { p: 0 } },
-          { b: 'Who follows it', x: 'Switch a child on and that subject’s path comes from this course, lesson by lesson. Courses travel between phone and computer.', m: { p: 1 } } ] } ] },
+          { b: 'Who follows it', x: 'Switch a child on and that subject’s path comes from this course, lesson by lesson. Courses travel between phone and computer and are ready to open straight away.', m: { p: 1 } } ] } ] },
 
   { id: 'paper', kicker: 'Printed, or done on screen', title: 'Paper and pen', dek: 'Sheets made fresh from what the child knows today, on A4 or on the screen, and marked by a grown-up.', thumb: 'p-ink',
     spreads: [
@@ -116,7 +116,7 @@ var CH = [
         steps: [
           { b: 'The real page', x: 'The sheet that would have printed, one page at a time. On the computer it opens at page width so the writing is large; the magnifier shows the whole page.', m: { p: 0, d: 0 } },
           { b: 'Pen, colours, rubber, undo', x: 'Three pencil colours, a rubber that lifts whole strokes, and undo. A stylus writes; a resting palm is ignored.', m: { p: 1, d: 1 } },
-          { b: 'Finished', x: 'Locks it and sends it to the grown-up. Until then it is theirs to change.', m: { p: 2, d: 2 } } ] },
+          { b: 'Finished', x: 'Locks it and sends it to the grown-up. Until then it is theirs to change, and My sheets on Home lets them reopen any assigned, sent or reviewed sheet later.', m: { p: 2, d: 2 } } ] },
       { shots: { d: 'd-ink-mark', p: 'p-ink-mark' }, h: 'Marking what they wrote', p: 'A finished sheet waits in your Today. Their page is there, with a red pen for your marks; then tap any question they missed and save. That is the evidence, exactly as on paper.',
         steps: [
           { b: 'Their page, your red pen', x: 'Tick, circle or write a note. Your marks stay apart from their writing, and they see them when they open it again.', m: { p: 0, d: 0 } },

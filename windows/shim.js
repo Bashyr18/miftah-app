@@ -52,7 +52,7 @@
     'voiceList', 'audioKeep', 'audioStats', 'audioClear', 'sync', 'requestNotifications', 'pinWidget', 'exportFile', 'shareFamily', 'shareImage', 'shareChallenge',
     'exportFamily', 'mediaPickType', 'mediaPick', 'mediaDelete', 'importFile', 'openUrl', 'updateCheck', 'updateInstall'];
   /* what only a computer can do (web/js/core/desk.js) */
-  var desk = ['voiceSave', 'speakWav', 'deskInfo', 'deskSet', 'deskZoom', 'pairCode', 'pairEnd', 'forgetPhone', 'rename', 'titleBar', 'openFolder', 'backup',
+  var desk = ['voiceSave', 'speakWav', 'deskInfo', 'deskSet', 'deskZoom', 'pairCode', 'pairEnd', 'forgetPhone', 'rename', 'titleBar', 'openFolder', 'backup', 'backupNow',
     'install', 'quit', 'unlocked', 'savePdf', 'reveal', 'openPdf'];
   var B = {}, D = {};
   names.concat(desk).forEach(function (n) { D[n] = B[n] = function () { return call(n, Array.prototype.slice.call(arguments)); }; });

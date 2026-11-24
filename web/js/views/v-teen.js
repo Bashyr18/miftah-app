@@ -104,11 +104,13 @@
     if (!A.P()) return { redirect: 'home' };
     var d = A.D(), work = d.work || [], id = args && args[0];
     if (id == null) return { html: head(L(['Essays', 'المقالات']), L(['Written work stays yours. A parent sees it only if you share it.', 'أعمالك المكتوبة لك، ولا يراها الوالدان إلا إذا شاركتها.']), ['study', ['Study', 'الدراسة']]) + '<div class="tw"><input class="tin" id="t-w-t" placeholder="' + esc(L(['Title or question', 'العنوان أو السؤال'])) + '"><button class="btn pri wide" style="margin-top:8px" data-a="t-w-new">' + esc(L(['Start writing', 'ابدأ الكتابة'])) + '</button><div class="tsec">' + esc(L(['My work', 'أعمالي'])) + '</div><div class="tl">' + (work.map(function (w, i) { return '<a class="ti" href="#/write/' + i + '"><span class="grow"><b>' + esc(w.title) + '</b><small>' + N(words(w.text)) + ' ' + esc(L(['words', 'كلمة'])) + (w.shared ? ' · ' + esc(L(['shared', 'مشارَك'])) : '') + '</small></span></a>'; }).reverse().join('') || '<div class="ti"><span class="grow"><small>' + esc(L(['Nothing yet.', 'لا شيء بعد.'])) + '</small></span></div>') + '</div></div>' };
-    var w = work[+id]; if (!w) return { redirect: 'write' };
-    var ch = (w.check || []), saveTimer = null, bEl = null, pEl = null;
-    function flushDraft() { clearTimeout(saveTimer); saveDraft(w, bEl, pEl); }
-    return { unmount: flushDraft, mount: function (v) {
+    var idx = +id, w = work[idx]; if (!w) return { redirect: 'write' };
+    var title = w.title, ch = (w.check || []), saveTimer = null, bEl = null, pEl = null;
+    function curEssay() { var arr = (A.D().work || []); return (arr[idx] && arr[idx].title === title) ? arr[idx] : arr.filter(function (x) { return x.title === title; })[0] || w; }
+    function flushDraft() { clearTimeout(saveTimer); saveDraft(curEssay(), bEl, pEl); }
+    return { unmount: function () { if (A.flushDraft === flushDraft) A.flushDraft = null; flushDraft(); }, mount: function (v) {
       bEl = $('#t-w-b', v); pEl = $('#t-w-p', v); var cnt = $('#t-w-c', v);
+      A.flushDraft = flushDraft;
       function queueDraft() {
         cnt.textContent = N(words(bEl.value)) + ' ' + L(['words', 'كلمة']);
         clearTimeout(saveTimer);
@@ -119,7 +121,7 @@
   };
   var CHECK = [['I answered the actual question', 'أجبت عن السؤال نفسه'], ['Each paragraph has one main point', 'لكل فقرة فكرة رئيسة'], ['I gave evidence and examples', 'قدمت أدلة وأمثلة'], ['I was fair to the other side', 'أنصفت الرأي الآخر'], ['I read it aloud and fixed what sounded wrong', 'قرأته بصوت عالٍ وأصلحت ما بدا خطأ']];
   function words(t) { return (t || '').trim().split(/\s+/).filter(Boolean).length; }
-  function saveDraft(w, b, p0) { if (!w || !b || (w.text === b.value && w.plan === p0.value)) return; if (w.text !== b.value && w.text && Math.abs(words(w.text) - words(b.value)) > 40) { w.versions = (w.versions || []).concat([{ t: A.now().getTime(), text: w.text }]).slice(-6); } w.text = b.value; w.plan = p0.value; w.t = A.now().getTime(); A.save(); }
+  function saveDraft(w, b, p0) { if (!w || !b || !p0 || (w.text === b.value && w.plan === p0.value)) return; if (w.text !== b.value && w.text && Math.abs(words(w.text) - words(b.value)) > 40) { w.versions = (w.versions || []).concat([{ t: A.now().getTime(), text: w.text }]).slice(-6); } w.text = b.value; w.plan = p0.value; w.t = A.now().getTime(); A.save(); }
   A.acts['t-w-new'] = function () { var t = val('t-w-t'); if (!t) return; var d = A.D(); d.work = (d.work || []).concat([{ title: t, text: '', plan: '', t: A.now().getTime() }]); A.saveNow(); A.go('write/' + (d.work.length - 1)); };
   A.acts['t-w-check'] = function (t) { var w = A.D().work[+t.dataset.w], i = +t.dataset.i; w.check = w.check || []; w.check[i] = !w.check[i]; t.classList.toggle('on', w.check[i]); A.save(); };
   A.acts['t-w-share'] = function (t) { var i = +t.dataset.w, w = A.D().work[i]; saveDraft(w, $('#t-w-b'), $('#t-w-p')); w.shared = !w.shared; A.saveNow(); A.rerender(); };

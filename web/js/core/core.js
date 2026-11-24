@@ -117,6 +117,7 @@
     var m = A.N.call('loadState'); if (m) { try { file = JSON.parse(m); } catch (e) { } }
     var raw = local && file ? ((file.savedAt || 0) >= (local.savedAt || 0) ? file : local) : (local || file);
     A.S = shape(raw || {});
+    if (A.Books) A.Books.register();
   };
   var saveT = null;
   A.saveNow = function () {

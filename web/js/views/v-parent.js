@@ -84,14 +84,18 @@
   A.pinSet = async function (input) {
     var pin = input.value.trim(), state = A.S;
     if (pinBusy || !open()) return;
-    if (pin && !/^\d{4,6}$/.test(pin)) { A.toast(L(['Use 4 to 6 digits', 'استعمل ٤ إلى ٦ أرقام'])); return; }
+    if (!/^\d{4,6}$/.test(pin)) { A.toast(L(['Use 4 to 6 digits', 'استعمل ٤ إلى ٦ أرقام'])); return; }
     pinBusy = true;
     try {
-      var next = pin ? await makePin(pin) : null;
+      var next = await makePin(pin);
       if (!input.isConnected || state !== A.S || !open()) return;
-      state.pin = next ? next.record : ''; state.gate = { a: 0 }; A.saveNow(); A.rerender();
-      if (next) showRecovery(next.code); else A.toast(T('Saved'));
+      state.pin = next.record; state.gate = { a: 0 }; A.saveNow(); A.rerender();
+      showRecovery(next.code);
     } catch (e) { pinError(); } finally { pinBusy = false; }
+  };
+  A.pinClear = function () {
+    if (pinBusy || !open() || !A.S.pin) return;
+    A.S.pin = ''; A.S.gate = { a: 0 }; A.saveNow(); A.rerender(); A.toast(T('Saved'));
   };
   function pinLockLeft() { var g = A.S.gate || {}; return g.until && g.until > Date.now() ? Math.ceil((g.until - Date.now()) / 1000) : 0; }
   async function checkPin(val, recovery, input) {
@@ -406,11 +410,25 @@
   /* a person hears the āyāt: the only grading that is not the child's own */
   function tHear(p) {
     if (A.stage(p) === 0) return { html: '<div class="card"><p style="color:var(--t2);line-height:1.5">' + esc(T('At this age they listen. Memorising and hearing start with Explorers.')) + '</p></div>' };
-    var h = Hifz.state(p.id), list = Hifz.toHear(p.id, 8), Q = window.QURAN;
+    Voice.refreshVoices();
+    var h = Hifz.state(p.id), d = A.D(p.id), list = Hifz.toHear(p.id, 8), Q = window.QURAN, recsMap = d.recs || {};
     var self = 0, heard = 0; (h.log || []).forEach(function (x) { if (x.by === 'parent') heard++; else self++; });
+    function recCtl(sn, an) {
+      var k = sn + ':' + an; if (!recsMap[k]) return '';
+      var rk = Voice.recKey(p.id, sn, an);
+      if (Voice.hasRec(p.id, sn, an)) return '<button class="btn pri sm" data-a="play-rec" data-k="' + esc(rk) + '">' + A.icon('play', 16) + '<span>' + esc(L(['Play child’s recording', 'استمع إلى تسجيل الطفل'])) + '</span></button>';
+      return '<span class="hear-na">' + esc(L(['Recording unavailable on this device', 'التسجيل غير متاح على هذا الجهاز'])) + '</span>';
+    }
+    var allRecs = Object.keys(recsMap).filter(function (k) { var q = k.split(':'); return Q.q[+q[0]] && Q.q[+q[0]].v[+q[1] - 1]; }).sort(function (x, y) { return recsMap[y] - recsMap[x]; });
+    var savedBlock = allRecs.length ? '<div class="card' + (allRecs.some(function (k) { var u = h.u[k]; return !u || !u.heard || u.heard < recsMap[k]; }) ? ' pending' : '') + '"><h3>' + esc(L(['Saved recordings', 'التسجيلات المحفوظة'])) + '</h3><p style="color:var(--t2);font-size:13.5px;line-height:1.45;margin-bottom:8px">' + esc(L(['The latest recording saved for each āyah. Listen, follow along, and mark it yourself.', 'آخر تسجيل محفوظ لكل آية. استمع وتابع وقيّمه بنفسك.'])) + '</p>' +
+      allRecs.slice(0, 16).map(function (k) {
+        var q = k.split(':'), sn = +q[0], an = +q[1], u = h.u[k], waiting = !u || !u.heard || u.heard < recsMap[k];
+        var dt = new Date(recsMap[k]).toLocaleDateString(A.ar() ? 'ar-u-nu-arab' : 'en', { day: 'numeric', month: 'short' });
+        return '<div class="hear-rec"><div class="hear-rec-h"><span class="grow"><b>' + esc(A.surahName(sn)) + ' · ' + A.num(an) + '</b><small>' + esc(dt) + ' · ' + esc(waiting ? L(['Waiting for your check', 'بانتظار استماعك']) : L(['Heard', 'تم الاستماع'])) + '</small></span></div><div class="hear-acts">' + recCtl(sn, an) + '<button class="btn sec sm" data-play-a="' + k + '">' + A.icon('speak', 16) + '<span>' + esc(L(['Reference', 'القارئ'])) + '</span></button></div>' + (waiting ? '<div class="grades"><button class="grade" data-hg="2" data-k="' + k + '">' + esc(T('Smooth')) + '</button><button class="grade" data-hg="1" data-k="' + k + '">' + esc(T('Small slips')) + '</button><button class="grade" data-hg="0" data-k="' + k + '">' + esc(T('Not yet')) + '</button></div>' : '') + '</div>';
+      }).join('') + '</div>' : '';
     return {
-      html: '<div class="card"><h3>' + esc(T('Listen to them recite')) + '</h3><p style="color:var(--t2);line-height:1.5">' + esc(T('Sit with them and hear each āyah from memory. Your check counts for more than theirs, and nothing here marks them by machine.')) + '</p><p class="ref" style="margin-top:6px;text-align:start">' + esc(T('Heard by you')) + ': ' + A.num(heard) + ' · ' + esc(T('Checked by themselves')) + ': ' + A.num(self) + '</p></div>' +
-        (list.length ? list.map(function (k) { var q = k.split(':'), sn = +q[0], an = +q[1], su = Q.q[sn]; return '<div class="card hear"><div class="hear-h"><b>' + esc(A.surahName(sn)) + ' · ' + A.num(an) + '</b><button class="round off" style="width:44px;height:44px" data-play-a="' + k + '" aria-label="' + esc(T('Listen')) + '">' + A.icon('play', 20) + '</button></div><div class="quran hear-v" lang="ar" dir="rtl">' + su.v[an - 1][1] + '</div><div class="grades"><button class="grade" data-hg="2" data-k="' + k + '">' + esc(T('Smooth')) + '</button><button class="grade" data-hg="1" data-k="' + k + '">' + esc(T('Small slips')) + '</button><button class="grade" data-hg="0" data-k="' + k + '">' + esc(T('Not yet')) + '</button></div></div>'; }).join('') : '<div class="card"><p style="color:var(--t2)">' + esc(T('Nothing waiting. Āyāt appear here as they are learned, and again every two weeks.')) + '</p></div>') + '<div class="card"><h3>' + esc(T('Already memorised')) + '</h3><p style="color:var(--t2);line-height:1.45;font-size:14.500px;margin-bottom:8px">' + esc(T('If they learned a sūrah before Miftāḥ, mark it. It moves straight into the revision cycle.')) + '</p><div style="display:flex;gap:8px"><select class="input" id="hk-s" style="font-size:15px;flex:1"><option value="">…</option>' + Q.order.filter(function (s) { return (h.finished || []).indexOf(s) < 0; }).map(function (s) { return '<option value="' + s + '">' + esc(A.surahName(s)) + '</option>'; }).join('') + '</select><button class="btn sec" id="hk-go">' + esc(T('Mark')) + '</button></div></div>',
+      html: savedBlock + '<div class="card"><h3>' + esc(T('Listen to them recite')) + '</h3><p style="color:var(--t2);line-height:1.5">' + esc(T('Sit with them and hear each āyah from memory. Your check counts for more than theirs, and nothing here marks them by machine.')) + '</p><p class="ref" style="margin-top:6px;text-align:start">' + esc(T('Heard by you')) + ': ' + A.num(heard) + ' · ' + esc(T('Checked by themselves')) + ': ' + A.num(self) + '</p></div>' +
+        (list.length ? list.map(function (k) { var q = k.split(':'), sn = +q[0], an = +q[1], su = Q.q[sn]; return '<div class="card hear"><div class="hear-h"><b>' + esc(A.surahName(sn)) + ' · ' + A.num(an) + '</b><button class="btn sec sm" data-play-a="' + k + '" aria-label="' + esc(L(['Reference', 'القارئ'])) + '">' + A.icon('speak', 16) + '<span>' + esc(L(['Reference', 'القارئ'])) + '</span></button></div>' + (recsMap[k] ? '<div class="hear-acts">' + recCtl(sn, an) + '</div>' : '') + '<div class="quran hear-v" lang="ar" dir="rtl">' + su.v[an - 1][1] + '</div><div class="grades"><button class="grade" data-hg="2" data-k="' + k + '">' + esc(T('Smooth')) + '</button><button class="grade" data-hg="1" data-k="' + k + '">' + esc(T('Small slips')) + '</button><button class="grade" data-hg="0" data-k="' + k + '">' + esc(T('Not yet')) + '</button></div></div>'; }).join('') : '<div class="card"><p style="color:var(--t2)">' + esc(T('Nothing waiting. Āyāt appear here as they are learned, and again every two weeks.')) + '</p></div>') + '<div class="card"><h3>' + esc(T('Already memorised')) + '</h3><p style="color:var(--t2);line-height:1.45;font-size:14.500px;margin-bottom:8px">' + esc(T('If they learned a sūrah before Miftāḥ, mark it. It moves straight into the revision cycle.')) + '</p><div style="display:flex;gap:8px"><select class="input" id="hk-s" style="font-size:15px;flex:1"><option value="">…</option>' + Q.order.filter(function (s) { return (h.finished || []).indexOf(s) < 0; }).map(function (s) { return '<option value="' + s + '">' + esc(A.surahName(s)) + '</option>'; }).join('') + '</select><button class="btn sec" id="hk-go">' + esc(T('Mark')) + '</button></div></div>',
       mount: function (v) {
         var kb = $('#hk-go', v); if (kb) kb.onclick = function () { var sv = +$('#hk-s', v).value; if (!sv) return; Hifz.markKnown(sv, p.id); A.toast(T('Saved')); A.rerender(); };
         $$('[data-play-a]', v).forEach(function (b) { b.onclick = function () { var q = b.dataset.playA.split(':'); Voice.ayah(+q[0], +q[1]); }; });
@@ -478,11 +496,12 @@
     return '<div class="cal" aria-hidden="true">' + cells + '</div>';
   }
   function tRecord(p) {
+    Voice.refreshVoices();
     var d = A.D(p.id), all0 = Object.assign({}, d.time, d.screen || {}), days = Object.keys(all0).filter(function (k) { return dayMs(d, k) > 0; }), tot = days.reduce(function (a, k) { return a + dayMs(d, k); }, 0), ob = d.obs.slice(-40).reverse();
-    var recs = d.recs ? Object.keys(d.recs) : [];
+    var recs = d.recs ? Object.keys(d.recs).sort(function (x, y) { return d.recs[y] - d.recs[x]; }) : [];
     return {
       html: '<div class="card"><h3>' + esc(T('Attendance')) + '</h3><p style="color:var(--t2);line-height:1.5">' + esc(T('Days')) + ': ' + A.num(days.length) + ' · ' + esc(T('Total')) + ': ' + hrs(tot) + '</p>' + calendar(d) + '<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap"><button class="btn sec sm" data-a="print-rep" data-p="' + p.id + '">' + A.icon('print', 18) + '<span>' + esc(T('Print a report')) + '</span></button></div></div>' +
-        (recs.length ? '<div class="card"><h3>' + esc(T('Recitations to hear')) + '</h3><div class="lst">' + recs.map(function (k) { var pa = k.split(':'); return '<button class="li" data-a="play-rec" data-k="rec_' + p.id + '_' + pa[0] + '_' + pa[1] + '">' + A.icon('play', 20) + '<span class="grow"><b>' + esc(A.surahName(pa[0])) + ' ' + A.num(pa[1]) + '</b><small>' + esc(new Date(d.recs[k]).toLocaleDateString(A.ar() ? 'ar-u-nu-arab' : 'en')) + '</small></span></button>'; }).join('') + '</div></div>' : '') +
+        (recs.length ? '<div class="card"><h3>' + esc(T('Recitations to hear')) + '</h3><div class="lst">' + recs.map(function (k) { var pa = k.split(':'), has = Voice.hasRec(p.id, pa[0], pa[1]), rk = Voice.recKey(p.id, pa[0], pa[1]), dt = new Date(d.recs[k]).toLocaleDateString(A.ar() ? 'ar-u-nu-arab' : 'en'); return has ? '<button class="li" data-a="play-rec" data-k="' + esc(rk) + '">' + A.icon('play', 20) + '<span class="grow"><b>' + esc(A.surahName(pa[0])) + ' ' + A.num(pa[1]) + '</b><small>' + esc(dt) + '</small></span></button>' : '<div class="li"><span class="grow"><b>' + esc(A.surahName(pa[0])) + ' ' + A.num(pa[1]) + '</b><small>' + esc(dt) + ' · ' + esc(L(['Recording unavailable on this device', 'التسجيل غير متاح على هذا الجهاز'])) + '</small></span></div>'; }).join('') + '</div></div>' : '') +
         '<div class="card"><h3>' + esc(T('Observations and deeds')) + '</h3>' + (ob.length ? '<div class="lst">' + ob.map(function (o) { return '<div class="li"><span class="grow"><b>' + esc(o.title) + '</b><small>' + esc(new Date(o.t).toLocaleDateString(A.ar() ? 'ar-u-nu-arab' : 'en')) + (o.value ? ' · ' + esc(o.value) : '') + '</small></span></div>'; }).join('') + '</div>' : '<p style="color:var(--t2)">' + esc(T('Nothing yet.')) + '</p>') + '</div>'
     };
   }
@@ -610,7 +629,7 @@
   }
   window.__native.onImport = function (txt) {
     if (!A.grownOpen()) return;
-    try { var o = A.Sync.parse(txt); if (!o || !Array.isArray(o.profiles)) throw 0; delete o.upd; o.pin = A.S.pin; o.gate = A.S.gate; A.S = A.shape(o); A.saveNow(); A.toast(T('Restored')); A.go('parent'); A.rerender(); } catch (e) { A.toast(T('That file could not be read')); }
+    try { var o = A.Sync.parse(txt); if (!o || !Array.isArray(o.profiles)) throw 0; delete o.upd; o.pin = A.S.pin; o.gate = A.S.gate; A.S = A.shape(o); if (A.Books) A.Books.register(); A.saveNow(); A.toast(T('Restored')); A.go('parent'); A.rerender(); } catch (e) { A.toast(T('That file could not be read')); }
   };
   window.__native.onExported = function (ok) { A.toast(T(ok ? 'Saved' : 'Not saved')); };
 

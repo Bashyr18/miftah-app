@@ -180,6 +180,7 @@ pub fn call(name: &str, body: &[u8]) -> Option<Value> {
             None
         }
         "backup" => Some(store::read_backup(&s(0)).map(Value::String).unwrap_or(Value::Null)),
+        "backupNow" => Some(json!(store::backup_now(&s(0), &s(1)))),
         "install" => { mc::later(install); None }
         "quit" => { mc::later(|| if let Some(a) = app() { a.quit() }); None }
         "unlocked" => { mc::later(|| if let Some(a) = app() { a.focus(false); a.post("window.Desk&&Desk.refresh()"); }); None }

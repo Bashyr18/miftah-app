@@ -40,7 +40,7 @@
     return {
       bare: true, hue: 'emerald',
       html: '<div class="pl h-emerald quiet" id="hf"><div class="pl-top"><a class="pl-x" href="#/home" aria-label="' + esc(T('Leave')) + '">' + A.icon('close', 24) + '</a><div class="pl-bar"><div class="hf-tier" id="hf-tier"></div><div class="ayahs" id="hf-dots" style="margin-top:6px"></div></div><div style="width:48px"></div></div><div class="pl-body" id="hf-body"></div><div class="pl-foot" id="hf-foot"></div></div>',
-      mount: function () { alive = true; startSession(stopI); },
+      mount: function () { alive = true; var h0 = Hifz.state(), s0 = Q.order[h0.i]; if (s0 && window.Voice && Voice.keep) Voice.keep(s0); startSession(stopI); },
       unmount: function () { alive = false; clearTimers(); Voice.stop(); stopRec(); }
     };
   };
@@ -132,7 +132,7 @@
   function stopRec() { if (recOn) { A.N.call('recStop'); recOn = false; } }
   function bindRec(s, a) {
     var b = $('#hf-rec'); if (!b) return;
-    var key = 'rec_' + A.S.cur + '_' + s + '_' + a;
+    var key = Voice.recKey(A.S.cur, s, a);
     b.onclick = function () {
       if (!recOn) { if (A.N.call('recStart', key)) { recOn = true; b.classList.add('rec'); b.classList.remove('off'); A.toast(A.L(['Recording. Recite, then tap again.', 'جارٍ التسجيل. اقرأ ثم انقر مجددًا.'])); } else A.micHelp(); }
       else { stopRec(); b.classList.remove('rec'); b.classList.add('off'); var d = A.D(); d.recs = d.recs || {}; d.recs[s + ':' + a] = A.now().getTime(); A.save(); A.toast(A.L(['Saved. Listen to yourself, and your parent can hear it too.', 'حُفظ. استمع إلى نفسك، ويمكن لوالديك سماعه.'])); Voice.refreshVoices(); later(function () { Voice.play('voice/' + key + '.m4a'); }, 300); }
@@ -150,10 +150,12 @@
     }).join('');
     return {
       hue: 'emerald',
-      html: '<div class="ph h-emerald">' + (A.hasImg('portal-quran') ? '<span class="ph-portal">' + A.portalImg('quran', true) + '</span>' : '<svg class="girih" viewBox="0 0 100 100">' + A.girih(null, .55) + '</svg>') + '<a class="backp" href="#/rooms">' + A.icon('back', 18) + '<span>' + esc(A.stage() >= 3 ? L(['Subjects', 'المواد']) : T('Rooms')) + '</span></a><h1>' + esc(T('Qurʾān')) + '</h1><p>' + esc(T('Listen, repeat, and keep it in your heart')) + '</p></div><div class="wrap"><button class="btn pri big wide" data-a="hf-now" style="margin:16px 0 4px">' + esc(T('Today’s portion')) + '</button><div class="unit"><div class="kl">' + list + '</div></div></div>'
+      html: '<div class="ph h-emerald">' + (A.hasImg('portal-quran') ? '<span class="ph-portal">' + A.portalImg('quran', true) + '</span>' : '<svg class="girih" viewBox="0 0 100 100">' + A.girih(null, .55) + '</svg>') + '<a class="backp" href="#/rooms">' + A.icon('back', 18) + '<span>' + esc(A.stage() >= 3 ? L(['Subjects', 'المواد']) : T('Rooms')) + '</span></a><h1>' + esc(T('Qurʾān')) + '</h1><p>' + esc(T('Listen, repeat, and keep it in your heart')) + '</p></div><div class="wrap"><button class="btn pri big wide" data-a="hf-now" style="margin:16px 0 4px">' + esc(T('Today’s portion')) + '</button>' + (A.N.has() && curS ? '<button class="btn ghost wide" data-a="hf-keep" data-s="' + curS + '" style="margin:6px 0 4px">' + A.icon('download', 18) + '<span>' + esc(L(['Keep ' + SN(curS) + ' offline', 'احفظ ' + SN(curS) + ' دون إنترنت'])) + '</span></button>' : '') + '<div class="unit"><div class="kl">' + list + '</div></div></div>',
+      mount: function () { if (curS && window.Voice && Voice.keep) Voice.keep(curS); }
     };
   };
   A.acts['hf-now'] = function () { if (Plan.over()) { A.go('rest'); return; } Fx.door('emerald', 'hifz'); };
+  A.acts['hf-keep'] = function (t) { var sv = +t.dataset.s; if (!sv || !window.Voice || !Voice.keep) return; Voice.keep(sv); A.toast(L(['Saving this sūrah on this device', 'جارٍ حفظ هذه السورة على هذا الجهاز'])); };
 
   /* reading and listening to a whole sūrah; tap any word to hear it */
   A.V.surah = function (args) {
@@ -165,7 +167,7 @@
     }).join('');
     return {
       hue: 'emerald',
-      html: '<div class="ph h-emerald"><a class="backp" href="#/room/quran">' + A.icon('back', 18) + '<span>' + esc(T('Qurʾān')) + '</span></a><h1>' + esc(SN(s)) + '</h1>' + (A.ar() ? '' : '<p lang="ar" style="font-family:var(--f-ar);font-size:24px">' + su.ar + '</p>') + '</div><div class="wrap">' + (s !== 1 && s !== 9 ? '<div class="bsm" style="margin:12px 0">' + Q.bsm + '</div>' : '') + rows + '<div style="height:90px"></div></div><div class="nav"><button class="btn sm sec" id="s-rec">' + esc(A.S.reciter === 'h' ? T('Teaching pace') : T('Flowing')) + '</button><button class="round" id="s-play" style="width:50px;height:50px" aria-label="' + esc(T('Listen')) + '">' + A.icon('play', 24) + '</button></div>',
+      html: '<div class="ph h-emerald"><a class="backp" href="#/room/quran">' + A.icon('back', 18) + '<span>' + esc(T('Qurʾān')) + '</span></a><h1>' + esc(SN(s)) + '</h1>' + (A.ar() ? '' : '<p lang="ar" style="font-family:var(--f-ar);font-size:24px">' + su.ar + '</p>') + '</div><div class="wrap">' + (s !== 1 && s !== 9 ? '<div class="bsm" style="margin:12px 0">' + Q.bsm + '</div>' : '') + rows + '<div style="height:90px"></div></div><div class="nav"><button class="btn sm sec" id="s-rec">' + esc(A.S.reciter === 'h' ? T('Teaching pace') : T('Flowing')) + '</button>' + (A.N.has() ? '<button class="btn sm ghost" data-a="hf-keep" data-s="' + s + '">' + A.icon('download', 16) + '<span>' + esc(L(['Keep offline', 'دون إنترنت'])) + '</span></button>' : '') + '<button class="round" id="s-play" style="width:50px;height:50px" aria-label="' + esc(T('Listen')) + '">' + A.icon('play', 24) + '</button></div>',
       mount: function (v) {
         $$('.tx-v', v).forEach(function (row) { bindWords(row, s, +row.dataset.a2); });
         var pb = $('#s-play', v);

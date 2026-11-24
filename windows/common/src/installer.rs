@@ -209,7 +209,11 @@ fn image_of(pid: u32) -> Option<String> {
    A copy running from somewhere else (Downloads, say) is left alone: its file is not the one being replaced. */
 pub fn close_running(wait_ms: u64) -> bool {
     if others().is_empty() { return true; }
-    pipe_send(&["--quit".to_string()], 1500);
+    let quit = ["--quit".to_string()];
+    if !pipe_send_to(&pipe_name(), &quit, 750) && !others().is_empty() {
+        /* 2.4.1 and earlier listened on the unscoped pipe: shut down an open older install cleanly instead of terminating it */
+        pipe_send_to(PIPE, &quit, 750);
+    }
     let until = Instant::now() + Duration::from_millis(wait_ms);
     while Instant::now() < until {
         if others().is_empty() { return true; }
@@ -229,9 +233,12 @@ pub fn close_running(wait_ms: u64) -> bool {
 
 /* a second launch (a shortcut, a dropped file, the tray, the installer) hands its request to the window already open */
 pub fn pipe_send(args: &[String], wait_ms: u32) -> bool {
+    pipe_send_to(&pipe_name(), args, wait_ms)
+}
+fn pipe_send_to(pipe: &str, args: &[String], wait_ms: u32) -> bool {
     use windows::Win32::Storage::FileSystem::*;
     use windows::Win32::System::Pipes::WaitNamedPipeW;
-    let name = h(&pipe_name());
+    let name = h(pipe);
     let body = args.join("\n");
     unsafe {
         let until = Instant::now() + Duration::from_millis(wait_ms as u64);
