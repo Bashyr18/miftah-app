@@ -86,7 +86,7 @@ var CH = [
 
   { id: 'parents', kicker: 'Behind a door only a grown-up opens', title: 'For parents', dek: 'What each child did, what they remember, and where they are stuck.', thumb: 'd-family',
     spreads: [
-      { shots: { d: 'd-family', p: 'p-family' }, h: 'The whole family', drop: true, p: 'A small sum keeps young children out, or a PIN if you set one. Inside, every child on one page; on the computer, the week in minutes and the paper waiting for you.',
+      { shots: { d: 'd-family', p: 'p-family' }, h: 'The whole family', drop: true, p: 'A small sum keeps young children out, or a PIN with a private recovery code if you set one. Inside, every child on one page; on the computer, the week in minutes and the paper waiting for you.',
         steps: [
           { b: 'You, Settings and Updates', x: 'Your own profile as parent, teacher or tutor, with Settings and Updates beside it, always at the top.', m: { p: 1 } },
           { b: 'Each child', x: 'Today’s progress, minutes this week, what is mastered and remembered, and what to do next together.', m: { p: 0, d: 0 } },
@@ -133,7 +133,7 @@ var CH = [
         steps: [ { b: 'Change things, see what happens', x: 'Drag, slide and watch the numbers answer. Nothing here can break.', m: { d: 0 } } ] },
       { shots: { d: 'd-pc' }, h: 'This computer', p: 'Updates, start with Windows, the tray, the size of everything, your data and thirty days of backups, in one page.',
         steps: [
-          { b: 'Updates', x: 'The version on this computer, and a check when you ask (or once a week). A new version installs over this one; your record stays. When one is ready, a small Update chip also appears in the side rail.', m: { d: 0 } },
+          { b: 'Updates', x: 'The version on this computer, and a check when you ask (or once a week). Updates are verified against a signed manifest and SHA-256 checksum before installing; your record stays. When one is ready, a small Update chip also appears in the side rail.', m: { d: 0 } },
           { b: 'Start with Windows, keep in the tray', x: 'So a paired phone can join records whenever it is home, and the daily reminder arrives.', m: { d: 1 } },
           { b: 'Size of everything', x: 'From 70% to 200%, for a small laptop or a television across the room.', m: { d: 2 } },
           { b: 'Backups', x: 'One copy each day for thirty days. Going back saves today first, so nothing is lost.', m: { d: 3 } } ] } ] },
@@ -227,7 +227,7 @@ $('#chapters').innerHTML = CH.map(function (c, ci) {
   if (c.ages) h += '<div class="ages rv">' + AGES.map(function (a) { return '<figure>' + device(a[0], a[1] + ': their home', '', true) + '<figcaption><b>' + esc(a[1]) + '</b><span>' + esc(a[2]) + '</span><small>' + esc(a[3]) + '</small></figcaption></figure>'; }).join('') + '</div><div class="ages-line rv" aria-hidden="true">' + [0, 25, 50, 75, 100].map(function (x) { return '<i style="left:calc(' + x + '% - 6px)"></i>'; }).join('') + '</div>' +
     '<div class="gest" style="margin-top:56px"><div class="g rv"><b>One record, every age</b><p>A three-year-old and a sixteen-year-old in one family use the same app. Each child moves up a stage by birthday, and a parent can hold a stage or move one on.</p></div><div class="g rv"><b>The door belongs to childhood</b><p>The carved door opens each new part of the day for the young ones. From twelve it opens quickly, and from fifteen it steps aside unless they want it.</p></div><div class="g rv"><b>Honest at every stage</b><p>Little Steps is played beside a grown-up; Scholars sit exams with one try and no hints. Either way, only what the child shows counts.</p></div></div>';
   if (c.link) h += '<div class="link rv">' + device('d-link', 'The computer, showing its code', '', false) + '<div class="waves" aria-hidden="true"><i></i><i></i><i></i><b>' + ICO.wifi + '</b></div>' + device('p-pair', 'The phone, typing it', '', false) + '</div>' +
-    '<div class="seal"><div class="g rv"><b>No account, no cloud</b><p>The two find each other on your home Wi-Fi. Nothing is sent anywhere else.</p></div><div class="g rv"><b>Sealed</b><p>Every message is sealed with AES-256 and HMAC-SHA256, under a key made at pairing. A neighbour on the same Wi-Fi can neither read nor fake one.</p></div><div class="g rv"><b>Nothing lost</b><p>Records are joined, never overwritten. A lesson, a recording or a marked sheet on either device counts on both.</p></div></div>';
+    '<div class="seal"><div class="g rv"><b>No account, no cloud</b><p>The two find each other on your home Wi-Fi. Nothing is sent anywhere else.</p></div><div class="g rv"><b>Sealed</b><p>Every connection derives fresh request and response keys from random challenges, sealed with AES-256 and HMAC-SHA256. A neighbour on the same Wi-Fi can neither read, fake nor replay one.</p></div><div class="g rv"><b>Nothing lost</b><p>Records are joined, never overwritten. A lesson, a recording or a marked sheet on either device counts on both.</p></div></div>';
   (c.spreads || []).forEach(function (s, si) {
     var dev = s.shots.d ? 'd' : 'p';
     h += '<div class="spread' + (s.flip ? ' flip' : '') + ' on-' + dev + '" data-c="' + ci + '" data-s="' + si + '" data-dev="' + dev + '">';

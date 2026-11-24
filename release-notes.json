@@ -1,4 +1,7 @@
 [
- ["Every Arabic letter can be heard: the device’s own voice fills in the ten letter names with no recording yet", "كل حروف العربية مسموعة: صوت الجهاز ينطق أسماء الحروف العشرة التي لا تسجيل لها بعد"],
- ["My voice shows what a child hears for each letter, with a button to add an Arabic voice to the device", "صفحة صوتي تبيّن ما يسمعه الطفل لكل حرف، مع زر لإضافة صوت عربي إلى الجهاز"]
+ ["Stronger parent PIN security with PBKDF2 hashing, rate-limiting and a private recovery code", "حماية أقوى لرمز الوالدين بالتشفير وتقييد المحاولات ورمز استرداد خاص"],
+ ["Signed in-app update manifests verified alongside SHA-256 checksums before installing", "التحقق من توقيع بيان التحديث مع بصمة SHA-256 قبل التثبيت"],
+ ["Upgraded home Wi-Fi sync with one-time pairing codes and fresh per-connection keys", "مزامنة أحدث عبر شبكة المنزل برموز اقتران لمرة واحدة ومفاتيح جديدة لكل اتصال"],
+ ["Accessibility, RTL and simulation fixes: pinch-to-zoom, sharper contrast, keyboard support and reduced motion", "تحسينات سهولة الوصول والعربية والمحاكاة: التكبير والتباين ولوحة المفاتيح والحركة المخفّضة"],
+ ["Reliability and learning-honesty fixes across saving, backups, exams, challenges and Qurʾān sessions", "إصلاحات الموثوقية وصدق التعلّم في الحفظ والنسخ الاحتياطي والاختبارات والتحديات وجلسات القرآن"]
 ]

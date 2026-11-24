@@ -73,7 +73,7 @@ On Windows, if it says **Windows protected your PC**, choose **More info › Run
 
 ### Updates
 
-From version 2.1, updates come from inside the app: **Parent area › Settings** on the phone, **This computer** on Windows. Press **Check for updates**, or turn on a weekly check (off by default). Miftāḥ downloads the new version, checks its SHA-256 against the release, and installs it; the family's record is never touched.
+From version 2.1, updates come from inside the app: **Parent area › Settings** on the phone, **This computer** on Windows. Press **Check for updates**, or turn on a weekly check (off by default). Miftāḥ verifies the signed update manifest and SHA-256 checksum before installing; the family's record is never touched.
 
 ## Watch the demo
 
@@ -186,7 +186,7 @@ A simple path for the first week. The [illustrated guide](https://bashyr18.githu
 1. **Install it** on the phone, the computer, or both ([Download](#download)).
 2. **Open the first door.** Choose English or العربية, press **Begin**, and add your first child: a name and an age. The age sets their stage.
 3. **Start the day.** Each child taps their name, then **Open the door**. They work through today's path one step at a time.
-4. **Open the parent area** with the button at the top right (a small sum keeps young children out, or set a PIN). Here you add brothers and sisters, see each child's day, and change their plan.
+4. **Open the parent area** with the button at the top right (a small sum keeps young children out, or set a PIN with a recovery code). Here you add brothers and sisters, see each child's day, and change their plan.
 5. **Print or send a sheet.** In a child's **Print** tab, choose a sheet and print it, save a PDF, or press **Do it on screen**. When it comes back, mark it from **Today**.
 6. **Join your phone and computer.** On the computer open **Phone and computer**, turn it on and press **Pair a phone**. On the phone open **Parent area › Devices › Find my computer** and enter the displayed code. Without Wi-Fi, **Send to my other device** does the same with a file.
 7. **Back up.** On the computer, **This computer › Backups** keeps a copy each day. On the phone, a family file is a complete backup too.
