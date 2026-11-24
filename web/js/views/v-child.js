@@ -228,7 +228,7 @@
         var x = 50 + 25 * Math.sin(idx * .95); if (rtl) x = 100 - x;
         var cy = y + 46;
         pts.push([x, cy]); if (done) lastDone = pts.length - 1;
-        nodes += '<button class="mapn h-' + r.hue + (done ? ' done' : isNext ? ' now' : open ? ' open' : ' lock') + '" style="left:' + x.toFixed(1) + '%;top:' + y + 'px" data-a="room-open" data-id="' + sk.id + '"><span class="mapm">' + (sk.glyph ? '<span class="mapg" lang="ar">' + sk.glyph + '</span>' : A.art(sk.art || r.art, 64)) + (done ? '<span class="mapk">' + keyIcon(sk.id, 26) + '</span>' : !open ? '<span class="mapl">' + A.icon('lock', 16) + '</span>' : '') + '</span><b>' + esc(L(sk.title)) + '</b><small>' + esc(stateText(sk.id, open)) + '</small></button>';
+        nodes += '<button class="mapn h-' + r.hue + (done ? ' done' : isNext ? ' now' : open ? ' open' : ' lock') + '" style="left:' + x.toFixed(1) + '%;top:' + y + 'px" data-a="room-open" data-id="' + esc(sk.id) + '"><span class="mapm">' + (sk.glyph ? '<span class="mapg" lang="ar">' + esc(sk.glyph) + '</span>' : A.art(sk.art || r.art, 64)) + (done ? '<span class="mapk">' + keyIcon(sk.id, 26) + '</span>' : !open ? '<span class="mapl">' + A.icon('lock', 16) + '</span>' : '') + '</span><b>' + esc(L(sk.title)) + '</b><small>' + esc(stateText(sk.id, open)) + '</small></button>';
         y += ROW; idx++;
       });
     });
@@ -238,12 +238,12 @@
     return {
       hue: r.hue,
       html: '<div class="ph h-' + r.hue + '">' + (A.hasImg('portal-' + r.id) ? '<span class="ph-portal">' + A.portalImg(r.id, true) + '</span>' : '<svg class="girih" viewBox="0 0 100 100">' + A.girih(null, .55) + '</svg>') + '<a class="backp" href="#/rooms">' + A.icon('back', 18) + '<span>' + esc(A.stage() >= 3 ? L(['Subjects', 'المواد']) : T('Rooms')) + '</span></a><h1>' + esc(L(r.name)) + '</h1><p>' + esc(L(r.tag)) + '</p></div>' + yearBar + '<div class="wrap">' + shelfHtml(r.id) + '<div class="rmap h-' + r.hue + '" style="height:' + y + 'px"><svg class="rmap-line" viewBox="0 0 100 ' + y + '" preserveAspectRatio="none" aria-hidden="true"><path d="' + dAll + '" class="ml-b"/><path d="' + dAll + '" class="ml-t"/>' + (lastDone >= 0 || next ? '<path d="' + dDone + '" class="ml-d"/>' : '') + '</svg>' + nodes + '</div></div>' + NAVBAR('rooms'),
-      mount: function (v) { var n = $('.mapn.now', v), yb = $('.ryear.on', v); if (yb && yb.scrollIntoView) yb.parentNode.scrollLeft = yb.offsetLeft - 40; if (n && n.scrollIntoView) setTimeout(function () { n.scrollIntoView({ block: 'center' }); }, 30); }
+      mount: function (v) { var n = $('.mapn.now', v), yb = $('.ryear.on', v); if (yb && yb.scrollIntoView) yb.scrollIntoView({ inline: 'center', block: 'nearest' }); if (n && n.scrollIntoView) setTimeout(function () { n.scrollIntoView({ block: 'center' }); }, 30); }
     };
   };
   function shelfHtml(room) {
     var list = Media.shelf(room); if (!list.length) return '';
-    return '<div class="shelf"><h3>' + esc(T('From your family')) + '</h3><div class="shelf-r">' + list.map(function (m) { return '<a class="shelf-i" href="#/watch/' + m.id + '"><span class="shelf-t">' + (m.kind === 'youtube' ? '<img src="https://i.ytimg.com/vi/' + m.ref + '/mqdefault.jpg" alt="" onerror="this.remove()">' : (m.kind === 'image' ? '<img src="media/' + encodeURIComponent(m.ref) + '" alt="">' : '')) + (m.kind === 'image' ? '' : '<i>' + A.icon('play', 20) + '</i>') + '</span><b>' + esc(m.title) + '</b></a>'; }).join('') + '</div></div>';
+    return '<div class="shelf"><h3>' + esc(T('From your family')) + '</h3><div class="shelf-r">' + list.map(function (m) { return '<a class="shelf-i" href="#/watch/' + esc(m.id) + '"><span class="shelf-t">' + (m.kind === 'youtube' ? '<img src="https://i.ytimg.com/vi/' + esc(m.ref) + '/mqdefault.jpg" alt="">' : (m.kind === 'image' ? '<img src="media/' + encodeURIComponent(m.ref) + '" alt="">' : '')) + (m.kind === 'image' ? '' : '<i>' + A.icon('play', 20) + '</i>') + '</span><b>' + esc(m.title) + '</b></a>'; }).join('') + '</div></div>';
   }
   function stateText(id, open) {
     if (!open) return '';
@@ -341,7 +341,7 @@
     var steps = Player.compose(sk, rng);
     /* depth for a child moving fast: harder questions at the end, with no help, one of them from the next lesson. They never stop
        a key being forged; they show how far the idea really reaches */
-    var fastNow = A.stage() >= 1 && !res && Flow.pace().fast !== 'steady';
+    var fastNow = res ? !!res.fast : (A.stage() >= 1 && Flow.pace().fast !== 'steady');
     if (fastNow && sk.review && !sk.hifz) {
       var extra = [], u0 = C.units[sk.unit], nextSk = u0 ? u0.skills[u0.skills.indexOf(sk) + 1] : null;
       for (var si = 0; si < 2; si++) { var q0 = sk.review(rng); q0 = Array.isArray(q0) ? q0[0] : q0; if (q0 && q0.k !== 'say' && q0.k !== 'mission') extra.push(Object.assign({}, q0, { ph: 'stretch', hint: null, noHelp: true })); }
@@ -351,7 +351,7 @@
     }
     Player.start(el, {
       steps: steps, skill: sk.id, hue: r.hue, rng: rng, mode: 'lesson', quiet: !!sk.quiet,
-      track: { skill: sk.id, seed: seed, stop: stopI }, at: res,
+      track: { skill: sk.id, seed: seed, stop: stopI, fast: fastNow }, at: res,
       onExit: function () { A.toast(T('Your place is saved')); A.go(stopI != null ? 'home' : 'room/' + sk.room); },
       onDone: function (res2, host) {
         forgeScreen(host, sk, res2, r.hue, function () {
@@ -415,7 +415,7 @@
         onDone: function (res) { if (res.solo && res.soloOk === res.solo) { M.log(sk.id, { k: 'forge', ok: true, by: 'leap' }); Flow.record(sk.id, true, undefined, { clean: true }); passed.push(sk); at++; one(); } else done(); } });
     }
     function done() {
-      Plan.complete(i); A.D().path = null; A.saveNow();
+      Plan.complete(i); A.saveNow();
       var n = passed.length;
       el.innerHTML = '<div class="forge h-' + R.hue + '"><div class="forge-rays" style="' + (n ? '' : 'display:none') + '"></div><div class="forge-key">' + A.art('key', Math.min(innerWidth, innerHeight) * .42) + '</div><div class="forge-txt"><small>' + esc(L(R.name)) + '</small><h2>' + esc(n ? L(['You leapt over ' + n + (n === 1 ? ' lesson' : ' lessons'), 'قفزت فوق ' + A.num(n) + (n === 1 ? ' درس' : ' دروس')]) : L(['Good: this is where we start', 'جيد: من هنا نبدأ'])) + '</h2><p>' + esc(n ? passed.map(function (x) { return L(x.title); }).join(' · ') : L(list[0].title)) + '</p><button class="btn pri big" id="fgo">' + esc(T('Next')) + '</button></div></div>';
       if (n) { Fx.clack(); Fx.bloom(innerWidth / 2, innerHeight * .42, '#f1d59e', true); }

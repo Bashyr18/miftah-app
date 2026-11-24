@@ -5,11 +5,22 @@
 use windows::core::{Interface, HSTRING};
 use windows::Media::SpeechSynthesis::SpeechSynthesizer;
 use windows::Storage::Streams::DataReader;
-use windows::Win32::System::WinRT::{RoInitialize, RO_INIT_MULTITHREADED};
+use windows::Win32::System::WinRT::{RoInitialize, RoUninitialize, RO_INIT_MULTITHREADED};
 use windows_future::IAsyncOperation;
 
+struct RoGuard(bool);
+impl Drop for RoGuard {
+    fn drop(&mut self) {
+        if self.0 { unsafe { RoUninitialize(); } }
+    }
+}
+
 fn on_thread<T: Send + 'static>(f: impl FnOnce() -> windows::core::Result<T> + Send + 'static) -> Option<T> {
-    std::thread::spawn(move || { unsafe { let _ = RoInitialize(RO_INIT_MULTITHREADED); } f().ok() }).join().ok().flatten()
+    std::thread::spawn(move || {
+        let init = unsafe { RoInitialize(RO_INIT_MULTITHREADED).is_ok() };
+        let _guard = RoGuard(init);
+        f().ok()
+    }).join().ok().flatten()
 }
 
 /// the languages there is a voice for, of the two the app speaks: "ar", "en"
@@ -43,10 +54,12 @@ pub fn wav(text: String, lang: String) -> Option<Vec<u8>> {
         s.SetVoice(&voice)?;
         if let Ok(o) = s.Options() { let _ = o.SetSpeakingRate(0.85); }
         let stream = s.SynthesizeTextToStreamAsync(&HSTRING::from(text))?.get()?;
-        let n = stream.Size()? as u32;
+        let n = u32::try_from(stream.Size()?).ok().filter(|&x| x > 0 && x <= 16 * 1024 * 1024);
+        let Some(n) = n else { return Ok(None) };
         let r = DataReader::CreateDataReader(&stream.GetInputStreamAt(0)?)?;
-        r.LoadAsync(n)?.cast::<IAsyncOperation<u32>>()?.get()?;
-        let mut buf = vec![0u8; n as usize];
+        let loaded = r.LoadAsync(n)?.cast::<IAsyncOperation<u32>>()?.get()?;
+        if loaded == 0 { return Ok(None); }
+        let mut buf = vec![0u8; loaded as usize];
         r.ReadBytes(&mut buf)?;
         Ok(Some(buf))
     }).flatten()

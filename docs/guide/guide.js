@@ -138,20 +138,20 @@ var CH = [
           { b: 'Size of everything', x: 'From 70% to 200%, for a small laptop or a television across the room.', m: { d: 2 } },
           { b: 'Backups', x: 'One copy each day for thirty days. Going back saves today first, so nothing is lost.', m: { d: 3 } } ] } ] },
 
-  { id: 'together', kicker: 'One family record', title: 'Phone and computer', dek: 'Pair once with six digits. After that the phone joins its record with the computer by itself whenever it is home.', thumb: 'd-link', link: true,
+  { id: 'together', kicker: 'One family record', title: 'Phone and computer', dek: 'Pair once with the code shown on the computer. After that the phone joins its record with the computer whenever it is home.', thumb: 'd-link', link: true,
     spreads: [
       { shots: { d: 'd-link' }, h: 'On the computer: show a code', drop: true, p: 'Open Phone and computer and turn on “Let my phone find this computer”. Windows may ask once to allow Miftāḥ on private networks: choose Allow. Then press Pair a phone.',
         steps: [
           { b: 'Let my phone find this computer', x: 'The computer becomes home base on your Wi-Fi. Nothing reaches the internet.', m: { d: 1 } },
-          { b: 'Six digits', x: 'Good for ten minutes and one phone. Eight wrong tries and the code is gone.', m: { d: 2 } },
+          { b: 'One-time code', x: 'Good for ten minutes and one phone. Older screenshots show the previous six-digit code.', m: { d: 2 } },
           { b: 'What to do on the phone', x: 'The three steps, written where you need them.', m: { d: 3 } } ] },
       { shots: { p: 'p-sync' }, flip: true, h: 'On the phone: find it', p: 'In the parent area, open Devices and tap Find my computer. If the Wi-Fi keeps devices apart, type the address shown on the computer instead.',
         steps: [
           { b: 'Find my computer', x: 'The phone looks on your Wi-Fi for Miftāḥ, and lists the computers it finds.', m: { p: 0 } },
           { b: 'Or with a file', x: 'Away from home, the family file still carries everything, recordings included.', m: { p: 1 } } ] },
-      { shots: { p: 'p-pair' }, h: 'Type it, and it is done', p: 'Type the six digits and press Pair. From now on, each time Miftāḥ opens at home, the two join their records quietly, recordings and photos included.',
+      { shots: { p: 'p-pair' }, h: 'Enter your pairing code', p: 'Enter the code from the computer and press Pair. Upgrade both apps and pair again if you used the old six-digit code.',
         steps: [
-          { b: 'The six digits', x: 'They prove the phone saw the computer’s screen. The two then share a long key no one else has.', m: { p: 0 } },
+          { b: 'Pairing code', x: 'This creates a private key for joining records, recordings and photos on your home network.', m: { p: 0 } },
           { b: 'Pair', x: 'Nothing is overwritten. Both keep everything, and a lesson done on either counts on both.', m: { p: 1 } } ] } ] },
 
   { id: 'look', kicker: 'Make it yours', title: 'Day, night and Arabic', dek: 'The world follows the sun by default, and every screen is drawn for Arabic, right to left.', thumb: 'd-home', themes: true, spreads: [] }

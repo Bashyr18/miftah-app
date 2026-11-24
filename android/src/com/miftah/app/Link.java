@@ -31,17 +31,14 @@ import java.util.Set;
 
 import javax.crypto.Cipher;
 import javax.crypto.Mac;
-import javax.crypto.SecretKeyFactory;
+
 import javax.crypto.spec.IvParameterSpec;
-import javax.crypto.spec.PBEKeySpec;
+
 import javax.crypto.spec.SecretKeySpec;
 
 /**
- * The phone's side of "Phone and computer": finds Miftah for Windows on the home Wi-Fi, pairs with the six digits it shows,
- * and joins records with it. The wire format and the seal are the same as windows/src/Link.cs:
- *   request  "MFT1" | type | id length | phone id | length (big-endian) | sealed payload
- *   answer   status | length (big-endian) | sealed payload
- *   seal     AES-256-CBC (key = HMAC(key, "miftah-enc")), then HMAC-SHA256 (key = HMAC(key, "miftah-mac")) over IV and cipher text
+ * The phone's side of "Phone and computer": finds Miftah for Windows on the home Wi-Fi, pairs with its one-time code,
+ * and joins records with it. See windows/app/src/link.rs for the MFT2 wire format.
  * Nothing here ever reaches the internet: only private addresses on the local network.
  */
 final class Link {
@@ -58,15 +55,18 @@ final class Link {
         if (id == null) { byte[] b = new byte[8]; new SecureRandom().nextBytes(b); id = hex(b); prefs().edit().putString("dev", id).apply(); }
         return id;
     }
-    JSONObject paired() { try { String s = prefs().getString("pc", null); return s == null ? null : new JSONObject(s); } catch (Exception e) { return null; } }
+    JSONObject paired() { try { JSONObject pc = new JSONObject(prefs().getString("pc", "{}")); return pc.optInt("protocol") == 2 ? pc : null; } catch (Exception e) { return null; } }
     void forget() { prefs().edit().remove("pc").apply(); }
 
     /* ---------- the seal ---------- */
-    static byte[] sub(byte[] key, String label) throws Exception { Mac m = Mac.getInstance("HmacSHA256"); m.init(new SecretKeySpec(key, "HmacSHA256")); return m.doFinal(label.getBytes(StandardCharsets.US_ASCII)); }
+    static byte[] sub(byte[] key, String label, byte[]... fields) throws Exception {
+        Mac m = Mac.getInstance("HmacSHA256"); m.init(new SecretKeySpec(key, "HmacSHA256"));
+        m.update(label.getBytes(StandardCharsets.US_ASCII));
+        for (byte[] field : fields) m.update(field);
+        return m.doFinal();
+    }
     static byte[] pairKey(String code, String pcId) throws Exception {
-        SecretKeyFactory f = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
-        PBEKeySpec spec = new PBEKeySpec(code.toCharArray(), ("miftah-pair:" + pcId).getBytes(StandardCharsets.UTF_8), 50000, 256);
-        return f.generateSecret(spec).getEncoded();
+        return sub(code.getBytes(StandardCharsets.US_ASCII), "miftah-v2/pair/" + pcId);
     }
     static byte[] close(byte[] key, byte[] plain) throws Exception {
         byte[] iv = new byte[16]; new SecureRandom().nextBytes(iv);
@@ -88,18 +88,32 @@ final class Link {
 
     /* ---------- one request, one answer ---------- */
     static final class Answer { int status; byte[] body; }
-    private Answer ask(String ip, int port, byte type, byte[] payload, int timeout) throws Exception {
+    private Answer ask(String ip, int port, byte type, byte[] key, byte[] plain, int timeout) throws Exception {
+        InetAddress address = InetAddress.getByName(ip);
+        if (!privateIp(address)) throw new Exception("home");
         try (Socket s = new Socket()) {
-            s.connect(new InetSocketAddress(ip, port), 2500); s.setSoTimeout(timeout);
+            s.connect(new InetSocketAddress(address, port), 2500); s.setSoTimeout(timeout);
             OutputStream o = s.getOutputStream(); byte[] id = devId().getBytes(StandardCharsets.US_ASCII);
             ByteArrayOutputStream h = new ByteArrayOutputStream();
-            h.write("MFT1".getBytes(StandardCharsets.US_ASCII)); h.write(type); h.write(id.length); h.write(id);
-            int n = payload.length; h.write(new byte[]{(byte) (n >> 24), (byte) (n >> 16), (byte) (n >> 8), (byte) n});
-            o.write(h.toByteArray()); o.write(payload); o.flush();
+            h.write("MFT2".getBytes(StandardCharsets.US_ASCII)); h.write(type); h.write(id.length); h.write(id);
+            byte[] clientNonce = new byte[32]; new SecureRandom().nextBytes(clientNonce); h.write(clientNonce);
+            byte[] header = h.toByteArray(); o.write(header); o.flush();
             DataInputStream in = new DataInputStream(s.getInputStream());
-            Answer a = new Answer(); a.status = in.readUnsignedByte(); int len = in.readInt();
-            if (len < 0 || len > MAX_FILE + 1024) throw new Exception("too big");
-            a.body = new byte[len]; in.readFully(a.body);
+            Answer a = new Answer(); a.status = in.readUnsignedByte(); if (a.status != 0) return a;
+            byte[] nonce = new byte[32], tag = new byte[32]; in.readFully(nonce); in.readFully(tag);
+            byte[] request = sub(key, "miftah-v2/request", nonce, header);
+            byte[] response = sub(key, "miftah-v2/response", nonce, header);
+            if (!MessageDigest.isEqual(tag, sub(response, "challenge"))) throw new Exception(type == PAIR ? "code" : "fail");
+            byte[] payload = close(request, plain);
+            byte[] length = java.nio.ByteBuffer.allocate(4).putInt(payload.length).array();
+            o.write(length); o.write(sub(request, "length", length)); o.write(payload); o.flush();
+            a.status = in.readUnsignedByte(); if (a.status != 0) return a;
+            in.readFully(length); in.readFully(tag);
+            int len = java.nio.ByteBuffer.wrap(length).getInt();
+            long max = type == GET ? MAX_FILE + 1024 : type == SYNC ? 64L * 1024 * 1024 : type == HELLO ? 1024 * 1024 : 16 * 1024;
+            if (len < 64 || len > max || !MessageDigest.isEqual(tag, sub(response, "length", length))) throw new Exception("fail");
+            byte[] body = new byte[len]; in.readFully(body);
+            a.body = open(response, body); if (a.body == null) throw new Exception("fail");
             return a;
         }
     }
@@ -115,7 +129,7 @@ final class Link {
         JSONArray out = new JSONArray(); Set<String> seen = new HashSet<>();
         try (DatagramSocket s = new DatagramSocket()) {
             s.setBroadcast(true); s.setSoTimeout(250);
-            byte[] q = "MFT1?".getBytes(StandardCharsets.US_ASCII);
+            byte[] q = "MFT2?".getBytes(StandardCharsets.US_ASCII);
             List<InetAddress> to = new ArrayList<>();
             if (only != null) { InetAddress one = InetAddress.getByName(only); if (!privateIp(one)) return out; to.add(one); } else to.add(InetAddress.getByName("255.255.255.255"));
             if (only == null) for (NetworkInterface ni : Collections.list(NetworkInterface.getNetworkInterfaces())) {
@@ -129,7 +143,7 @@ final class Link {
                 try {
                     DatagramPacket p = new DatagramPacket(buf, buf.length); s.receive(p);
                     String m = new String(p.getData(), 0, p.getLength(), StandardCharsets.UTF_8);
-                    if (!m.startsWith("MFT1!") || !privateIp(p.getAddress())) continue;
+                    if (!m.startsWith("MFT2!") || !privateIp(p.getAddress())) continue;
                     JSONObject card = new JSONObject(m.substring(5)); String id = card.optString("id");
                     if (id.isEmpty() || !seen.add(id)) continue;
                     card.put("ip", p.getAddress().getHostAddress()); out.put(card);
@@ -142,16 +156,16 @@ final class Link {
     /* ---------- pairing ---------- */
     /** returns the computer's name, or throws with a reason the page can show */
     String pair(String ip, int port, String pcId, String code, String phoneName) throws Exception {
-        if (!privateIp(InetAddress.getByName(ip))) throw new Exception("home");
+        if (!code.matches("[a-f0-9]{32}") || !pcId.matches("[a-f0-9]{16}")) throw new Exception("code");
         byte[] pk = pairKey(code, pcId);
         JSONObject me = new JSONObject().put("name", phoneName);
-        Answer a = ask(ip, port, PAIR, close(pk, me.toString().getBytes(StandardCharsets.UTF_8)), 20000);
+        Answer a = ask(ip, port, PAIR, pk, me.toString().getBytes(StandardCharsets.UTF_8), 20000);
         if (a.status == 2) throw new Exception("code");
         if (a.status == 4) throw new Exception("locked");
         if (a.status != 0) throw new Exception("fail");
-        byte[] plain = open(pk, a.body); if (plain == null) throw new Exception("code");
-        JSONObject r = new JSONObject(new String(plain, StandardCharsets.UTF_8));
-        JSONObject pc = new JSONObject().put("id", r.getString("id")).put("name", r.optString("name", "Computer")).put("key", r.getString("key")).put("ip", ip).put("port", port);
+        JSONObject r = new JSONObject(new String(a.body, StandardCharsets.UTF_8));
+        if (!pcId.equals(r.getString("id")) || java.util.Base64.getDecoder().decode(r.getString("key")).length != 32) throw new Exception("fail");
+        JSONObject pc = new JSONObject().put("id", pcId).put("name", r.optString("name", "Computer")).put("key", r.getString("key")).put("ip", ip).put("port", port).put("protocol", 2);
         prefs().edit().putString("pc", pc.toString()).apply();
         return pc.getString("name");
     }
@@ -162,21 +176,22 @@ final class Link {
     Result sync(String state, String phoneName, Files files) throws Exception {
         JSONObject pc = paired(); if (pc == null) throw new Exception("unpaired");
         byte[] key = android.util.Base64.decode(pc.getString("key"), android.util.Base64.DEFAULT);
+        if (key.length != 32) throw new Exception("forgotten");
         String ip = pc.optString("ip"); int port = pc.optInt("port", TCP);
         /* the computer may have a new address since last time: look for it by its id */
         Answer hello;
         JSONObject me = new JSONObject().put("name", phoneName);
-        try { hello = ask(ip, port, HELLO, close(key, me.toString().getBytes(StandardCharsets.UTF_8)), 8000); }
+        try { hello = ask(ip, port, HELLO, key, me.toString().getBytes(StandardCharsets.UTF_8), 8000); }
         catch (Exception first) {
             JSONArray found = find(1600); String nip = null;
             for (int i = 0; i < found.length(); i++) if (found.getJSONObject(i).optString("id").equals(pc.getString("id"))) { nip = found.getJSONObject(i).getString("ip"); port = found.getJSONObject(i).optInt("port", TCP); }
             if (nip == null) throw new Exception("away");
             ip = nip; pc.put("ip", ip).put("port", port); prefs().edit().putString("pc", pc.toString()).apply();
-            hello = ask(ip, port, HELLO, close(key, me.toString().getBytes(StandardCharsets.UTF_8)), 8000);
+            hello = ask(ip, port, HELLO, key, me.toString().getBytes(StandardCharsets.UTF_8), 8000);
         }
         if (hello.status == 1) throw new Exception("forgotten");
         if (hello.status != 0) throw new Exception("fail");
-        JSONObject theirs = new JSONObject(new String(open(key, hello.body), StandardCharsets.UTF_8));
+        JSONObject theirs = new JSONObject(new String(hello.body, StandardCharsets.UTF_8));
         Result res = new Result(); res.name = theirs.optString("name", pc.optString("name"));
         /* recordings and the family's files first, so the joined record finds them */
         String[][] kinds = {{"media"}, {"voice"}};
@@ -189,18 +204,18 @@ final class Link {
                 byte[] head = new JSONObject().put("kind", k[0]).put("name", n).toString().getBytes(StandardCharsets.UTF_8), data = read(f);
                 byte[] p = new byte[4 + head.length + data.length]; p[0] = (byte) (head.length >> 24); p[1] = (byte) (head.length >> 16); p[2] = (byte) (head.length >> 8); p[3] = (byte) head.length;
                 System.arraycopy(head, 0, p, 4, head.length); System.arraycopy(data, 0, p, 4 + head.length, data.length);
-                if (ask(ip, port, PUT, close(key, p), 120000).status == 0) res.sent++;
+                if (ask(ip, port, PUT, key, p, 120000).status == 0) res.sent++;
             }
             for (String n : there) if (!here.contains(n) && safe(n)) {
-                Answer a = ask(ip, port, GET, close(key, new JSONObject().put("kind", k[0]).put("name", n).toString().getBytes(StandardCharsets.UTF_8)), 120000);
-                if (a.status != 0) continue; byte[] data = open(key, a.body); if (data == null) continue;
+                Answer a = ask(ip, port, GET, key, new JSONObject().put("kind", k[0]).put("name", n).toString().getBytes(StandardCharsets.UTF_8), 120000);
+                if (a.status != 0) continue; byte[] data = a.body;
                 File tmp = new File(dir, n + ".tmp"); try (FileOutputStream o = new FileOutputStream(tmp)) { o.write(data); }
                 if (tmp.renameTo(new File(dir, n))) res.got++; else tmp.delete();
             }
         }
-        Answer s = ask(ip, port, SYNC, close(key, state.getBytes(StandardCharsets.UTF_8)), 90000);
+        Answer s = ask(ip, port, SYNC, key, state.getBytes(StandardCharsets.UTF_8), 90000);
         if (s.status != 0) throw new Exception("fail");
-        byte[] merged = open(key, s.body); if (merged == null) throw new Exception("fail");
+        byte[] merged = s.body;
         res.state = new String(merged, StandardCharsets.UTF_8);
         prefs().edit().putLong("last", System.currentTimeMillis()).apply();
         return res;

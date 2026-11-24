@@ -142,7 +142,7 @@ html[lang=ar] .sy-h{letter-spacing:0;font-size:13px}
 .sy-st{display:block;text-align:center;font-size:13px;color:var(--t3);line-height:1.45}
 .sy-st:empty{display:none}
 .sy-p{font-size:14px;color:var(--t2);line-height:1.45;text-align:center}
-.sy-code{text-align:center;font-size:28px;letter-spacing:.35em;font-weight:700;font-variant-numeric:tabular-nums}
+.sy-code{font:700 16px/1.4 monospace}
 .sy-manual{justify-self:center;font-size:13px;color:var(--t3);text-decoration:underline;text-underline-offset:3px;padding:6px}
 .sy-lan .btn.ghost.sm{justify-self:center}
 /* ===== sheets on screen (v-ink.js) ===== */

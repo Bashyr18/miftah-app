@@ -103,7 +103,7 @@ fn message(hwnd: HWND, text: String) {
     let v: Value = serde_json::from_str(&text).unwrap_or(Value::Null);
     match v["do"].as_str() {
         Some("install") => {
-            if let Some(s) = st() { s.copying.set(true); }
+            if let Some(s) = st() { if s.copying.replace(true) { return; } }
             install(v["desk"].as_bool().unwrap_or(true), v["boot"].as_bool().unwrap_or(false));
         }
         Some("open") => {
@@ -173,10 +173,10 @@ fn main() {
     let (bg, fg) = if dark { (0x0b0d14, 0xf0e9dc) } else { (0xfbf6ea, 0x282116) };
     mc::caption(hwnd, dark, bg, fg);
 
-    let data = std::env::temp_dir().join("Miftah-Setup-webview");
+    let data = std::env::temp_dir().join(format!("Miftah-Setup-webview-{}", std::process::id()));
     let web = match mc::create_web(hwnd, &data.to_string_lossy(), "--disable-features=msSmartScreenProtection") {
         Ok(w) => w,
-        Err(_) => { unsafe { let _ = DestroyWindow(hwnd); } plain(); return; }
+        Err(_) => { let _ = std::fs::remove_dir_all(&data); unsafe { let _ = DestroyWindow(hwnd); } plain(); return; }
     };
     mc::set_background(&web.controller, bg);
     unsafe {
@@ -185,9 +185,16 @@ fn main() {
             let _ = st.SetAreDefaultContextMenusEnabled(false);
             let _ = st.SetIsStatusBarEnabled(false);
             let _ = st.SetIsZoomControlEnabled(false);
+            let _ = st.SetAreHostObjectsAllowed(false);
+            let _ = st.SetAreDefaultScriptDialogsEnabled(false);
             if let Ok(s3) = st.cast::<ICoreWebView2Settings3>() { let _ = s3.SetAreBrowserAcceleratorKeysEnabled(false); }
+            if let Ok(s4) = st.cast::<ICoreWebView2Settings4>() { let _ = s4.SetIsGeneralAutofillEnabled(false); let _ = s4.SetIsPasswordAutosaveEnabled(false); }
+            if let Ok(s6) = st.cast::<ICoreWebView2Settings6>() { let _ = s6.SetIsSwipeNavigationEnabled(false); }
         }
         let mut t = Default::default();
+        if let Ok(v4) = web.view.cast::<ICoreWebView2_4>() {
+            let _ = v4.add_DownloadStarting(&DownloadStartingEventHandler::create(Box::new(|_, a| { if let Some(a) = a { let _ = a.SetCancel(true); } Ok(()) })), &mut t);
+        }
         let _ = web.view.add_WebMessageReceived(&WebMessageReceivedEventHandler::create(Box::new(move |_, a| {
             if let Some(a) = a { let mut p = PWSTR::null(); if a.TryGetWebMessageAsString(&mut p).is_ok() { let m = take_pwstr(p); mc::later(move || message(hwnd, m)); } }
             Ok(())
@@ -215,6 +222,12 @@ fn main() {
     *s.web.borrow_mut() = Some(web);
     unsafe { let _ = ShowWindow(hwnd, SW_SHOWNORMAL); let _ = UpdateWindow(hwnd); }
     let code = mc::pump();
+    ST.with(|x| { *x.borrow_mut() = None; });
+    drop(s);
+    for _ in 0..8 {
+        if std::fs::remove_dir_all(&data).is_ok() || !data.exists() { break; }
+        std::thread::sleep(std::time::Duration::from_millis(80));
+    }
     let _ = PWSTR::null();
     let _ = DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2;
     std::process::exit(code);

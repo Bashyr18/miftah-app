@@ -79,7 +79,7 @@ body.rail-mini #rail .rl-dot{position:absolute;top:8px;inset-inline-end:8px}
   html.is-desk body.has-rail .view .nav{display:grid!important}
   html.is-desk body.has-rail .view .nav::before{display:block!important}
   html.is-desk body.has-rail .toast{left:50%}
-  html.is-desk body.has-rail .view{padding-bottom:0}
+  html.is-desk body.has-rail .view{padding-bottom:calc(92px + var(--sab))}
 }
 
 /* ---------- dialogs in the middle of the screen ---------- */
@@ -222,8 +222,7 @@ html[data-motion=off] .dk-waves path{animation:none}
 .dk-pc code{font:600 13px ui-monospace,Consolas,monospace;padding:4px 10px;border-radius:8px;background:var(--bg);border:1px solid var(--line2);color:var(--t2);direction:ltr}
 .dk-code{display:grid;justify-items:center;gap:10px;padding:18px 0 6px}
 .dk-digits{display:flex;gap:8px;direction:ltr}
-.dk-digits span{width:52px;height:64px;display:grid;place-items:center;border-radius:14px;font:700 34px/1 var(--f);font-variant-numeric:tabular-nums;color:var(--t1);background:var(--bg);border:1px solid var(--gold-line);box-shadow:var(--hi),0 10px 24px -18px rgba(183,140,67,.9)}
-.dk-digits span.gap{margin-left:14px}
+.dk-digits code{padding:12px;border-radius:14px;font-size:clamp(12px,2vw,18px);overflow-wrap:anywhere;user-select:text;background:var(--bg);border:1px solid var(--gold-line)}
 .dk-timer{width:min(340px,100%);height:4px;border-radius:4px;background:var(--line2);overflow:hidden}
 .dk-timer i{display:block;height:100%;background:var(--gold);transition:width 1s linear}
 .dk-code small{color:var(--t3);font-size:13px}

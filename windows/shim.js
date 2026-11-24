@@ -3,7 +3,8 @@
 (function () {
   'use strict';
   /* the app's own page only: not a simulation or a video inside it, which have no bridge */
-  if (location.origin !== 'https://miftah.example' || window.top !== window || !(window.chrome && chrome.webview)) return;
+  if (location.origin !== 'https://miftah.example' || (location.pathname !== '/' && location.pathname !== '/index.html') || window.top !== window || !(window.chrome && chrome.webview)) return;
+  var BRIDGE_TOKEN = '__MIFTAH_TOKEN__';
   window.MIFTAH_DESKTOP = true;
   /* the document may not exist yet at this point */
   var mark = function () { document.documentElement.classList.add('is-desk'); };
@@ -14,7 +15,7 @@
     try {
       var x = new XMLHttpRequest();
       x.open('POST', '/__bridge/' + fn, false);
-      x.setRequestHeader('X-Miftah', '1');
+      x.setRequestHeader('X-Miftah', BRIDGE_TOKEN);
       x.setRequestHeader('Content-Type', 'application/json');
       x.send(JSON.stringify(args || []));
       if (x.status !== 200) return undefined;

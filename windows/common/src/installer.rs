@@ -19,6 +19,22 @@ pub const ABOUT: &str = "Islamic homeschool for the whole family";
 pub const PIPE: &str = r"\\.\pipe\Miftah.Desktop.v2";
 const RUN_KEY: &str = r"Software\Microsoft\Windows\CurrentVersion\Run";
 
+/* per-user named pipe so Fast User Switching accounts never collide */
+pub fn pipe_name() -> String {
+    let mut h: u64 = 0xcbf29ce484222325;
+    for k in ["USERNAME", "USERDOMAIN", "LOCALAPPDATA"] {
+        if let Some(v) = crate::env(k) {
+            for b in v.to_lowercase().as_bytes() {
+                h ^= *b as u64;
+                h = h.wrapping_mul(0x100000001b3);
+            }
+            h ^= 0xff;
+            h = h.wrapping_mul(0x100000001b3);
+        }
+    }
+    format!("{}.{:016x}", PIPE, h)
+}
+
 /* MIFTAH_INSTALL_TEST=<folder> puts the program and shortcuts in that folder and uses a Settings line of its own,
    so the installer can be tested without touching the computer's real Miftah */
 fn test() -> Option<String> { crate::env("MIFTAH_INSTALL_TEST") }
@@ -83,12 +99,24 @@ fn copy(from: &mut dyn Read, len: u64, to: &Path, progress: &dyn Fn(f64)) -> Res
         o.sync_all().ok();
     }
     /* the old file may still be closing: a few tries. A running copy can be moved aside even when it cannot be deleted. */
+    let old = to.with_extension("exe.old");
+    let mut moved_old = false;
     for i in 0.. {
         let _ = fs::remove_file(to);
-        if to.exists() { let old = to.with_extension("exe.old"); let _ = fs::remove_file(&old); let _ = fs::rename(to, &old); }
+        if to.exists() {
+            let _ = fs::remove_file(&old);
+            if fs::rename(to, &old).is_ok() { moved_old = true; }
+        }
         match fs::rename(&part, to) {
             Ok(_) => return Ok(()),
-            Err(e) => { if i >= 20 { let _ = fs::remove_file(&part); return Err(e.to_string()); } std::thread::sleep(Duration::from_millis(250)); }
+            Err(e) => {
+                if i >= 20 {
+                    let _ = fs::remove_file(&part);
+                    if moved_old && !to.exists() && old.exists() { let _ = fs::rename(&old, to); }
+                    return Err(e.to_string());
+                }
+                std::thread::sleep(Duration::from_millis(250));
+            }
         }
     }
     Ok(())
@@ -133,16 +161,17 @@ pub fn remove() {
         for e in rd.flatten() { if e.file_name().to_string_lossy().starts_with("app-") { let _ = fs::remove_dir_all(e.path()); } }
     }
     /* a running program cannot delete its own folder: a hidden command waits a moment, then removes the whole folder,
-       trying again for a while if anything still holds a file (ping is the pause; timeout needs a console) */
-    let d = dir().to_string_lossy().into_owned();
-    let mut c = String::from("/d /c \"");
-    for i in 0..15 {
-        if i > 0 { c.push_str(" & "); }
-        c.push_str(&format!("ping -n 2 127.0.0.1 >nul & if exist \"{d}\" rmdir /s /q \"{d}\" 2>nul"));
-    }
-    c.push('"');
+       trying again for a while if anything still holds a file (ping is the pause; timeout needs a console).
+       The path is passed via an environment variable so special characters in a user folder name cannot inject shell syntax. */
+    use std::os::windows::process::CommandExt;
+    let d = dir();
     let cmd = std::env::var("ComSpec").unwrap_or_else(|_| r"C:\Windows\System32\cmd.exe".into());
-    crate::spawn(&cmd, &c, Some(&std::env::temp_dir().to_string_lossy()), true);
+    let _ = std::process::Command::new(cmd)
+        .current_dir(std::env::temp_dir())
+        .env("MIFTAH_RMDIR", &d)
+        .raw_arg(r#"/d /c "for /l %i in (1,1,15) do @(ping -n 2 127.0.0.1 >nul & if exist "%MIFTAH_RMDIR%" rmdir /s /q "%MIFTAH_RMDIR%" 2>nul)""#)
+        .creation_flags(CREATE_NO_WINDOW.0)
+        .spawn();
 }
 
 /* every running Miftah.exe started from the installed file, apart from this process */
@@ -202,7 +231,7 @@ pub fn close_running(wait_ms: u64) -> bool {
 pub fn pipe_send(args: &[String], wait_ms: u32) -> bool {
     use windows::Win32::Storage::FileSystem::*;
     use windows::Win32::System::Pipes::WaitNamedPipeW;
-    let name = h(PIPE);
+    let name = h(&pipe_name());
     let body = args.join("\n");
     unsafe {
         let until = Instant::now() + Duration::from_millis(wait_ms as u64);
@@ -239,4 +268,19 @@ pub fn shortcut(lnk: &Path, target: &Path, args: &str, about: &str) -> Result<()
     }
     let _ = PCWSTR::null();
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn pipe_name_is_scoped_and_safe() {
+        let p = pipe_name();
+        assert!(p.starts_with(r"\\.\pipe\Miftah.Desktop.v2."));
+        let suffix = p.strip_prefix(r"\\.\pipe\Miftah.Desktop.v2.").unwrap();
+        assert_eq!(suffix.len(), 16);
+        assert!(suffix.chars().all(|c| c.is_ascii_hexdigit()));
+        assert_eq!(p, pipe_name());
+    }
 }

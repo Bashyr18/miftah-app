@@ -112,12 +112,12 @@
   Player.start = function (host, o) {
     /* o: {steps, skill, mode, hue, title, onDone, onExit} */
     var st = A.stage();
-    var at = o.at && o.at.i < o.steps.length ? o.at : null;
-    run = { o: o, i: at ? at.i : 0, phases: stepKinds(o.steps), solo: at ? at.solo : 0, soloOk: at ? at.soloOk : 0, tries: 0, hinted: false, started: Date.now(), last: Date.now(), wrong: [], retried: false, retries: [] };
+    var at = o.at && Number.isInteger(o.at.i) && o.at.i >= 0 && o.at.i <= o.steps.length ? o.at : null;
+    run = { o: o, at: at, i: at ? at.i : 0, phases: stepKinds(o.steps), solo: at ? at.solo || 0 : 0, soloOk: at ? at.soloOk || 0 : 0, stN: at && at.stN, stOk: at && at.stOk, tries: 0, hinted: false, started: Date.now(), last: Date.now(), wrong: [], retried: false, retries: [] };
     if (o.mode === 'review') run.phases = ['review'];
     host.innerHTML = '<div class="pl h-' + (o.hue || 'gold') + (o.quiet ? ' quiet' : '') + '">' +
       '<div class="pl-top"><button class="pl-x" data-a="pl-exit" aria-label="' + esc(T('Leave')) + '">' + A.icon('close', 24) + '</button><div class="pl-bar"></div><button class="pl-sp" data-a="pl-say" aria-label="' + esc(T('Hear it again')) + '">' + A.icon('speak', 26) + '</button></div>' +
-      '<div class="pl-head"><div class="pl-ph"></div><div class="pl-prompt"></div></div><div class="pl-body"></div><div class="pl-msg"></div><div class="pl-foot"></div></div>';
+      '<div class="pl-head"><div class="pl-ph"></div><div class="pl-prompt"></div></div><div class="pl-body"></div><div class="pl-msg" aria-live="polite" aria-atomic="true"></div><div class="pl-foot"></div></div>';
     run.host = host; run.st = st;
     show();
   };
@@ -137,13 +137,23 @@
     if (txt) Voice.say(txt, { lang: A.ar() ? 'ar' : (s.lang || 'en'), key: s.vk });
   }
 
+  function savePlace(r) {
+    if (!r.o.track) return;
+    var i = r.i + (r.answered ? 1 : 0);
+    A.D().resume = i || r.tries || r.hinted ? Object.assign({}, r.o.track, {
+      i: i, solo: r.solo, soloOk: r.soloOk, stN: r.stN, stOk: r.stOk,
+      tries: r.answered ? 0 : r.tries, hinted: !r.answered && r.hinted, t: A.now().getTime()
+    }) : null;
+    A.save();
+  }
+
   function show() {
     var r = run, s = r.o.steps[r.i];
     if (!s) return finish();
     s = r.o.steps[r.i] = Voice.adapt(s);
-    r.step = s; r.tries = 0; r.hinted = false; r.answered = false;
-    /* the place is kept from the second step on: leaving never loses it */
-    if (r.o.track) { var dd = A.D(); dd.resume = r.i > 0 ? Object.assign({}, r.o.track, { i: r.i, solo: r.solo, soloOk: r.soloOk, t: A.now().getTime() }) : null; A.save(); }
+    r.step = s; r.tries = r.at ? r.at.tries || 0 : 0; r.hinted = !!(r.at && r.at.hinted); r.answered = false;
+    r.at = null;
+    savePlace(r);
     if (r.cleanup) { try { r.cleanup(); } catch (e) { } r.cleanup = null; }
     var ph = r.o.mode === 'review' ? 'review' : s.ph;
     var same = r.o.steps.filter(function (x) { return (r.o.mode === 'review') || x.ph === s.ph; });
@@ -187,6 +197,7 @@
   function hint() {
     var r = run, s = r.step; if (!s) return;
     r.hinted = true;
+    savePlace(r);
     if (r.st >= 2 && window.Aids && Aids.generic(s.hint)) { var wh = Aids.why(r); if (wh) { $('.pl-msg', r.host).innerHTML = wh; return; } }
     var box = $('.pl-hint', r.host);
     if (!box) { box = document.createElement('div'); box.className = 'pl-hint'; $('.pl-msg', r.host).appendChild(box); }
@@ -207,17 +218,19 @@
 
   function onOk(x, opts) {
     var r = run; if (!r || r.answered) return;
+    var s = r.step;
     opts = opts || {};
     r.answered = true;
     log(true);
     /* unaided means right first time. The youngest get one gentle second go. */
     if (s_isSolo(r.step)) { r.solo++; if (!r.hinted && r.tries <= (r.st <= 1 ? 1 : 0)) r.soloOk++; }
     if (r.step.ph === 'stretch') { r.stN = (r.stN || 0) + 1; if (!r.hinted && r.tries === 0) r.stOk = (r.stOk || 0) + 1; }
+    savePlace(r);
     Fx.ok();
     if (!r.o.quiet) Fx.bloomAt(x || $('.step-in', r.host), getHue(r), false);
     var delay = opts.delay != null ? opts.delay : (r.st >= 3 ? 420 : r.st === 2 ? 700 : 950);
     if (opts.note || r.step.after) { var n = opts.note || r.step.after; note(n, true); delay = 0; showNext(); return; }
-    setTimeout(function () { if (run === r && r.answered && r.step) advance(); }, delay);
+    setTimeout(function () { if (run === r && r.answered && r.step === s) advance(); }, delay);
   }
   function s_isSolo(s) { return s.ph === 'solo' || s.ph === 'make'; }
   function getHue(r) { var el = $('.pl', r.host); return el ? getComputedStyle(el).getPropertyValue('--h2').trim() || '#d9b26f' : '#d9b26f'; }
@@ -231,19 +244,23 @@
     if (r.o.exam) { log(false, e || s.err); r.answered = true; if (s_isSolo(s)) r.solo++; Fx.soft(); setTimeout(function () { if (run === r && r.step === s) advance(); }, 280); return; }
     Fx.soft(); if (el) Fx.shake(el);
     log(false, e || s.err);
-    if (why && r.tries < 3) { note(why, true); if (r.tries === 2 && s.hint) hint(); r.hinted = r.hinted || r.tries === 2; }
-    else if (r.tries === 1) { note(COAX[0], false); if (r.st < 2) Voice.say(L(COAX[0]), { lang: A.ar() ? 'ar' : 'en' }); }
-    else if (r.tries === 2) { if (s.hint) hint(); else { note(COAX[1], false); if (r.st < 2) Voice.say(L(COAX[1]), { lang: A.ar() ? 'ar' : 'en' }); } r.hinted = true; }
-    else {
-      /* show it, kindly, and try a fresh one later */
+    if (r.tries >= 3) {
+      /* Keep the missed mark when the learner leaves with the answer on screen. */
       r.answered = true;
       if (s_isSolo(s)) { r.solo++; }
+      savePlace(r);
       if (r.reveal) r.reveal();
       if (s.workS && window.Teach) { var oldH = $('.pl-hint', r.host); if (oldH) oldH.remove(); Teach.reveal(r.ctx, s); note(['Here is the working. Read it, then carry on.', 'هذا هو الحل. اقرأه ثم تابع.'], true); showNext(); return; }
       note(s.show || ['Here it is. We will see it again soon.', 'هذا هو. سنراه مرة أخرى قريبًا.'], true);
       if (window.Aids) { var whyH = Aids.why(r); if (whyH) $('.pl-msg', r.host).insertAdjacentHTML('beforeend', whyH); }
       showNext();
+      return;
     }
+    if (r.tries === 2) r.hinted = true;
+    if (why) { note(why, true); if (r.tries === 2 && s.hint) hint(); }
+    else if (r.tries === 2 && s.hint) hint();
+    else { var coax = COAX[r.tries - 1]; note(coax, false); if (r.st < 2) Voice.say(L(coax), { lang: A.ar() ? 'ar' : 'en' }); }
+    savePlace(r);
   }
   function note(txt, keep) {
     var r = run; var n = $('.pl-note', r.host);

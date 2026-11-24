@@ -50,8 +50,10 @@
 
   /* ---------- the player: no links out, nothing to browse ---------- */
   function frameUrl(m) {
+    var id = /^[\w-]{11}$/.test(String(m.ref || '')) ? String(m.ref) : '';
     var o = location.origin && location.origin !== 'null' ? location.origin : 'https://appassets.androidplatform.net';
-    return 'https://www.youtube-nocookie.com/embed/' + m.ref + '?rel=0&modestbranding=1&playsinline=1&iv_load_policy=3&fs=0&enablejsapi=1&origin=' + encodeURIComponent(o) + (m.start ? '&start=' + m.start : '') + (m.end ? '&end=' + m.end : '');
+    var st = Math.max(0, Math.floor(+m.start || 0)), en = Math.max(0, Math.floor(+m.end || 0));
+    return 'https://www.youtube-nocookie.com/embed/' + id + '?rel=0&modestbranding=1&playsinline=1&iv_load_policy=3&fs=0&enablejsapi=1&origin=' + encodeURIComponent(o) + (st ? '&start=' + st : '') + (en ? '&end=' + en : '');
   }
   Media.playerHtml = function (m) {
     if (m.kind === 'youtube') {

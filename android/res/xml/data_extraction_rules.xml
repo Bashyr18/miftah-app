@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<data-extraction-rules>
+    <cloud-backup>
+        <!-- Exclude children's voice recordings, imported media, cached audio, and LAN pairing keys from cloud backup -->
+        <exclude domain="file" path="voice/" />
+        <exclude domain="file" path="media/" />
+        <exclude domain="file" path="audio/" />
+        <exclude domain="sharedpref" path="link.xml" />
+    </cloud-backup>
+    <device-transfer>
+        <!-- Exclude LAN pairing keys on device transfer so each phone pairs fresh -->
+        <exclude domain="sharedpref" path="link.xml" />
+    </device-transfer>
+</data-extraction-rules>

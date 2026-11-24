@@ -96,7 +96,7 @@ pub fn app_icon(size: i32) -> HICON {
     use windows::Win32::System::LibraryLoader::GetModuleHandleW;
     unsafe {
         let m = GetModuleHandleW(None).unwrap_or_default();
-        LoadImageW(Some(m.into()), PCWSTR(1 as _), IMAGE_ICON, size, size, LR_DEFAULTCOLOR).map(|h| HICON(h.0)).unwrap_or_default()
+        LoadImageW(Some(m.into()), PCWSTR(1 as _), IMAGE_ICON, size, size, LR_DEFAULTCOLOR | LR_SHARED).map(|h| HICON(h.0)).unwrap_or_default()
     }
 }
 
@@ -106,12 +106,14 @@ pub fn app_icon(size: i32) -> HICON {
 pub const WM_APP_RUN: u32 = WM_APP + 1;
 type Job = Box<dyn FnOnce() + Send>;
 static JOBS: Mutex<VecDeque<Job>> = Mutex::new(VecDeque::new());
-static mut UI: isize = 0;
-pub fn set_ui(hwnd: HWND) { unsafe { UI = hwnd.0 as isize; } }
-pub fn ui() -> HWND { unsafe { HWND(UI as _) } }
+static UI: std::sync::atomic::AtomicIsize = std::sync::atomic::AtomicIsize::new(0);
+pub fn set_ui(hwnd: HWND) { UI.store(hwnd.0 as isize, std::sync::atomic::Ordering::Release); }
+pub fn ui() -> HWND { HWND(UI.load(std::sync::atomic::Ordering::Acquire) as _) }
 pub fn post(f: impl FnOnce() + Send + 'static) {
+    let h = ui();
+    if h.0.is_null() { return; }
     JOBS.lock().unwrap().push_back(Box::new(f));
-    unsafe { let _ = PostMessageW(Some(ui()), WM_APP_RUN, WPARAM(0), LPARAM(0)); }
+    unsafe { let _ = PostMessageW(Some(h), WM_APP_RUN, WPARAM(0), LPARAM(0)); }
 }
 /* the window's own thread, later: for work that must not run inside a WebView2 callback (a dialog, say) */
 pub fn later(f: impl FnOnce() + 'static) {

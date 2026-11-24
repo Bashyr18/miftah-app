@@ -126,8 +126,9 @@
     clock: { t: 'M12 3.2a8.8 8.8 0 1 0 0 17.6 8.8 8.8 0 0 0 0-17.6z', l: 'M12 3.2a8.8 8.8 0 1 0 0 17.6 8.8 8.8 0 0 0 0-17.6zM12 7.2V12l3.2 2' }
   };
   A.icon = function (n, s) {
-    var ph = n !== 'check' && (window.PHICONS || {})[n]; if (ph) { var zz = s || 22; return '<svg class="ic" viewBox="0 0 256 256" width="' + zz + '" height="' + zz + '" fill="currentColor" aria-hidden="true">' + ph + '</svg>'; }
+    var cl = 'ic' + (n === 'back' || n === 'next' ? ' ic-flip' : '');
+    var ph = n !== 'check' && (window.PHICONS || {})[n]; if (ph) { var zz = s || 22; return '<svg class="' + cl + '" viewBox="0 0 256 256" width="' + zz + '" height="' + zz + '" fill="currentColor" aria-hidden="true">' + ph + '</svg>'; }
     var x = IC[n] || {}, z = s || 22;
-    return '<svg class="ic" viewBox="0 0 24 24" width="' + z + '" height="' + z + '" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + (x.f ? '<path d="' + x.f + '" fill="currentColor" stroke="none"/>' : '') + (x.t ? '<path d="' + x.t + '" fill="currentColor" stroke="none" opacity=".2"/>' : '') + (x.l ? '<path d="' + x.l + '"/>' : '') + '</svg>';
+    return '<svg class="' + cl + '" viewBox="0 0 24 24" width="' + z + '" height="' + z + '" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + (x.f ? '<path d="' + x.f + '" fill="currentColor" stroke="none"/>' : '') + (x.t ? '<path d="' + x.t + '" fill="currentColor" stroke="none" opacity=".2"/>' : '') + (x.l ? '<path d="' + x.l + '"/>' : '') + '</svg>';
   };
 })();

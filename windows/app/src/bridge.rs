@@ -50,7 +50,7 @@ pub fn call(name: &str, body: &[u8]) -> Option<Value> {
         "openAppSettings" => { mc::shell_open("ms-settings:privacy-microphone"); None }
         "voiceSave" => {
             use base64::Engine;
-            let ok = store::safe(&s(0)).and_then(|k| base64::engine::general_purpose::STANDARD.decode(s(1)).ok().map(|d| (k, d)))
+            let ok = store::safe(&s(0)).zip(base64::engine::general_purpose::STANDARD.decode(s(1)).ok())
                 .map(|(k, d)| std::fs::write(store::dirs().voice.join(format!("{}.m4a", k)), d).is_ok()).unwrap_or(false);
             Some(json!(ok))
         }
@@ -184,12 +184,20 @@ pub fn call(name: &str, body: &[u8]) -> Option<Value> {
         "quit" => { mc::later(|| if let Some(a) = app() { a.quit() }); None }
         "unlocked" => { mc::later(|| if let Some(a) = app() { a.focus(false); a.post("window.Desk&&Desk.refresh()"); }); None }
         "savePdf" => { let n = s(0); mc::later(move || save_pdf(n)); None }
-        "reveal" => { let p = s(0); if in_prints(&p) { mc::reveal(&p); } None }
-        "openPdf" => { let p = s(0); if in_prints(&p) { mc::shell_open(&p); } None }
+        "reveal" => { let p = s(0); if let Some(c) = in_prints(&p, false) { mc::reveal(&c.to_string_lossy()); } None }
+        "openPdf" => { let p = s(0); if let Some(c) = in_prints(&p, true) { mc::shell_open(&c.to_string_lossy()); } None }
         _ => None,
     }
 }
-fn in_prints(p: &str) -> bool { !p.is_empty() && Path::new(p).is_file() && p.to_lowercase().starts_with(&dialogs::print_folder().to_string_lossy().to_lowercase()) && !p.contains("..") }
+fn in_prints_dir(dir: &Path, p: &str, pdf_only: bool) -> Option<PathBuf> {
+    if p.is_empty() { return None; }
+    let base = std::fs::canonicalize(dir).ok()?;
+    let cand = std::fs::canonicalize(Path::new(p)).ok()?;
+    if !cand.is_file() || !cand.starts_with(&base) { return None; }
+    if pdf_only && !cand.extension().is_some_and(|e| e.eq_ignore_ascii_case("pdf")) { return None; }
+    Some(cand)
+}
+fn in_prints(p: &str, pdf_only: bool) -> Option<PathBuf> { in_prints_dir(&dialogs::print_folder(), p, pdf_only) }
 
 /* the port can stay held for a moment after the link was turned off */
 fn start_link(a: &crate::App) -> bool {
@@ -247,25 +255,80 @@ fn pick(mime: Option<String>) {
 }
 
 /* ---------- updates: only when a grown-up asks (web/js/core/update.js) ----------
-   A check reads version.json from the latest release. Installing downloads the new Miftah.exe beside the family's data and
-   checks its SHA-256 against version.json; then this program file is moved aside (Windows allows that while it runs), the new
-   one takes its place and opens, and this copy closes. The record is untouched: it lives in its own folder. */
+   A check reads version.json from the latest release and caches the verified candidate in native memory; installing only
+   ever downloads that native-verified release URL and SHA-256 (never trusting URL/SHA arguments from the page), checks its
+   SHA-256 against version.json, swaps this program file once Miftah closes, and reopens it. */
+static UPD_CANDIDATE: std::sync::Mutex<Option<(String, String)>> = std::sync::Mutex::new(None);
+static UPD_BUSY: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+fn valid_update_url(url: &str, asset: &str) -> bool {
+    if url.strip_prefix(UPD_FROM).and_then(|s| s.strip_prefix("latest/download/")) == Some(asset) { return true; }
+    let Some(rest) = url.strip_prefix("https://github.com/Bashyr18/miftah-app/releases/download/") else { return false };
+    if rest.contains("..") || rest.contains('\\') || rest.contains('@') || rest.contains('?') || rest.contains('#') { return false; }
+    let mut parts = rest.split('/');
+    let Some(tag) = parts.next() else { return false };
+    let Some(file) = parts.next() else { return false };
+    if parts.next().is_some() { return false; }
+    !tag.is_empty() && tag.len() <= 64 && tag.chars().all(|c| c.is_ascii_alphanumeric() || matches!(c, '.' | '_' | '-')) && file == asset
+}
+fn valid_sha256(sha: &str) -> bool { sha.len() == 64 && sha.bytes().all(|b| b.is_ascii_hexdigit()) }
+fn parse_update_candidate(raw: &str) -> Option<(String, String)> {
+    let v: Value = serde_json::from_str(raw).ok()?;
+    let code = v.get("code")?.as_u64()?;
+    let cur: u64 = CODE.parse().unwrap_or(0);
+    if code <= cur { return None; }
+    let w = v.get("windows")?;
+    let url = w.get("url")?.as_str()?;
+    let sha = w.get("sha256")?.as_str()?;
+    if !(valid_update_url(url, "Miftah-Windows.exe") || valid_update_url(url, "Miftah.exe")) || !valid_sha256(sha) { return None; }
+    Some((url.to_string(), sha.to_ascii_lowercase()))
+}
+fn verified_manifest(raw: &str, public_key: &str) -> Option<String> {
+    use base64::{engine::general_purpose::STANDARD, Engine};
+    use p256::{ecdsa::{signature::Verifier, Signature, VerifyingKey}, pkcs8::DecodePublicKey};
+    let envelope: Value = serde_json::from_str(raw).ok()?;
+    let payload = STANDARD.decode(envelope.get("payload")?.as_str()?).ok()?;
+    let sig = STANDARD.decode(envelope.get("signature")?.as_str()?).ok()?;
+    let key = VerifyingKey::from_public_key_der(&STANDARD.decode(public_key).ok()?).ok()?;
+    key.verify(&payload, &Signature::from_der(&sig).ok()?).ok()?;
+    let latest: Value = serde_json::from_slice(&payload).ok()?;
+    if !latest.is_object() { return None; }
+    Some(latest.to_string())
+}
+fn fetch_version_json() -> Option<String> {
+    let key = option_env!("MIFTAH_UPDATE_PUBLIC_KEY")?.trim();
+    let raw = net::text(&format!("{}latest/download/version.json", UPD_FROM), 65536).ok()?;
+    verified_manifest(&raw, key)
+}
 fn update_check() {
     std::thread::spawn(|| {
-        let res = net::text(&format!("{}latest/download/version.json", UPD_FROM), 65536).ok()
-            .filter(|b| b.trim_start().starts_with('{'))
-            .map(|b| format!("{{\"latest\":{},\"current\":{{\"name\":{},\"code\":{}}}}}", b, js(VERSION), CODE));
+        let latest = fetch_version_json();
+        *UPD_CANDIDATE.lock().unwrap() = latest.as_deref().and_then(parse_update_candidate);
+        let res = latest.map(|b| {
+            format!("{{\"latest\":{},\"current\":{{\"name\":{},\"code\":{}}}}}", b, js(VERSION), CODE)
+        });
         post(format!("window.Upd&&Upd.onCheck({})", res.map(|r| js(&r)).unwrap_or_else(|| "null".into())));
     });
 }
-fn update_install(url: String, sha: String) -> bool {
-    if !url.starts_with(UPD_FROM) || sha.len() != 64 { return false; }
-    let sha = sha.to_lowercase();
-    let dir = store::root().join("update");
-    let _ = std::fs::create_dir_all(&dir);
-    let file = dir.join("Miftah.exe");
-    let part = dir.join("Miftah.exe.part");
+fn update_install(_url: String, _sha: String) -> bool {
+    if UPD_BUSY.swap(true, std::sync::atomic::Ordering::SeqCst) { return false; }
+    let cached = UPD_CANDIDATE.lock().unwrap().clone();
     std::thread::spawn(move || {
+        struct Guard;
+        impl Drop for Guard { fn drop(&mut self) { UPD_BUSY.store(false, std::sync::atomic::Ordering::SeqCst); } }
+        let _guard = Guard;
+
+        let cand = cached.or_else(|| {
+            let b = fetch_version_json()?;
+            let c = parse_update_candidate(&b);
+            *UPD_CANDIDATE.lock().unwrap() = c.clone();
+            c
+        });
+        let Some((url, sha)) = cand else { post("window.Upd&&Upd.onDone('failed')".into()); return; };
+        let dir = store::root().join("update");
+        let _ = std::fs::create_dir_all(&dir);
+        let file = dir.join("Miftah.exe");
+        let part = dir.join("Miftah.exe.part");
         if !(file.exists() && net::sha256(&file).as_deref() == Some(&sha)) {
             let _ = std::fs::remove_file(&file);
             /* progress: only a rise, at most every 150 ms, or the window drowns in messages */
@@ -344,5 +407,67 @@ fn save_pdf(name: String) {
         let p2 = p.clone();
         let handler = webview2_com::PrintToPdfCompletedHandler::create(Box::new(move |e, ok| { done(e.is_ok() && ok, p2); Ok(()) }));
         if v7.PrintToPdf(&mc::h(&p), &st, &handler).is_err() { done(false, String::new()); }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn update_url_and_candidate_validation() {
+        let sha = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
+        assert!(valid_update_url("https://github.com/Bashyr18/miftah-app/releases/download/v2.5.0/Miftah.exe", "Miftah.exe"));
+        assert!(!valid_update_url("https://github.com/Bashyr18/miftah-app/releases/../../../evil/repo/releases/download/v1/Miftah.exe", "Miftah.exe"));
+        assert!(!valid_update_url("https://github.com/Bashyr18/miftah-app/releases/download/v2.5.0/evil.exe", "Miftah.exe"));
+        assert!(!valid_update_url("https://github.com/Bashyr18/miftah-app/releases/download/v2.5.0/Miftah.exe?x=1", "Miftah.exe"));
+        assert!(valid_update_url("https://github.com/Bashyr18/miftah-app/releases/latest/download/Miftah-Windows.exe", "Miftah-Windows.exe"));
+
+        let cur: u64 = CODE.parse().unwrap_or(0);
+        let ok_json = format!(r#"{{"code":{},"windows":{{"url":"https://github.com/Bashyr18/miftah-app/releases/download/v9.0/Miftah.exe","sha256":"{}"}}}}"#, cur + 1, sha);
+        assert!(parse_update_candidate(&ok_json).is_some());
+
+        let downgrade = format!(r#"{{"code":{},"windows":{{"url":"https://github.com/Bashyr18/miftah-app/releases/download/v1.0/Miftah.exe","sha256":"{}"}}}}"#, cur, sha);
+        assert!(parse_update_candidate(&downgrade).is_none());
+    }
+
+    #[test]
+    fn update_manifest_trusts_only_the_signed_body() {
+        use base64::{engine::general_purpose::STANDARD, Engine};
+        use p256::{ecdsa::{signature::Signer, Signature, SigningKey}, pkcs8::EncodePublicKey};
+        let key = SigningKey::from_slice(&[7; 32]).unwrap();
+        let public = p256::SecretKey::from_slice(&[7; 32]).unwrap().public_key();
+        let public = STANDARD.encode(public.to_public_key_der().unwrap().as_bytes());
+        let payload = br#"{"code":10}"#;
+        let sig: Signature = key.sign(payload);
+        let mut envelope = json!({"code":999, "payload":STANDARD.encode(payload), "signature":STANDARD.encode(sig.to_der().as_bytes())});
+        assert_eq!(verified_manifest(&envelope.to_string(), &public).unwrap().as_bytes(), payload);
+        assert!(verified_manifest(&envelope.to_string(), "").is_none());
+        envelope["payload"] = json!(STANDARD.encode(br#"{"code":11}"#));
+        assert!(verified_manifest(&envelope.to_string(), &public).is_none());
+        assert!(verified_manifest(r#"{"code":11}"#, &public).is_none());
+    }
+
+    #[test]
+    fn in_prints_blocks_sibling_and_non_pdf() {
+        let root = std::env::temp_dir().join(format!("miftah_test_prints_{}", std::process::id()));
+        let prints = root.join("Printables");
+        let sibling = root.join("PrintablesEvil");
+        let _ = std::fs::remove_dir_all(&root);
+        std::fs::create_dir_all(&prints).unwrap();
+        std::fs::create_dir_all(&sibling).unwrap();
+        let pdf = prints.join("sheet.pdf");
+        let exe = prints.join("calc.exe");
+        let sib = sibling.join("evil.pdf");
+        std::fs::write(&pdf, b"%PDF").unwrap();
+        std::fs::write(&exe, b"MZ").unwrap();
+        std::fs::write(&sib, b"%PDF").unwrap();
+
+        assert!(in_prints_dir(&prints, &pdf.to_string_lossy(), true).is_some());
+        assert!(in_prints_dir(&prints, &exe.to_string_lossy(), true).is_none());
+        assert!(in_prints_dir(&prints, &exe.to_string_lossy(), false).is_some());
+        assert!(in_prints_dir(&prints, &sib.to_string_lossy(), true).is_none());
+
+        let _ = std::fs::remove_dir_all(&root);
     }
 }

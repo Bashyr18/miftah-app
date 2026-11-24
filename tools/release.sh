@@ -1,6 +1,6 @@
 #!/bin/bash
-# The full release, in one step: recordings fetched so far, then the Android APK and Play bundle.
-# The Windows app is on hold until it is rebuilt as its own thing, so it is not part of a release.
+# The Android release, in one step: recordings fetched so far, then the Android APK and Play bundle.
+# For Windows, run `python -I tools/build_windows.py` on Windows (or via the GitHub Actions workflow).
 # The signing key lives outside the repo (see README, Signing). Nothing here publishes anything.
 set -e
 cd "$(dirname "$0")/.."

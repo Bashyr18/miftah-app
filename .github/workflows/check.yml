@@ -58,6 +58,12 @@ jobs:
           key: cargo-${{ hashFiles('windows/Cargo.lock') }}
       - name: build Miftah.exe and Miftah-Setup.exe
         run: python -I tools/build_windows.py
+      - name: rust unit tests
+        working-directory: windows
+        run: cargo test --workspace --locked
+      - name: rust clippy
+        working-directory: windows
+        run: cargo clippy --workspace --locked --all-targets -- -D warnings
       - uses: actions/upload-artifact@v4
         with:
           name: Miftah-Windows

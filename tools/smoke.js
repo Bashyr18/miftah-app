@@ -11,6 +11,8 @@ function boot(stored, iso) {
   const vc = new VirtualConsole(); vc.on('error', e => errors.push(String(e && e.stack || e))); vc.on('jsdomError', e => { if (!/Not implemented|canvas/i.test(String(e))) errors.push(String(e.stack || e)); });
   const dom = new JSDOM(html, { url: 'https://appassets.androidplatform.net/index.html', runScripts: 'outside-only', pretendToBeVisual: true, virtualConsole: vc });
   const w = dom.window;
+  Object.defineProperty(w.crypto, 'subtle', { value: require('node:crypto').webcrypto.subtle });
+  w.TextEncoder = TextEncoder;
   w.matchMedia = () => ({ matches: true });   /* reduced motion: skips animation in tests */
   w.Element.prototype.animate = function () { return { finish() { }, cancel() { }, onfinish: null }; };
   w.Element.prototype.scrollIntoView = function () { };
@@ -162,6 +164,11 @@ T = boot({ profiles: [kid(6)], cur: 'c1', lang: 'ar', theme: 'dark' }, '2026-11-
   w.M.log('m.count5', { k: 'recall', ok: true }); A.saveNow();
   const raw = JSON.parse(w.localStorage.getItem('miftah.v1'));
   ok(raw.data.c1.led.length === 1, 'progress persists');
+  const setItem = w.Storage.prototype.setItem;
+  w.Storage.prototype.setItem = () => { throw new w.DOMException('Storage is full', 'QuotaExceededError'); };
+  w.M.log('m.count5', { k: 'recall', ok: true }); A.saveNow();
+  ok(JSON.parse(w.localStorage.getItem('miftah.v1')).data.c1.led.length === 1, 'a full browser store keeps the last durable copy');
+  w.Storage.prototype.setItem = setItem;
   ok(raw.lang === 'ar', 'language persists');
   ok(w.document.documentElement.dir === 'rtl', 'Arabic is right to left');
   ok(JSON.stringify(A.shape({ profiles: 'nope', lang: 7, data: 3, theme: 'x' })).length > 0, 'a damaged backup cannot break the app');
@@ -343,8 +350,12 @@ T = boot({ profiles: [kid(6)], cur: 'c1' }, '2026-11-05T09:00:00');
     const ev = (i, sk, t, ok) => ({ i, t, s: sk, k: 'recall', ok, a: false, by: 'child' });
     mine.data[id] = Object.assign({}, mine.data[id], { led: [ev('a', 'm.add10', 1000, true)], keys: { 'm.add10': { forged: 1000, n: {}, e: {} } }, cards: [{ f: 'Q', b: 'A', next: 5 }], papers: [{ r: 'math', t: 1, p: 50 }], work: [{ title: 'E', text: 'old', t: 1 }] });
     const theirs = JSON.parse(JSON.stringify(mine)); theirs.profiles[0].id = 'other'; theirs.data = { other: Object.assign({}, mine.data[id], { led: [ev('a', 'm.add10', 1000, true), ev('b', 'm.add10', 2000, true), ev('c', 'm.count', 3000, true)], keys: { 'm.add10': { forged: 900, n: {}, e: {} }, 'm.count': { forged: 3000, n: {}, e: {} } }, cards: [{ f: 'Q', b: 'A', next: 9 }, { f: 'Q2', b: 'B', next: 1 }], papers: [{ r: 'math', t: 2, p: 80 }], work: [{ title: 'E', text: 'new', t: 2 }] }) };
+    Object.assign(mine.data[id], { hifz: { i: 2, a: 5, u: {} }, screen: { day: 15000 }, extra: { day: 5 }, notyet: { 'm.count5': 1 } });
+    delete mine.data[id].pending; delete theirs.data.other.pending;
+    theirs.data.other.hifz = { i: 3, a: 1, u: {} };
     theirs.media = [{ kind: 'youtube', ref: 'abc' }, { kind: 'image', ref: 'x.jpg' }];
     const r = Sync.merge(mine, theirs), d = r.S.data[id];
+    ok(d.hifz.i === 3 && d.hifz.a === 1, 'Quran sync keeps the surah and verse together');
     ok(r.S.profiles.length === mine.profiles.length, 'the same child on two devices stays one child');
     ok(d.led.length === 3, 'histories join without duplicates'); ok(d.keys['m.count'].forged && d.keys['m.add10'].forged === 900, 'mastery from either device is kept');
     ok(r.report[0].lessons === 1, 'and the report says what arrived'); ok(d.cards.length === 2 && d.cards[0].next === 9, 'cards join, the later schedule wins');
@@ -354,6 +365,12 @@ T = boot({ profiles: [kid(6)], cur: 'c1' }, '2026-11-05T09:00:00');
     const again = Sync.merge(r.S, theirs); ok(again.S.data[id].led.length === 3 && again.report[0].lessons === 0, 'receiving the same file twice changes nothing');
     const nu = JSON.parse(JSON.stringify(theirs)); nu.profiles = [Object.assign({}, nu.profiles[0], { id: 'x9', name: 'Zayd', by: 2015 })]; nu.data = { x9: nu.data.other };
     ok(Sync.merge(mine, nu).S.profiles.length === mine.profiles.length + 1, 'a child this device has not met is added');
+    A.S = A.shape(r.S);
+    const joined = A.D(id);
+    ok(joined.screen.day === 15000 && joined.extra.day === 5 && joined.notyet['m.count5'] === 1, 'reading a merged record without pending work preserves its other fields');
+    A.S.pin = '1234'; A.S.gate = { a: 2 }; A.S.upd = { found: {} };
+    const family = JSON.parse(Sync.stateOut());
+    ok(family.familyFile === 1 && !('pin' in family) && !('gate' in family) && !('upd' in family), 'family files exclude device-local gate and update settings');
     A.S = A.shape(base);
   }
   {
@@ -435,10 +452,55 @@ for (const age of [13, 16]) {
   let wOk = 0; I.write({ el: host, step: { p: ['Q', 'س'], min: 3, check: [['a', 'أ'], ['b', 'ب']] }, ok: () => wOk++, bad: () => { } });
   host.querySelector('#i-w').value = 'one two three four'; host.querySelector('#i-w-go').click(); host.querySelector('.wcheck').click(); host.querySelector('#i-w-end').click();
   ok(wOk === 1 && A.D().work.length === 1, age + ': written work is kept');
-  A.D().work[0].shared = false; T2.go('marking'); ok(!A.$('#app').textContent.includes('one two three'), age + ': unshared work stays private');
-  A.D().work[0].shared = true; T2.go('marking'); ok(A.$('#app').textContent.includes('one two three'), age + ': shared work reaches the parent');
+  A.D().work[0].shared = true; T2.go('marking');
+  ok(A.$('.gate') && !A.$('[data-mark]'), age + ': shared work is behind the parent gate');
+  const sum = A.$('#gp-q').textContent.split('+').map(x => parseInt(x));
+  A.$$('.numopt').find(b => +b.dataset.v === sum[0] + sum[1]).click();
+  ok(A.route() === 'marking' && A.$('#app').textContent.includes('one two three'), age + ': unlocking opens the requested marking page');
+  function mark(text) { const input = A.$('[data-mark]'); input.value = text; input.dispatchEvent(new w.Event('change')); }
+  mark('Parent feedback');
+  ok(A.D().work[0].mark === 'Parent feedback', age + ': the unlocked parent can save feedback');
+  A.D().work[0].shared = false; A.rerender();
+  ok(!A.$('[data-mark]') && !A.$('#app').textContent.includes('one two three'), age + ': unshared work stays private even after unlock');
+  T2.go('home'); T2.go('marking');
+  ok(A.$('.gate'), age + ': returning to the learner screen relocks marking');
+  A.D().work[0].shared = true;
+  const sum2 = A.$('#gp-q').textContent.split('+').map(x => parseInt(x));
+  A.$$('.numopt').find(b => +b.dataset.v === sum2[0] + sum2[1]).click();
+  w.__t += 21 * 60000; mark('Expired feedback');
+  ok(A.$('.gate') && A.D().work[0].mark === 'Parent feedback', age + ': feedback cannot change after the parent session expires');
   ok(C.skill('d10.evolution').sup && C.skill('d10.palestine').sup && C.skill('d10.puberty').sup, age + ': sensitive lessons are supervised');
   ok(T2.errors.length === 0, age + ': no errors ' + (T2.errors[0] || '').slice(0, 120));
+}
+{ /* a resume retains missed attempts and final scores across exits */
+  const { A, w } = boot({ profiles: [kid(13)], cur: 'c1' }, '2026-11-05T09:00:00');
+  const host = w.document.createElement('div');
+  let ctx, result;
+  w.I.resumeProbe = c => { ctx = c; };
+  const options = { track: { skill: 'm.count5', seed: 7 }, steps: [{ k: 'resumeProbe', ph: 'solo', silent: true }], onDone: r => { result = r; } };
+  w.Player.start(host, options); ctx.bad();
+  w.Player.stop(); w.Player.start(host, { ...options, at: A.D().resume });
+  ok(A.D().resume?.tries === 1, 'resuming the first question keeps a miss');
+  ctx.bad(); ctx.bad(); w.Player.stop();
+  w.Player.start(host, { ...options, at: A.D().resume });
+  ok(result?.solo === 1 && result.soloOk === 0 && !A.D().resume, 'resuming after the final reveal finishes with the miss');
+}
+{ /* a switch of learner flushes the draft to its original owner */
+  const { A, go } = boot({ profiles: [kid(13, 'first'), kid(14, 'second')], cur: 'first', data: {
+    first: { work: [{ title: 'First', text: '', plan: '' }] }, second: { work: [{ title: 'Second', text: 'Keep me', plan: '' }] }
+  } }, '2026-11-05T09:00:00');
+  go('write/0'); A.$('#t-w-b').value = 'First learner draft';
+  A.S.cur = 'second'; go('home');
+  ok(A.D('first').work[0].text === 'First learner draft' && A.D('second').work[0].text === 'Keep me', 'changing learner keeps both drafts with their owners');
+}
+{ /* an abandoned group attempt cannot restart the same questions for a new score */
+  const { A, go } = boot({ profiles: [kid(13, 'first'), kid(14, 'second')], cur: 'first' }, '2026-11-05T09:00:00');
+  A.Group.keep({ seed: 7, room: 'math', y: 6, n: 3 });
+  go('challenge/7'); ok(A.$('#t-ch .pl') && A.S.challenges[0].res.first?.incomplete, 'a group attempt is saved before the first question');
+  go('home'); go('challenge/7');
+  ok(!A.$('#t-ch .pl') && A.$('#t-ch').textContent.includes('Attempt ended early'), 'a group attempt stays incomplete after leaving');
+  A.S.cur = 'second'; go('challenge/7');
+  ok(A.$('#t-ch .pl'), 'another learner can still take the same challenge');
 }
 { /* the door and rooms for a young child are untouched */
   const T3 = boot({ profiles: [kid(6, 'y')], cur: 'y' }, '2026-11-05T09:00:00'); const { A, w } = T3;
@@ -493,9 +555,7 @@ const unlock = (TT) => { TT.go('parent'); const qq = TT.A.$('.gate p').textConte
   T5.go('parent/media'); ok(A.$('.mi[data-id="' + m.id + '"]'), 'a simulation sits in the library');
   T5.go('lab/h-' + m.id); ok(A.$('.simstage iframe') && A.$('.simstage iframe').getAttribute('sandbox') === 'allow-scripts', 'it plays full screen, sandboxed');
   T5.go('watch/' + m.id); ok(w.location.hash.includes('lab/h-'), 'from a subject shelf it opens the same player');
-  T5.go('parent/media'); A.acts['m-edit'](A.$('.mi[data-id="' + m.id + '"]')); ok(A.$('a#e-p[href="#/lab/h-' + m.id + '"]') && A.$('#e-t'), 'its sheet plays and renames it'); A.$('#e-d').onclick.call(A.$('#e-d')); ok(Media.get(m.id), 'delete asks twice'); A.$('#e-d').onclick.call(A.$('#e-d')); ok(!Media.get(m.id), 'and then it is gone');
-  { const T6 = boot({ profiles: [kid(13, 'g')], cur: 'g', pin: '1234' }, '2026-11-05T09:00:00'); T6.go('parent'); ok(T6.A.$('#gp-pin') && !T6.A.$('.numopt'), 'a PIN replaces the sum at the gate');
-    const i6 = T6.A.$('#gp-pin'); i6.value = '0000'; T6.A.$('#gp-go').click(); ok(T6.A.$('#gp-pin'), 'a wrong PIN stays locked'); T6.A.$('#gp-pin').value = '1234'; T6.A.$('#gp-go').click(); ok(!T6.A.$('#gp-pin') && !T6.A.$('.gate'), 'the right PIN opens it'); }
+  unlock(T5); T5.go('parent/media'); A.acts['m-edit'](A.$('.mi[data-id="' + m.id + '"]')); ok(A.$('a#e-p[href="#/lab/h-' + m.id + '"]') && A.$('#e-t'), 'its sheet plays and renames it'); A.$('#e-d').onclick.call(A.$('#e-d')); ok(Media.get(m.id), 'delete asks twice'); A.$('#e-d').onclick.call(A.$('#e-d')); ok(!Media.get(m.id), 'and then it is gone');
   { const T7 = boot({ profiles: [kid(13, 'u')], cur: 'u' }, '2026-11-05T09:00:00'); const A7 = T7.A, w7 = T7.w; unlock(T7); T7.go('parent/u/set');
     await_ui(w7); const ns = A7.$$('select').filter(x => x.style.display !== 'none'); ok(ns.length === 0 && A7.$$('.pk').length > 3, 'no native select is ever shown');
     const sl = A7.$('select[data-c-start="math"]'); sl.closest('.card').classList.remove('shut'); sl.nextSibling.click(); ok(w7.document.querySelector('.sheet .pk-row'), 'choosing opens our own list');
@@ -505,5 +565,26 @@ const unlock = (TT) => { TT.go('parent'); const qq = TT.A.$('.gate p').textConte
     T7.go('parent/u/plan'); await_ui(w7); ok(T7.errors.length === 0, 'tidy runs clean ' + (T7.errors[0] || '').slice(0, 100)); }
   ok(T5.errors.length === 0, 'no errors ' + (T5.errors[0] || '').slice(0, 120));
 }
-console.log(pass + ' passed, ' + fail + ' failed');
-process.exit(fail ? 1 : 0);
+(async () => {
+  const { A, go, w } = boot({ profiles: [kid(13, 'g')], cur: 'g', pin: '1234' }, '2026-11-05T09:00:00');
+  async function navigate(route) { go(route); await new Promise(resolve => w.setTimeout(resolve, 0)); }
+  await navigate('parent'); ok(A.$('#gp-pin') && !A.$('.numopt'), 'a PIN replaces the sum at the gate');
+  async function submit(value) { A.$('#gp-pin').value = value; await A.$('#gp-go').onclick(); }
+  for (let i = 0; i < 5; i++) await submit('0000');
+  await submit('1234'); ok(A.$('#gp-pin') && A.S.gate.until > w.Date.now(), 'too many wrong PINs temporarily lock the gate');
+  w.__t += 31000; await submit('1234');
+  const recovery = A.$('#gp-recovery-code')?.textContent;
+  ok(!A.$('#gp-pin') && A.S.pin.startsWith('v1$') && !!recovery, 'the correct legacy PIN migrates and shows a recovery code');
+  ok(!JSON.stringify(A.Sync.recordOut()).includes(A.S.pin), 'a backup export omits the device PIN record');
+  A.closeSheet(); await navigate('home'); await navigate('parent'); await submit('1234');
+  ok(!A.$('#gp-pin'), 'the same PIN opens the gate after migration');
+  await navigate('home'); await navigate('parent'); A.$('#gp-recover').click(); await submit('0'.repeat(32));
+  ok(!!A.$('#gp-pin'), 'an incorrect recovery code leaves the PIN set');
+  await submit(recovery);
+  ok(!A.$('#gp-pin') && A.S.pin === '' && A.S.profiles[0].id === 'g', 'recovery clears the PIN and preserves learning profiles');
+  await navigate('parent/settings'); A.$('#c-pin').value = '5678'; await A.pinSet(A.$('#c-pin'));
+  ok(A.S.pin.startsWith('v1$') && !!A.$('#gp-recovery-code'), 'setting a new PIN stores a verifier and shows recovery');
+})().then(() => {
+  console.log(pass + ' passed, ' + fail + ' failed');
+  process.exit(fail ? 1 : 0);
+}).catch(e => { console.error(e); process.exit(1); });

@@ -114,7 +114,7 @@
     if (list.length < 4) return { redirect: 'study' };
     var tm = 0, left = 20 * 60, t0 = A.now().getTime();
     return {
-      bare: true, html: '<div id="t-paper"></div>', unmount: function () { clearInterval(tm); },
+      bare: true, html: '<div id="t-paper"></div>', unmount: function () { clearInterval(tm); Player.stop(); Voice.stop(); },
       mount: function (v) {
         var rng = A.rng(A.seed()), steps = [];
         rng.shuffle(list).slice(0, 15).forEach(function (sk) { var st = sk.review(rng); (Array.isArray(st) ? st.slice(0, 1) : [st]).forEach(function (x) { steps.push(Object.assign({}, x, { ph: 'solo', skill: sk.id, hint: null, noHelp: true })); }); });
@@ -128,7 +128,7 @@
             host.innerHTML = '<div class="tres ' + (pct >= 70 ? 'ok' : 'no') + '"><small>' + esc(L(C.rooms[room].name)) + '</small><h2>' + N(pct) + '%</h2><div class="fl-k"><span><b>' + N(res.soloOk) + '/' + N(res.solo) + '</b>' + esc(L(['correct', 'صحيحة'])) + '</span><span><b>' + N(mm) + L([' min', ' د']) + '</b>' + esc(L(['taken', 'استغرق'])) + '</span></div>' + (wk.length ? '<div class="card" style="margin:6px 0 12px"><h3>' + esc(L(['To strengthen', 'لتقويته'])) + '</h3>' + wk.map(function (k) { return '<a class="act" href="#/lesson/' + k.id + '"><span class="grow"><b>' + esc(L(k.title)) + '</b></span>' + A.icon('next', 16) + '</a>'; }).join('') + '</div>' : '') + '<a class="btn pri wide" href="#/study">' + esc(L(['Done', 'تم'])) + '</a></div>';
           }
         });
-        var clock = document.createElement('div'); clock.className = 'pclock'; clock.setAttribute('role', 'timer');
+        var clock = document.createElement('div'); clock.className = 'pclock'; clock.setAttribute('role', 'timer'); clock.dir = 'ltr';
         var sp = $('.pl-sp', v); if (sp) sp.replaceWith(clock); else $('.pl-top', v).appendChild(clock);
         var paint = function () { clock.textContent = N(Math.floor(left / 60)) + ':' + A.num(('0' + (left % 60)).slice(-2)); clock.classList.toggle('hot', left <= 120); };
         paint();

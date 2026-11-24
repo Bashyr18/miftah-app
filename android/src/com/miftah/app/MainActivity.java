@@ -56,7 +56,9 @@ import java.util.Map;
 /**
  * Miftāḥ native shell.
  *  - The bundled app, its recitations and any parent recordings are served from the reserved origin
- *    https://appassets.androidplatform.net/ by request interception. No INTERNET permission: nothing ever leaves the phone.
+ *    https://appassets.androidplatform.net/ by request interception.
+ *  - Network access is used only for parent-added videos/simulations, optional on-demand Qur'an audio caching,
+ *    and parent-initiated update checks; all other WebView requests are blocked.
  *  - File and content access are off; external links go to the system browser.
  *  - The bridge adds what a page cannot: the device voice, the microphone, haptics, backup, the widget and the reminder.
  */
@@ -77,6 +79,7 @@ public class MainActivity extends Activity {
     private volatile boolean ttsReady;
     private String ttsLang = "";
     private volatile String ttsLangs = "";
+    private final Object recLock = new Object();
     private MediaRecorder rec;
     private File recTmp, recDst;
     private static final Map<String, String> MIME = new HashMap<>();
@@ -124,7 +127,7 @@ public class MainActivity extends Activity {
         s.setMediaPlaybackRequiresUserGesture(false);   /* a recitation must be able to begin as a lesson step opens */
         s.setSupportMultipleWindows(false);
         s.setJavaScriptCanOpenWindowsAutomatically(false);
-        s.setTextZoom(Math.round(Math.max(1f, Math.min(1.25f, getResources().getConfiguration().fontScale)) * 100));
+        s.setTextZoom(Math.round(Math.max(1f, Math.min(2f, getResources().getConfiguration().fontScale)) * 100));
         s.setUseWideViewPort(true);    /* the page's viewport is honoured: on a tablet it lays out a little smaller and is shown larger (js/core/form.js) */
         s.setLoadWithOverviewMode(false);
         s.setSupportZoom(false);
@@ -215,10 +218,22 @@ public class MainActivity extends Activity {
     }
     private WebResourceResponse mediaFile(String path) {
         try {
-            String n = path.substring("/media/".length()); if (n.contains("/") || n.contains("..")) return blocked();
-            File f = new File(mediaDir(), java.net.URLDecoder.decode(n, "UTF-8")); if (!f.exists()) return blocked();
-            String ext = n.substring(n.lastIndexOf('.') + 1), mime = ext.toLowerCase(Locale.US).startsWith("htm") ? "text/html" : android.webkit.MimeTypeMap.getSingleton().getMimeTypeFromExtension(ext); if (mime == null) mime = "application/octet-stream";
-            return new WebResourceResponse(mime, null, new java.io.FileInputStream(f));
+            String raw = path.substring("/media/".length());
+            String n = java.net.URLDecoder.decode(raw, "UTF-8");
+            if (n.isEmpty() || n.contains("/") || n.contains("\\") || n.contains("..") || n.indexOf('\0') >= 0) return blocked();
+            File dir = mediaDir();
+            File f = new File(dir, n);
+            if (!f.isFile() || !f.getCanonicalPath().startsWith(dir.getCanonicalPath() + File.separator)) return blocked();
+            int dot = n.lastIndexOf('.');
+            String ext = dot >= 0 ? n.substring(dot + 1).toLowerCase(Locale.US) : "";
+            boolean isHtml = ext.equals("html") || ext.equals("htm");
+            String mime = isHtml ? "text/html" : android.webkit.MimeTypeMap.getSingleton().getMimeTypeFromExtension(ext);
+            if (mime == null) mime = "application/octet-stream";
+            Map<String, String> h = new HashMap<>();
+            h.put("X-Content-Type-Options", "nosniff");
+            h.put("Content-Security-Policy", isHtml ? "sandbox allow-scripts" : "default-src 'none'; sandbox");
+            h.put("Content-Length", String.valueOf(f.length()));
+            return new WebResourceResponse(mime, isHtml ? "utf-8" : null, 200, "OK", h, new java.io.FileInputStream(f));
         } catch (Exception e) { return blocked(); }
     }
 
@@ -365,7 +380,7 @@ public class MainActivity extends Activity {
             InputStream is; long len = -1;
             if (clean.startsWith("voice/")) {
                 File f = new File(voiceDir(), clean.substring(6));
-                if (!f.isFile() || !f.getCanonicalPath().startsWith(voiceDir().getCanonicalPath())) return blocked();
+                if (!f.isFile() || !f.getCanonicalPath().startsWith(voiceDir().getCanonicalPath() + File.separator)) return blocked();
                 is = new FileInputStream(f); len = f.length();
             } else if (clean.startsWith("audio/") && ext.equals("mp3")) {
                 File f = cachedAudio(clean.substring(6)); if (f == null) return blocked();
@@ -394,7 +409,7 @@ public class MainActivity extends Activity {
     @Override protected void onResume() { super.onResume(); if (loaded) js("__native.onResume&&__native.onResume()"); }
     @Override protected void onPause() { stopRecording(); if (web != null) js("window.Voice&&Voice.stop()"); super.onPause(); }
     @Override protected void onSaveInstanceState(Bundle out) { super.onSaveInstanceState(out); if (web != null) web.saveState(out); }
-    @Override protected void onDestroy() { unwatchFold(); stopRecording(); if (tts != null) { tts.shutdown(); tts = null; } if (web != null) { web.destroy(); web = null; } super.onDestroy(); }
+    @Override protected void onDestroy() { unwatchFold(); stopRecording(); audioPool.shutdownNow(); updPool.shutdownNow(); if (tts != null) { tts.shutdown(); tts = null; } if (web != null) { web.destroy(); web = null; } super.onDestroy(); }
 
     @Override
     @SuppressWarnings("deprecation")
@@ -410,28 +425,72 @@ public class MainActivity extends Activity {
     /* ---------- updates ---------- */
     private static final String UPD_FROM = "https://github.com/Bashyr18/miftah-app/releases/";
     private static final String UPD_INFO = UPD_FROM + "latest/download/version.json";
+    private static final long MAX_UPD_BYTES = 256L * 1024 * 1024;
     private final java.util.concurrent.ExecutorService updPool = java.util.concurrent.Executors.newSingleThreadExecutor();
+    private final java.util.concurrent.atomic.AtomicBoolean updBusy = new java.util.concurrent.atomic.AtomicBoolean();
+    private volatile String updUrl, updSha;
     private static String jsq(String s) { return s == null ? "null" : org.json.JSONObject.quote(s); }
+    private static boolean validUpdUrl(String u) {
+        if ((UPD_FROM + "latest/download/Miftah.apk").equals(u)) return true;
+        if (u == null || !u.startsWith(UPD_FROM + "download/")) return false;
+        String rest = u.substring((UPD_FROM + "download/").length());
+        if (rest.contains("..") || rest.contains("\\") || rest.contains("@") || rest.contains("?") || rest.contains("#")) return false;
+        String[] parts = rest.split("/", -1);
+        return parts.length == 2 && parts[0].matches("[A-Za-z0-9._-]{1,64}") && parts[1].equals("Miftah.apk");
+    }
+    private long currentVersionCode() throws Exception {
+        android.content.pm.PackageInfo pi = getPackageManager().getPackageInfo(getPackageName(), 0);
+        return Build.VERSION.SDK_INT >= 28 ? pi.getLongVersionCode() : pi.versionCode;
+    }
+    private boolean cacheUpdCandidate(org.json.JSONObject latest, long curCode) {
+        updUrl = null; updSha = null;
+        if (latest == null || latest.optLong("code", 0) <= curCode) return false;
+        org.json.JSONObject a = latest.optJSONObject("android");
+        if (a == null) return false;
+        String u = a.optString("url", ""), s = a.optString("sha256", "");
+        if (!validUpdUrl(u) || !s.matches("[0-9a-fA-F]{64}")) return false;
+        updUrl = u; updSha = s.toLowerCase(Locale.US);
+        return true;
+    }
     private java.net.HttpURLConnection updOpen(String u) throws java.io.IOException {
         java.net.HttpURLConnection c = (java.net.HttpURLConnection) new java.net.URL(u).openConnection();
         c.setConnectTimeout(10000); c.setReadTimeout(60000); c.setRequestProperty("User-Agent", "Miftah"); c.setInstanceFollowRedirects(true);
         return c;
     }
-    /** reads version.json from the latest release and says what this build is; the page decides what to show */
+    private org.json.JSONObject fetchVersionJson() throws Exception {
+        String key;
+        try (InputStream in = getAssets().open("update-public-key.txt")) {
+            byte[] b = new byte[512];
+            int n = 0, read;
+            while (n < b.length && (read = in.read(b, n, b.length - n)) > 0) n += read;
+            if (n == 0 || in.read() != -1) return null;
+            key = new String(b, 0, n, StandardCharsets.US_ASCII).trim();
+        }
+        java.net.HttpURLConnection c = updOpen(UPD_INFO);
+        try {
+            if (c.getResponseCode() != 200) return null;
+            java.io.ByteArrayOutputStream bo = new java.io.ByteArrayOutputStream();
+            try (InputStream in = c.getInputStream()) { byte[] b = new byte[8192]; int n; while ((n = in.read(b)) > 0) { if (bo.size() + n > 65536) return null; bo.write(b, 0, n); } }
+            org.json.JSONObject envelope = new org.json.JSONObject(bo.toString("UTF-8"));
+            byte[] payload = UpdateSignature.verify(key, envelope.getString("payload"), envelope.getString("signature"));
+            return new org.json.JSONObject(new String(payload, StandardCharsets.UTF_8));
+        } finally { c.disconnect(); }
+    }
+    /** reads version.json from the latest release and caches the verified candidate natively */
     private void updCheck() {
         String res = null;
+        updUrl = null; updSha = null;
         try {
-            java.net.HttpURLConnection c = updOpen(UPD_INFO);
-            if (c.getResponseCode() == 200) {
-                java.io.ByteArrayOutputStream bo = new java.io.ByteArrayOutputStream();
-                try (InputStream in = c.getInputStream()) { byte[] b = new byte[8192]; int n; while ((n = in.read(b)) > 0 && bo.size() < 65536) bo.write(b, 0, n); }
+            org.json.JSONObject latest = fetchVersionJson();
+            if (latest != null) {
                 android.content.pm.PackageInfo pi = getPackageManager().getPackageInfo(getPackageName(), 0);
+                long curCode = Build.VERSION.SDK_INT >= 28 ? pi.getLongVersionCode() : pi.versionCode;
+                cacheUpdCandidate(latest, curCode);
                 org.json.JSONObject cur = new org.json.JSONObject();
-                cur.put("name", pi.versionName); cur.put("code", Build.VERSION.SDK_INT >= 28 ? pi.getLongVersionCode() : pi.versionCode);
-                org.json.JSONObject o = new org.json.JSONObject(); o.put("latest", new org.json.JSONObject(bo.toString("UTF-8"))); o.put("current", cur);
+                cur.put("name", pi.versionName); cur.put("code", curCode);
+                org.json.JSONObject o = new org.json.JSONObject(); o.put("latest", latest); o.put("current", cur);
                 res = o.toString();
             }
-            c.disconnect();
         } catch (Exception ignored) { }
         js("window.Upd&&Upd.onCheck(" + jsq(res) + ")");
     }
@@ -440,30 +499,40 @@ public class MainActivity extends Activity {
         try (InputStream in = new java.io.FileInputStream(f)) { byte[] b = new byte[65536]; int n; while ((n = in.read(b)) > 0) md.update(b, 0, n); }
         StringBuilder sb = new StringBuilder(); for (byte x : md.digest()) sb.append(String.format(Locale.US, "%02x", x)); return sb.toString();
     }
-    /** downloads the new APK, checks its SHA-256, and hands it to the system installer (which also checks the signing key) */
-    private void updInstall(String url, String sha) {
+    /** downloads the native-verified APK, checks its SHA-256, and hands it to the system installer */
+    private void updInstall() {
         File dir = new File(getCacheDir(), "share"); dir.mkdirs();
         File f = new File(dir, "Miftah-update.apk"), tmp = new File(dir, "Miftah-update.apk.part");
         try {
+            String url = updUrl, sha = updSha;
+            if (url == null || sha == null) {
+                org.json.JSONObject latest = fetchVersionJson();
+                if (!cacheUpdCandidate(latest, currentVersionCode())) throw new java.io.IOException("no candidate");
+                url = updUrl; sha = updSha;
+            }
             if (!(f.isFile() && sha.equals(sha256(f)))) {
                 f.delete();
                 java.net.HttpURLConnection c = updOpen(url);
-                if (c.getResponseCode() != 200) throw new java.io.IOException("http " + c.getResponseCode());
-                long total = c.getContentLength(), got = 0; int last = -1;
-                try (InputStream in = c.getInputStream(); FileOutputStream out = new FileOutputStream(tmp)) {
-                    byte[] b = new byte[65536]; int n;
-                    while ((n = in.read(b)) > 0) {
-                        out.write(b, 0, n); got += n;
-                        int pc = total > 0 ? (int) (got * 100 / total) : 0;
-                        if (pc != last) { last = pc; js("window.Upd&&Upd.onProgress(" + (pc / 100.0) + ")"); }
+                try {
+                    if (c.getResponseCode() != 200) throw new java.io.IOException("http " + c.getResponseCode());
+                    long total = c.getContentLengthLong(), got = 0; int last = -1;
+                    if (total > MAX_UPD_BYTES) throw new java.io.IOException("too large");
+                    try (InputStream in = c.getInputStream(); FileOutputStream out = new FileOutputStream(tmp)) {
+                        byte[] b = new byte[65536]; int n;
+                        while ((n = in.read(b)) > 0) {
+                            got += n; if (got > MAX_UPD_BYTES) throw new java.io.IOException("too large");
+                            out.write(b, 0, n);
+                            int pc = total > 0 ? (int) (got * 100 / total) : 0;
+                            if (pc != last) { last = pc; js("window.Upd&&Upd.onProgress(" + (pc / 100.0) + ")"); }
+                        }
                     }
-                }
-                c.disconnect();
+                } finally { c.disconnect(); }
                 if (!sha.equals(sha256(tmp))) { tmp.delete(); js("window.Upd&&Upd.onDone('checksum')"); return; }
                 if (!tmp.renameTo(f)) throw new java.io.IOException("rename");
             }
             ui.post(this::updHandOver);
         } catch (Exception e) { tmp.delete(); js("window.Upd&&Upd.onDone('failed')"); }
+        finally { updBusy.set(false); }
     }
     private void updHandOver() {
         try {
@@ -530,30 +599,34 @@ public class MainActivity extends Activity {
             ui.post(() -> requestPermissions(new String[]{Manifest.permission.RECORD_AUDIO}, REQ_MIC));
             return false;
         }
-        stopRecording();
-        try {
-            recTmp = new File(voiceDir(), key + ".tmp"); recDst = new File(voiceDir(), key + ".m4a");
-            rec = Build.VERSION.SDK_INT >= 31 ? new MediaRecorder(this) : new MediaRecorder();
-            rec.setAudioSource(MediaRecorder.AudioSource.MIC);
-            rec.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
-            rec.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
-            rec.setAudioEncodingBitRate(96000);
-            rec.setAudioSamplingRate(44100);
-            rec.setOutputFile(recTmp.getPath());
-            rec.prepare(); rec.start();
-            ui.post(() -> getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON));
-            return true;
-        } catch (Exception e) { stopRecording(); return false; }
+        synchronized (recLock) {
+            stopRecording();
+            try {
+                recTmp = new File(voiceDir(), key + ".tmp"); recDst = new File(voiceDir(), key + ".m4a");
+                rec = Build.VERSION.SDK_INT >= 31 ? new MediaRecorder(this) : new MediaRecorder();
+                rec.setAudioSource(MediaRecorder.AudioSource.MIC);
+                rec.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
+                rec.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
+                rec.setAudioEncodingBitRate(96000);
+                rec.setAudioSamplingRate(44100);
+                rec.setOutputFile(recTmp.getPath());
+                rec.prepare(); rec.start();
+                ui.post(() -> getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON));
+                return true;
+            } catch (Exception e) { stopRecording(); return false; }
+        }
     }
     private void stopRecording() {
-        if (rec == null) return;
-        boolean ok = true;
-        try { rec.stop(); } catch (Exception e) { ok = false; }
-        try { rec.release(); } catch (Exception ignored) { }
-        rec = null;
-        ui.post(() -> getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON));
-        if (ok && recTmp != null && recTmp.isFile()) { if (recDst.exists()) recDst.delete(); recTmp.renameTo(recDst); }
-        else if (recTmp != null) recTmp.delete();
+        synchronized (recLock) {
+            if (rec == null) return;
+            boolean ok = true;
+            try { rec.stop(); } catch (Exception e) { ok = false; }
+            try { rec.release(); } catch (Exception ignored) { }
+            rec = null;
+            ui.post(() -> getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON));
+            if (ok && recTmp != null && recTmp.isFile()) { if (recDst.exists()) recDst.delete(); recTmp.renameTo(recDst); }
+            else if (recTmp != null) recTmp.delete();
+        }
     }
 
     @Override
@@ -618,6 +691,15 @@ public class MainActivity extends Activity {
         if (loaded) { final Uri fu = u; new Thread(() -> readImport(fu, true)).start(); } else pendingImport = u;
         return true;
     }
+    private static boolean allowedMediaName(String n) {
+        if (n == null || n.isEmpty() || n.length() > 120 || n.contains("/") || n.contains("\\") || n.contains("..")) return false;
+        int dot = n.lastIndexOf('.'); if (dot <= 0) return false;
+        String e = n.substring(dot + 1).toLowerCase(Locale.US);
+        return e.equals("mp4") || e.equals("webm") || e.equals("mov") || e.equals("m4v") || e.equals("mkv")
+            || e.equals("mp3") || e.equals("m4a") || e.equals("ogg") || e.equals("opus") || e.equals("wav") || e.equals("aac")
+            || e.equals("png") || e.equals("jpg") || e.equals("jpeg") || e.equals("webp") || e.equals("gif") || e.equals("bmp")
+            || e.equals("html") || e.equals("htm");
+    }
     private void readImport(Uri u, boolean shared) {
         try (InputStream raw = getContentResolver().openInputStream(u); java.io.BufferedInputStream is = new java.io.BufferedInputStream(raw)) {
             is.mark(4); int a = is.read(), b = is.read(); is.reset();
@@ -626,15 +708,33 @@ public class MainActivity extends Activity {
                 files = true;
                 try (java.util.zip.ZipInputStream z = new java.util.zip.ZipInputStream(is)) {
                     java.util.zip.ZipEntry e; byte[] buf = new byte[65536];
-                    while ((e = z.getNextEntry()) != null) {
+                    int entries = 0; long totalBytes = 0;
+                    while ((e = z.getNextEntry()) != null && ++entries <= 5000) {
                         String name = e.getName();
-                        if (name.equals("family.json") || name.equals("challenge.json")) { java.io.ByteArrayOutputStream bo = new java.io.ByteArrayOutputStream(); int n; while ((n = z.read(buf)) > 0) bo.write(buf, 0, n); json = bo.toString("UTF-8"); continue; }
-                        File dir = name.startsWith("media/") ? mediaDir() : name.startsWith("voice/") ? voiceDir() : null;
-                        if (dir == null || e.isDirectory()) continue;
-                        File dst = new File(dir, name.substring(6));
+                        if (name.equals("family.json") || name.equals("challenge.json")) {
+                            java.io.ByteArrayOutputStream bo = new java.io.ByteArrayOutputStream(); int n;
+                            while ((n = z.read(buf)) > 0) { if (bo.size() + n > 30_000_000) throw new IOException("too large"); bo.write(buf, 0, n); }
+                            json = bo.toString("UTF-8"); continue;
+                        }
+                        boolean isMedia = name.startsWith("media/"), isVoice = name.startsWith("voice/");
+                        if ((!isMedia && !isVoice) || e.isDirectory()) continue;
+                        String leaf = name.substring(6);
+                        if (isMedia ? !allowedMediaName(leaf) : (!safeKey(leaf) || !leaf.toLowerCase(Locale.US).endsWith(".m4a"))) continue;
+                        File dir = isMedia ? mediaDir() : voiceDir();
+                        File dst = new File(dir, leaf);
                         /* a file may only land in its own folder, and never replaces what is here */
                         if (!dst.getCanonicalPath().startsWith(dir.getCanonicalPath() + File.separator) || dst.exists()) continue;
-                        try (OutputStream out = new FileOutputStream(dst)) { int n; while ((n = z.read(buf)) > 0) out.write(buf, 0, n); }
+                        if (totalBytes >= 500L * 1024 * 1024) continue;
+                        File tmp = new File(dir, leaf + ".tmp");
+                        try (OutputStream out = new FileOutputStream(tmp)) {
+                            int n;
+                            while ((n = z.read(buf)) > 0) {
+                                totalBytes += n;
+                                if (totalBytes > 500L * 1024 * 1024) throw new IOException("too large");
+                                out.write(buf, 0, n);
+                            }
+                        } catch (IOException ex) { tmp.delete(); throw ex; }
+                        if (!tmp.renameTo(dst)) tmp.delete();
                     }
                 }
             } else {
@@ -651,24 +751,34 @@ public class MainActivity extends Activity {
 
     /* ---------- the bridge ---------- */
     private Link lan;
+    /* A recreated Activity must share the same writer for state.json. */
+    private static final java.util.concurrent.ExecutorService savePool = java.util.concurrent.Executors.newSingleThreadExecutor();
+    private static final java.util.concurrent.atomic.AtomicReference<String> pendingSave = new java.util.concurrent.atomic.AtomicReference<>();
+    private static void flushSavedState(File files) {
+        String json = pendingSave.getAndSet(null);
+        if (json == null) return;
+        try {
+            byte[] bytes = json.getBytes(StandardCharsets.UTF_8);
+            File tmp = new File(files, "state.json.tmp"), dst = new File(files, "state.json");
+            try (FileOutputStream fo = new FileOutputStream(tmp)) { fo.write(bytes); fo.getFD().sync(); }
+            if (!tmp.renameTo(dst)) { tmp.delete(); return; }
+            File dir = new File(files, "daily"); dir.mkdirs();
+            File today = new File(dir, new java.text.SimpleDateFormat("yyyyMMdd", Locale.US).format(new java.util.Date()) + ".json");
+            if (!today.exists()) {
+                File dtmp = new File(dir, today.getName() + ".tmp");
+                try (FileOutputStream fo = new FileOutputStream(dtmp)) { fo.write(bytes); fo.getFD().sync(); }
+                if (!dtmp.renameTo(today)) dtmp.delete();
+                File[] all = dir.listFiles((d, name) -> name.endsWith(".json"));
+                if (all != null && all.length > 30) { java.util.Arrays.sort(all); for (int i = 0; i < all.length - 30; i++) all[i].delete(); }
+            }
+        } catch (Exception ignored) { }
+    }
     private class Bridge {
         @JavascriptInterface public void ready(final double ms) { if (ready) return; ready = true; ui.post(() -> root.invalidate()); }
         @JavascriptInterface public void saveState(final String json) {
             if (json == null || json.length() > 30_000_000) return;
-            new Thread(() -> {
-                try {
-                    File tmp = new File(getFilesDir(), "state.json.tmp"), dst = new File(getFilesDir(), "state.json");
-                    try (FileOutputStream fo = new FileOutputStream(tmp)) { fo.write(json.getBytes(StandardCharsets.UTF_8)); fo.getFD().sync(); }
-                    if (!tmp.renameTo(dst)) { dst.delete(); tmp.renameTo(dst); }
-                    File dir = new File(getFilesDir(), "daily"); dir.mkdirs();
-                    File today = new File(dir, new java.text.SimpleDateFormat("yyyyMMdd", Locale.US).format(new java.util.Date()) + ".json");
-                    if (!today.exists()) {
-                        try (FileOutputStream fo = new FileOutputStream(today)) { fo.write(json.getBytes(StandardCharsets.UTF_8)); }
-                        File[] all = dir.listFiles();
-                        if (all != null && all.length > 30) { java.util.Arrays.sort(all); for (int i = 0; i < all.length - 30; i++) all[i].delete(); }
-                    }
-                } catch (Exception ignored) { }
-            }).start();
+            File files = getFilesDir();
+            if (pendingSave.getAndSet(json) == null) savePool.execute(() -> flushSavedState(files));
         }
         @JavascriptInterface public String loadState() {
             File f = new File(getFilesDir(), "state.json");
@@ -682,8 +792,8 @@ public class MainActivity extends Activity {
         /* ---------- updates: only when a grown-up asks (web/js/core/update.js) ---------- */
         @JavascriptInterface public boolean updateCheck() { updPool.execute(MainActivity.this::updCheck); return true; }
         @JavascriptInterface public boolean updateInstall(String url, String sha) {
-            if (url == null || sha == null || !url.startsWith(UPD_FROM) || !sha.matches("[0-9a-fA-F]{64}")) return false;
-            updPool.execute(() -> updInstall(url, sha.toLowerCase(Locale.US))); return true;
+            if (!updBusy.compareAndSet(false, true)) return false;
+            updPool.execute(MainActivity.this::updInstall); return true;
         }
         @JavascriptInterface public String version() { try { return getPackageManager().getPackageInfo(getPackageName(), 0).versionName; } catch (Exception e) { return "android"; } }
         @JavascriptInterface public void haptic(String k) {

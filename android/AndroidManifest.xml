@@ -25,6 +25,8 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:theme="@style/Theme.Miftah"
         android:allowBackup="true"
+        android:fullBackupContent="@xml/backup_rules"
+        android:dataExtractionRules="@xml/data_extraction_rules"
         android:supportsRtl="true"
         android:usesCleartextTraffic="false"
         android:enableOnBackInvokedCallback="false"

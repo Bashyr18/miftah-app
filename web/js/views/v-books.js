@@ -193,11 +193,11 @@
   }
   /* a child following a course: that subject comes from it, in order, before anything else in the room */
   var next0 = C.next;
-  C.next = function (room, pid, skip) {
+  C.next = function (room, pid, skip, assume) {
     var p = A.profile(pid), id = p && follows(p)[room];
     if (id) {
       var u = C.units['bk-' + id];
-      if (u) for (var j = 0; j < u.skills.length; j++) { var sk = u.skills[j]; if (skip && skip.indexOf(sk.id) >= 0) continue; if (!M.met(sk.id, pid) && C.open(sk, pid)) return sk; }
+      if (u) for (var j = 0; j < u.skills.length; j++) { var sk = u.skills[j]; if ((skip && skip.indexOf(sk.id) >= 0) || (assume && assume[sk.id])) continue; if (!M.met(sk.id, pid) && C.open(sk, pid)) return sk; }
     }
     return next0.apply(C, arguments);
   };

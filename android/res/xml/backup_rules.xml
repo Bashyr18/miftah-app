@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<full-backup-content>
+    <!-- Keep learning progress; exclude children's voice recordings, imported media, cached audio, and LAN pairing keys -->
+    <exclude domain="file" path="voice/" />
+    <exclude domain="file" path="media/" />
+    <exclude domain="file" path="audio/" />
+    <exclude domain="sharedpref" path="link.xml" />
+</full-backup-content>

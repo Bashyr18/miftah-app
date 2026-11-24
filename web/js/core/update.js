@@ -132,7 +132,8 @@
   U.restore = function () {
     var f = S().found; if (!f || !U.can()) return;
     var now = A.N.call('version');
-    if (now && f.cur && String(now) === String(f.cur.name)) { U.info = f.info; U.cur = f.cur; U.state = 'ready'; pill(); }
+    var ok = now && f.cur && String(now) === String(f.cur.name) && f.info && typeof f.info === 'object' && f.info[U.platform()] && (+f.info.code || 0) > (+f.cur.code || 0);
+    if (ok) { U.info = f.info; U.cur = f.cur; U.state = 'ready'; pill(); }
     else { delete S().found; A.saveNow(); }
   };
   addEventListener('hashchange', function () { setTimeout(pill, 60); });

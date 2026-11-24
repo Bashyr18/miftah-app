@@ -29,11 +29,11 @@
         key.h = Math.min(120, Math.max(key.h, gap) * (1.6 + (1 - p) * 1.6));
         if (gap >= 14) key.deep = key.deep || ev.t;
       } else if (!key.h) key.h = .8;
-      key.lastOk = ev.t;
+      key.lastOk = Math.max(key.lastOk || 0, ev.t);
     } else if (!ev.ok) {
       key.fail++;
       if (ev.e) key.e[ev.e] = (key.e[ev.e] || 0) + 1;
-      if (ev.rv) key.h = Math.max(.5, key.h * .55);
+      if (ev.rv && key.forged) key.h = Math.max(.5, key.h * .55);
     }
     /* the evidence gate: production or observed work, and successful recall after a real delay */
     if (key.forged && !key.proven && key.okInd >= 3 && (key.delayed >= 2 || (key.delayed >= 1 && (key.n.production + key.n.observed) >= 1))) key.proven = ev.t;
@@ -69,7 +69,7 @@
   /* memory strength 0..1 */
   M.light = function (s, pid) {
     var k = M.key(s, pid); if (!k || !k.forged) return 0;
-    var days = (A.now().getTime() - (k.lastOk || k.forged)) / DAY;
+    var days = Math.max(0, (A.now().getTime() - (k.lastOk || k.forged)) / DAY);
     return Math.pow(2, -days / Math.max(k.h, .5));
   };
   M.state = function (s, pid) {
@@ -281,11 +281,11 @@
     if (!u) { if (grade === 0) { h.log.push({ t: t, k: k, g: 0, by: by }); return; } u = h.u[k] = { t: t, h: 1, last: t, lapse: 0, n: 0 }; }
     else {
       var gap = (t - u.last) / DAY;
-      /* being heard by a person counts for more than checking oneself */
-      if (grade === 2) u.h = Math.min(90, Math.max(u.h, gap) * (by === 'parent' ? 2.1 : 1.7));
-      else if (grade === 1) u.h = Math.max(1, Math.max(u.h, gap) * 1.2);
+      /* being heard by a person counts for more than checking oneself; same-day repeats do not inflate half-life */
+      if (grade === 2) { if (gap >= .8) u.h = Math.min(90, Math.max(u.h, gap) * (by === 'parent' ? 2.1 : 1.7)); }
+      else if (grade === 1) { if (gap >= .8) u.h = Math.max(1, Math.max(u.h, gap) * 1.2); }
       else { u.h = Math.max(.8, u.h * .4); u.lapse++; }
-      u.last = t;
+      u.last = Math.max(u.last || 0, t);
     }
     u.n = (u.n || 0) + 1;
     if (by === 'parent') u.heard = t;
@@ -315,5 +315,5 @@
     return Object.keys(h.u).filter(function (k) { return !h.u[k].heard || (t - h.u[k].heard) / DAY >= 14; }).sort(function (a, b) { return (h.u[a].heard || 0) - (h.u[b].heard || 0) || h.u[a].t - h.u[b].t; }).slice(0, n || 10);
   };
   Hifz.known = function (sN, pid) { var h = Hifz.state(pid), su = window.QURAN.q[sN], n = 0; su.v.forEach(function (v) { if (h.u[sN + ':' + v[0]]) n++; }); return { n: n, of: su.v.length }; };
-  Hifz.strength = function (k, pid) { var h = Hifz.state(pid), u = h.u[k]; if (!u) return 0; return Math.pow(2, -((A.now().getTime() - u.last) / DAY) / Math.max(u.h, .5)); };
+  Hifz.strength = function (k, pid) { var h = Hifz.state(pid), u = h.u[k]; if (!u) return 0; return Math.pow(2, -Math.max(0, (A.now().getTime() - u.last) / DAY) / Math.max(u.h, .5)); };
 })();

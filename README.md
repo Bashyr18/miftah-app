@@ -166,9 +166,9 @@ Also on Windows: thirty days of backups, start with Windows, a daily reminder in
 
 ### Phone and computer, together
 
-<img src="docs/screens/together.webp" alt="The computer showing a six-digit code and the phone typing it" width="100%">
+<img src="docs/screens/together.webp" alt="Phone and computer pairing screens from an earlier version" width="100%">
 
-Pair once with six digits on your home Wi-Fi. After that the phone joins its record with the computer by itself whenever Miftāḥ opens at home, recordings and photos included. Every message is sealed (AES-256 with HMAC-SHA256) with a key only the two share. No account, no cloud.
+Pair once with the one-time code shown on your computer. After that the phone joins its record with the computer by itself whenever Miftāḥ opens at home, recordings and photos included. Each connection uses fresh authentication and encrypted messages. Upgrade both apps and pair again if you previously used a six-digit code. Learning records stay on your devices.
 
 ### By night, and in Arabic
 
@@ -188,7 +188,7 @@ A simple path for the first week. The [illustrated guide](https://bashyr18.githu
 3. **Start the day.** Each child taps their name, then **Open the door**. They work through today's path one step at a time.
 4. **Open the parent area** with the button at the top right (a small sum keeps young children out, or set a PIN). Here you add brothers and sisters, see each child's day, and change their plan.
 5. **Print or send a sheet.** In a child's **Print** tab, choose a sheet and print it, save a PDF, or press **Do it on screen**. When it comes back, mark it from **Today**.
-6. **Join your phone and computer.** On the computer open **Phone and computer**, turn it on and press **Pair a phone**. On the phone open **Parent area › Devices › Find my computer** and type the six digits. Without Wi-Fi, **Send to my other device** does the same with a file.
+6. **Join your phone and computer.** On the computer open **Phone and computer**, turn it on and press **Pair a phone**. On the phone open **Parent area › Devices › Find my computer** and enter the displayed code. Without Wi-Fi, **Send to my other device** does the same with a file.
 7. **Back up.** On the computer, **This computer › Backups** keeps a copy each day. On the phone, a family file is a complete backup too.
 
 ## Sources and privacy
@@ -221,6 +221,18 @@ The signing key is **never** kept in this repository. By default `build.sh` look
 - **Your own fork:** run once with `MIFTAH_NEW_KEY=1` to create a new key. That is a different app identity, so it can't update the official app.
 
 Back up the key offline. An app on the Play Store can only ever be updated with the same key.
+
+### In-app update manifests
+
+Use a separate P-256 key for update metadata. Keep the private PEM file outside the repository and back it up offline. Set `MIFTAH_UPDATE_PUBLIC_KEY` to the base64 of the key's DER SubjectPublicKeyInfo before building Android and Windows. The Windows installer embeds the same app binary. Local builds without a public key can be updated by installing a new build manually.
+
+For example, OpenSSL can export the public value from an existing P-256 signing key:
+
+```bash
+export MIFTAH_UPDATE_PUBLIC_KEY="$(openssl pkey -in "$MIFTAH_UPDATE_SIGNING_KEY" -pubout -outform DER | openssl base64 -A)"
+```
+
+After building both release packages, run `python -I tools/release_meta.py` with `MIFTAH_UPDATE_SIGNING_KEY` pointing to the private PEM file and Python's `cryptography` package installed. The tool checks both packages' public keys before signing `dist/version.json`. Upload that manifest with the matching release assets. Keep using the same manifest signing key for updates to deployed builds.
 
 ### Windows
 

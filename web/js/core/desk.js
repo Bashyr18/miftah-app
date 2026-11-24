@@ -6,7 +6,7 @@
    - a command bar (Ctrl K) that jumps to any child, subject, lesson, tool or setting;
    - the keyboard everywhere: digits and Enter answer a lesson, 1 to 4 choose, Esc steps back;
    - Print Studio: several sheets at once, to paper or to one PDF in Documents\Miftah\Printables;
-   - Phone and computer: pair a phone on the home Wi-Fi with six digits, then the two join records by themselves;
+   - Phone and computer: pair a phone on the home Wi-Fi with a one-time code, then the two join records by themselves;
    - Focus: the whole screen for a child's session, and only a grown-up can leave it;
    - This computer: install, start with Windows, the tray, zoom, the data folder and thirty days of backups. */
 (function () {
@@ -44,7 +44,6 @@
   function ic(n, s) { if (!IC[n]) return A.icon(n, s); return '<svg class="ic" viewBox="0 0 24 24" width="' + (s || 20) + '" height="' + (s || 20) + '" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + IC[n] + '</svg>'; }
   function kbd(k) { return '<kbd>' + esc(k) + '</kbd>'; }
   /* the parent area's own lock, shared with these grown-up pages */
-  function grown(fn) { if (A.grownOpen && A.grownOpen()) fn(); else A.askGrown(fn); }
 
   /* ================= the rail ================= */
   var IMMERSIVE = { welcome: 1, who: 1, lesson: 1, stop: 1, nursery: 1, exam: 1, paper: 1, watch: 1, place: 1, flash: 1, write: 1, challenge: 1, marking: 1, sheet: 1 };
@@ -78,9 +77,9 @@
         : (who + (items ? '<nav class="rl-nav">' + items + '</nav>' : ''))) +
       '<div class="rl-sec">' + esc(L(['Grown-ups', 'للكبار'])) + '</div><nav class="rl-nav">' +
       (parent ? '<a class="rl-i" href="#/home">' + A.icon('path', 20) + '<span>' + esc(L(['Back to learning', 'العودة إلى التعلّم'])) + '</span></a>' : '<a class="rl-i" href="#/parent">' + A.icon('lock', 20) + '<span>' + esc(L(['Parent area', 'ركن الوالدين'])) + '</span></a>') +
-      '<a class="rl-i' + (location.hash === '#/desk/print' ? ' on' : '') + '" href="#/desk/print" data-grown>' + A.icon('print', 20) + '<span>' + esc(L(['Print Studio', 'استوديو الطباعة'])) + '</span></a>' +
-      '<a class="rl-i' + (location.hash === '#/desk/link' ? ' on' : '') + '" href="#/desk/link" data-grown>' + ic('phone', 20) + '<span>' + esc(L(['Phone and computer', 'الهاتف والحاسوب'])) + '</span>' + dot + '</a>' +
-      '<a class="rl-i' + (location.hash === '#/desk/pc' ? ' on' : '') + '" href="#/desk/pc" data-grown>' + ic('pc', 20) + '<span>' + esc(L(['This computer', 'هذا الحاسوب'])) + '</span></a>' +
+      '<a class="rl-i' + (location.hash === '#/desk/print' ? ' on' : '') + '" href="#/desk/print">' + A.icon('print', 20) + '<span>' + esc(L(['Print Studio', 'استوديو الطباعة'])) + '</span></a>' +
+      '<a class="rl-i' + (location.hash === '#/desk/link' ? ' on' : '') + '" href="#/desk/link">' + ic('phone', 20) + '<span>' + esc(L(['Phone and computer', 'الهاتف والحاسوب'])) + '</span>' + dot + '</a>' +
+      '<a class="rl-i' + (location.hash === '#/desk/pc' ? ' on' : '') + '" href="#/desk/pc">' + ic('pc', 20) + '<span>' + esc(L(['This computer', 'هذا الحاسوب'])) + '</span></a>' +
       '</nav><div class="grow"></div>' +
       '<div class="rl-foot"><button class="rl-tool" data-desk="focus" title="' + esc(L(['Focus: the whole screen for a lesson', 'تركيز: الشاشة كلها للدرس'])) + '">' + ic('focus', 19) + '<span>' + esc(L(['Focus', 'تركيز'])) + '</span></button><button class="rl-tool" data-desk="keys" title="' + esc(L(['Keyboard shortcuts', 'اختصارات لوحة المفاتيح'])) + '">' + ic('kbd', 19) + '<span>' + esc(L(['Keys', 'المفاتيح'])) + '</span></button>' + A.dn() + '</div>';
   }
@@ -93,8 +92,6 @@
     if (show) drawRail();
   }
   rail.addEventListener('click', function (e) {
-    var g = e.target.closest('[data-grown]');
-    if (g && !(A.grownOpen && A.grownOpen())) { e.preventDefault(); var h = g.getAttribute('href'); A.askGrown(function () { location.hash = h; }); return; }
     var b = e.target.closest('[data-desk]'); if (!b) return;
     var k = b.dataset.desk;
     if (k === 'palette') Desk.palette();
@@ -304,16 +301,17 @@
   document.addEventListener('keydown', function (e) {
     var k = e.key, ctrl = e.ctrlKey || e.metaKey;
     if (pal && pal.parentNode) return;   /* the command bar has its own keys */
-    if (ctrl && (k === 'k' || k === 'K')) { e.preventDefault(); Desk.palette(); return; }
+    if (ctrl && (k === 'k' || k === 'K')) { e.preventDefault(); if (Desk.focusOn) { Desk.askUnlock(); return; } Desk.palette(); return; }
     if (k === 'F11') { e.preventDefault(); if (Desk.focusOn) { Desk.askUnlock(); return; } B.deskSet('full', !document.documentElement.classList.contains('dk-full')); return; }
+    if (k === 'F5' || (ctrl && (k === 'r' || k === 'R'))) { if (Desk.focusOn) { e.preventDefault(); return; } }
     if (k === 'F1' || (k === '?' && !typing(e))) { e.preventDefault(); Desk.keys(); return; }
     if (ctrl && (k === '=' || k === '+')) { e.preventDefault(); zoom(+0.1); return; }
     if (ctrl && k === '-') { e.preventDefault(); zoom(-0.1); return; }
     if (ctrl && k === '0') { e.preventDefault(); B.deskZoom(1); return; }
-    if (ctrl && k === ',') { e.preventDefault(); grown(function () { A.go('desk/pc'); }); return; }
-    if (ctrl && (k === 'p' || k === 'P')) { e.preventDefault(); var pr = $('#pp-go'); if (visible(pr)) pr.click(); else grown(function () { A.go('desk/print'); }); return; }
+    if (ctrl && k === ',') { e.preventDefault(); if (Desk.focusOn) { Desk.askUnlock(); return; } A.go('desk/pc'); return; }
+    if (ctrl && (k === 'p' || k === 'P')) { e.preventDefault(); if (Desk.focusOn) { Desk.askUnlock(); return; } var pr = $('#pp-go'); if (visible(pr)) pr.click(); else A.go('desk/print'); return; }
     if (ctrl && e.shiftKey && (k === 'l' || k === 'L')) { e.preventDefault(); var dn = $('.dn'); if (dn) dn.click(); return; }
-    if (ctrl && k === 'q') { e.preventDefault(); B.quit(); return; }
+    if (ctrl && (k === 'q' || k === 'Q')) { e.preventDefault(); if (Desk.focusOn) { Desk.askUnlock(); return; } B.quit(); return; }
     if (ctrl && /^[1-9]$/.test(k) && !Desk.focusOn) { var kid = (A.S.profiles || [])[+k - 1]; if (kid && !/^(lesson|stop|exam|paper)$/.test(document.body.dataset.view)) { e.preventDefault(); A.S.cur = kid.id; A.saveNow(); A.go('home'); A.rerender(); } return; }
     if (k === 'Escape') {
       if (A.closeSheet && A.closeSheet()) { e.preventDefault(); return; }
@@ -365,7 +363,7 @@
   /* ================= the command bar ================= */
   var pal = null;
   function entries() {
-    var out = [], p = A.P(), add = function (group, icon, title, sub, run, words) { out.push({ g: group, ic: icon, t: title, s: sub || '', run: run, w: (title + ' ' + (sub || '') + ' ' + (words || '')).toLowerCase() }); };
+    var out = [], p = A.P(), add = function (group, icon, title, sub, run, words, rawSub) { out.push({ g: group, ic: icon, t: title, s: sub || '', rawSub: !!rawSub, run: run, w: (title + ' ' + (sub || '') + ' ' + (words || '')).toLowerCase() }); };
     (A.S.profiles || []).forEach(function (k, i) { add(L(['Children', 'الأطفال']), avatar(k, 22), k.name, L(A.STAGES[A.stage(k)].name), function () { A.S.cur = k.id; A.saveNow(); A.go('home'); A.rerender(); }, 'child ' + (i + 1)); });
     if (p) {
       Object.keys(C.rooms).forEach(function (r) { var rm = C.rooms[r]; if ((p.off || {})[r]) return; add(L(['Subjects', 'المواد']), A.icon('rooms', 20), L(rm.name), '', function () { A.go('room/' + r); }, r); });
@@ -385,17 +383,17 @@
     add(G, A.icon('lock', 20), L(['Parent area', 'ركن الوالدين']), '', function () { A.go('parent'); }, 'family dashboard');
     if (p) {
       [['today', ['Today', 'اليوم']], ['log', ['Lessons', 'الدروس']], ['make', ['Print', 'الطباعة']], ['hear', ['Qurʾān', 'القرآن']], ['plan', ['Plan', 'الخطة']], ['set', ['Settings', 'الإعدادات']]].forEach(function (x) {
-        add(G, A.icon('grown', 20), p.name + ' · ' + L(x[1]), L(['Parent area', 'ركن الوالدين']), function () { grown(function () { A.go('parent/' + p.id + '/' + x[0]); }); }, x[0]);
+        add(G, A.icon('grown', 20), p.name + ' · ' + L(x[1]), L(['Parent area', 'ركن الوالدين']), function () { A.go('parent/' + p.id + '/' + x[0]); }, x[0]);
       });
     }
-    add(G, A.icon('print', 20), L(['Print Studio', 'استوديو الطباعة']), L(['Several sheets at once, or one PDF', 'عدة أوراق معًا أو PDF واحد']), function () { grown(function () { A.go('desk/print'); }); }, 'pdf worksheet');
-    add(G, ic('phone'), L(['Phone and computer', 'الهاتف والحاسوب']), L(['Pair a phone, sync on Wi-Fi', 'اقرن هاتفًا وزامن عبر الواي فاي']), function () { grown(function () { A.go('desk/link'); }); }, 'sync pair wifi');
-    add(G, ic('pc'), L(['This computer', 'هذا الحاسوب']), L(['Backups, updates, start with Windows', 'النسخ الاحتياطية والتحديثات والتشغيل مع ويندوز']), function () { grown(function () { A.go('desk/pc'); }); }, 'settings backup update tray');
+    add(G, A.icon('print', 20), L(['Print Studio', 'استوديو الطباعة']), L(['Several sheets at once, or one PDF', 'عدة أوراق معًا أو PDF واحد']), function () { A.go('desk/print'); }, 'pdf worksheet');
+    add(G, ic('phone'), L(['Phone and computer', 'الهاتف والحاسوب']), L(['Pair a phone, sync on Wi-Fi', 'اقرن هاتفًا وزامن عبر الواي فاي']), function () { A.go('desk/link'); }, 'sync pair wifi');
+    add(G, ic('pc'), L(['This computer', 'هذا الحاسوب']), L(['Backups, updates, start with Windows', 'النسخ الاحتياطية والتحديثات والتشغيل مع ويندوز']), function () { A.go('desk/pc'); }, 'settings backup update tray');
     var D = L(['Actions', 'إجراءات']);
-    add(D, A.icon(document.documentElement.dataset.theme === 'dark' ? 'sun' : 'moon', 20), L(['Day or night', 'نهار أو ليل']), kbd('Ctrl') + kbd('Shift') + kbd('L'), function () { var d = $('.dn'); if (d) d.click(); else { A.S.theme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'; A.saveNow(); A.applyTheme(); } }, 'theme dark light');
+    add(D, A.icon(document.documentElement.dataset.theme === 'dark' ? 'sun' : 'moon', 20), L(['Day or night', 'نهار أو ليل']), kbd('Ctrl') + kbd('Shift') + kbd('L'), function () { var d = $('.dn'); if (d) d.click(); else { A.S.theme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'; A.saveNow(); A.applyTheme(); } }, 'theme dark light', true);
     add(D, ic('focus'), L(['Focus for a lesson', 'تركيز للدرس']), L(['Only a grown-up can leave', 'لا يخرج منه إلا الكبار']), function () { Desk.focus(true); }, 'lock kiosk');
-    add(D, ic('full'), L(['Full screen', 'ملء الشاشة']), kbd('F11'), function () { B.deskSet('full', !document.documentElement.classList.contains('dk-full')); }, '');
-    add(D, ic('kbd'), L(['Keyboard shortcuts', 'اختصارات لوحة المفاتيح']), kbd('F1'), function () { Desk.keys(); }, 'help keys');
+    add(D, ic('full'), L(['Full screen', 'ملء الشاشة']), kbd('F11'), function () { if (Desk.focusOn) Desk.askUnlock(); else B.deskSet('full', !document.documentElement.classList.contains('dk-full')); }, '', true);
+    add(D, ic('kbd'), L(['Keyboard shortcuts', 'اختصارات لوحة المفاتيح']), kbd('F1'), function () { Desk.keys(); }, 'help keys', true);
     add(D, A.icon('swap', 20), A.ar() ? 'English' : 'العربية', L(['Language', 'اللغة']), function () { A.S.lang = A.ar() ? 'en' : 'ar'; A.saveNow(); A.applyTheme(); A.rerender(); }, 'language arabic english');
     return out;
   }
@@ -422,7 +420,7 @@
       if (s) { /* grouped by kind, best first */ var order = []; shown.forEach(function (e) { if (order.indexOf(e.g) < 0) order.push(e.g); }); shown.sort(function (a, b) { return order.indexOf(a.g) - order.indexOf(b.g); }); }
       sel = Math.min(sel, Math.max(0, shown.length - 1));
       var last = null;
-      list.innerHTML = shown.length ? shown.map(function (e, i) { var head = e.g !== last ? '<div class="dk-pal-g">' + esc(e.g) + '</div>' : ''; last = e.g; return head + '<button class="dk-pal-i' + (i === sel ? ' on' : '') + '" data-i="' + i + '" role="option"><span class="dk-pal-ic">' + e.ic + '</span><span class="grow"><b>' + esc(e.t) + '</b>' + (e.s ? '<small>' + (/<kbd>/.test(e.s) ? e.s : esc(e.s)) + '</small>' : '') + '</span>' + (i === sel ? A.icon('next', 16) : '') + '</button>'; }).join('') : '<p class="dk-pal-none">' + esc(L(['Nothing by that name', 'لا شيء بهذا الاسم'])) + '</p>';
+      list.innerHTML = shown.length ? shown.map(function (e, i) { var head = e.g !== last ? '<div class="dk-pal-g">' + esc(e.g) + '</div>' : ''; last = e.g; return head + '<button class="dk-pal-i' + (i === sel ? ' on' : '') + '" data-i="' + i + '" role="option"><span class="dk-pal-ic">' + e.ic + '</span><span class="grow"><b>' + esc(e.t) + '</b>' + (e.s ? '<small>' + (e.rawSub ? e.s : esc(e.s)) + '</small>' : '') + '</span>' + (i === sel ? A.icon('next', 16) : '') + '</button>'; }).join('') : '<p class="dk-pal-none">' + esc(L(['Nothing by that name', 'لا شيء بهذا الاسم'])) + '</p>';
       var on = $('.dk-pal-i.on', list); if (on) on.scrollIntoView({ block: 'nearest' });
     }
     function run(i) { var e = shown[i]; if (!e) return; close(); setTimeout(e.run, 10); }
@@ -465,14 +463,14 @@
   /* ================= the phone joins its record with this one ================= */
   Desk.lanMerge = function (txt, phone) {
     try {
-      var o = JSON.parse(txt); if (!o || !Array.isArray(o.profiles)) return null;
+      var o = A.Sync.parse(txt); if (!o || !Array.isArray(o.profiles)) return null;
       var r = A.Sync.merge(A.S, o, true); A.S = A.shape(r.S);
       if (window.Voice && Voice.refreshVoices) Voice.refreshVoices();
       A.saveNow(); A.rerender();
       var got = r.report.reduce(function (s, x) { return s + Math.max(0, x.lessons) + Math.max(0, x.ayat); }, 0);
       A.toast(L(['Joined with', 'تمّ الدمج مع']) + ' ' + (phone || L(['the phone', 'الهاتف'])) + (got ? ' · +' + A.num(got) : ''));
       linkState.last = Date.now();
-      return JSON.stringify(Object.assign({}, A.S, { familyFile: 1 }));
+      return A.Sync.stateOut();
     } catch (e) { return null; }
   };
   Desk.onLink = function (ev) {
@@ -483,6 +481,8 @@
   };
   Desk.refresh = function () {
     var i = info(); linkState.on = !!i.link; linkState.phones = i.phones || [];
+    Desk.focusOn = !!i.focus;
+    document.documentElement.classList.toggle('dk-focus', Desk.focusOn);
     document.documentElement.classList.toggle('dk-full', !!i.full);
     if (/^#\/desk\//.test(location.hash) && !A.$('.sheet.on') && !(document.activeElement && /INPUT/.test(document.activeElement.tagName))) A.rerender(); else placeRail();
   };
@@ -496,7 +496,7 @@
   function bytes(n) { return n > 1048576 ? A.num(Math.round(n / 104857.6) / 10) + ' MB' : A.num(Math.max(1, Math.round(n / 1024))) + ' KB'; }
 
   A.V.desk = function (args) {
-    if (!(A.grownOpen && A.grownOpen())) return { redirect: 'parent' };
+    if (!A.grownOpen()) return A.grownGate();
     var w = args[0];
     if (w === 'link') return linkPage();
     if (w === 'print') return printPage(args[1]);
@@ -519,7 +519,7 @@
     if (on) {
       body += '<div class="dk-pc"><span>' + ic('pc', 18) + '<b>' + esc(i.machine || '') + '</b></span>' + '<small>' + esc(addr ? L(['On the home Wi-Fi', 'على شبكة المنزل']) : L(['Not on a home network', 'غير متصل بشبكة منزلية'])) + '</small>' + '</div>';
       body += '<div class="dk-code" id="lk-code"><button class="btn pri wide" id="lk-new">' + esc(L(['Pair a phone', 'اقرن هاتفًا'])) + '</button></div>';
-      body += '<ol class="dk-steps"><li>' + esc(L(['On the phone, open Miftāḥ, then Parent area › Devices.', 'في الهاتف افتح مفتاح ثم ركن الوالدين › الأجهزة.'])) + '</li><li>' + esc(L(['Tap Find my computer and choose', 'اضغط ابحث عن حاسوبي واختر']) + ' ' + (i.machine || '')) + '.</li><li>' + esc(L(['Type the six digits shown here.', 'اكتب الأرقام الستة الظاهرة هنا.'])) + '</li></ol>';
+      body += '<ol class="dk-steps"><li>' + esc(L(['On the phone, open Miftāḥ, then Parent area › Devices.', 'في الهاتف افتح مفتاح ثم ركن الوالدين › الأجهزة.'])) + '</li><li>' + esc(L(['Tap Find my computer and choose', 'اضغط ابحث عن حاسوبي واختر']) + ' ' + (i.machine || '')) + '.</li><li>' + esc(L(['Enter the pairing code shown here.', 'أدخل رمز الاقتران الظاهر هنا.'])) + '</li></ol>';
     }
     body += '</section><section class="card"><h3>' + esc(L(['Paired phones', 'الهواتف المقترنة'])) + '</h3>' +
       (phones.length ? phones.map(function (ph) { return '<div class="li"><span class="dk-phone">' + ic('phone', 20) + '</span><span class="grow"><b>' + esc(ph.name) + '</b><small>' + esc(L(['Last joined', 'آخر دمج'])) + ' · ' + esc(ago(ph.last)) + '</small></span><button class="btn ghost sm" data-forget="' + esc(ph.id) + '">' + esc(L(['Forget', 'انسَ'])) + '</button></div>'; }).join('')
@@ -531,7 +531,7 @@
         bindSwitches(v);
         var nb = $('#lk-new', v); if (nb) nb.onclick = function () { showCode(v); };
         $$('[data-forget]', v).forEach(function (b) { b.onclick = function () { B.forgetPhone(b.dataset.forget); A.rerender(); }; });
-        $('#lk-save', v).onclick = function () { A.N.call('exportFamily', 'Miftah-family-' + new Date().toISOString().slice(0, 10) + '.zip', JSON.stringify(Object.assign({}, A.S, { familyFile: 1 }))); };
+        $('#lk-save', v).onclick = function () { A.N.call('exportFamily', 'Miftah-family-' + A.day() + '.zip', A.Sync.stateOut()); };
         $('#lk-open', v).onclick = function () { A.__syncIn = true; A.N.call('importFile'); };
       },
       unmount: function () { clearInterval(codeT); try { B.pairEnd(); } catch (e) { } }
@@ -540,7 +540,7 @@
   function showCode(v) {
     var c = B.pairCode(); if (!c) return;
     var box = $('#lk-code', v), until = Date.now() + 10 * 60000;
-    box.innerHTML = '<div class="dk-digits" aria-label="' + esc(c) + '">' + c.split('').map(function (d, i) { return '<span' + (i === 3 ? ' class="gap"' : '') + '>' + d + '</span>'; }).join('') + '</div><div class="dk-timer"><i id="lk-bar"></i></div><small id="lk-left"></small><button class="btn ghost sm" id="lk-again">' + esc(L(['New code', 'رمز جديد'])) + '</button>';
+    box.innerHTML = '<div class="dk-digits"><code>' + esc(c.match(/.{8}/g).join(' ')) + '</code></div><div class="dk-timer"><i id="lk-bar"></i></div><small id="lk-left"></small><button class="btn ghost sm" id="lk-again">' + esc(L(['New code', 'رمز جديد'])) + '</button>';
     $('#lk-again', box).onclick = function () { showCode(v); };
     clearInterval(codeT);
     var tick = function () {
@@ -591,14 +591,15 @@
     };
   }
   function restore(name) {
-    var txt = B.backup(name); var o; try { o = JSON.parse(txt); } catch (e) { o = null; }
+    var txt = B.backup(name); var o; try { o = A.Sync.parse(txt); } catch (e) { o = null; }
     if (!o || !Array.isArray(o.profiles)) { A.toast(L(['That backup could not be read', 'تعذّرت قراءة النسخة'])); return; }
     var d = new Date(name + 'T12:00:00').toLocaleDateString(A.ar() ? 'ar-u-nu-arab' : 'en', { weekday: 'long', day: 'numeric', month: 'long' });
     A.sheet(L(['Go back to', 'ارجع إلى']) + ' ' + d, '<p class="dk-note">' + esc(L(['The record returns to how it was that day. Everything after it is set aside, not lost: today is saved as a backup first.', 'يعود السجل كما كان ذلك اليوم. ما بعده يُحفظ جانبًا ولا يضيع: يُحفظ اليوم نسخةً أولًا.'])) + '</p><div class="dk-row2"><button class="btn pri" id="bk-go">' + esc(L(['Go back', 'ارجع'])) + '</button><button class="btn ghost" id="bk-no">' + esc(L(['Keep today', 'أبقِ اليوم'])) + '</button></div>', function (sh) {
       $('#bk-no', sh).onclick = A.closeSheet;
       $('#bk-go', sh).onclick = function () {
-        var keep = { lang: A.S.lang, theme: A.S.theme, pin: A.S.pin, motion: A.S.motion };
-        A.N.call('exportFile', 'Miftah-before-' + name + '.json', JSON.stringify(A.S));
+        var keep = { lang: A.S.lang, theme: A.S.theme, pin: A.S.pin, gate: A.S.gate, motion: A.S.motion };
+        delete o.upd;
+        A.N.call('exportFile', 'Miftah-before-' + name + '.json', JSON.stringify(A.Sync.recordOut()));
         A.S = A.shape(Object.assign(o, keep)); A.saveNow(); A.closeSheet(); A.go('parent'); A.toast(L(['The record is as it was on', 'السجل كما كان في']) + ' ' + d);
       };
     });
@@ -642,7 +643,7 @@
   }
 
   /* on a computer, "your other device" is the phone: the sheet becomes the Phone and computer page */
-  if (A.Sync) A.Sync.open = function () { A.closeSheet && A.closeSheet(); grown(function () { A.go('desk/link'); }); };
+  if (A.Sync) A.Sync.open = function () { A.closeSheet && A.closeSheet(); A.go('desk/link'); };
   /* ================= start ================= */
   document.addEventListener('DOMContentLoaded', function () { setTimeout(function () { Desk.refresh(); after(); }, 0); });
   addEventListener('resize', function () { clearTimeout(placeRail._t); placeRail._t = setTimeout(function () { placeRail(); wide(); }, 120); });

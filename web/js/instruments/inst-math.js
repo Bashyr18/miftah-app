@@ -157,13 +157,17 @@
     c.el.innerHTML = '<div class="bl-n" dir="ltr">' + N(s.n) + '</div><div class="bl-area" dir="ltr"></div><div class="bl-btns" dir="ltr">' + (hasH ? '<button class="blb" data-t="h"><i class="bl-h"></i><span>' + esc(T('Hundred')) + '</span></button>' : '') + '<button class="blb" data-t="t"><i class="bl-t"></i><span>' + esc(T('Ten')) + '</span></button><button class="blb" data-t="o"><i class="bl-o"></i><span>' + esc(T('One')) + '</span></button></div><div class="bl-read" dir="ltr"></div><div class="tf-go"><button class="btn pri big">' + A.icon('check', 22) + '<span>' + esc(T('Check')) + '</span></button></div>';
     var area = $('.bl-area', c.el), read = $('.bl-read', c.el);
     function paint() {
-      var h = ''; var i;
-      for (i = 0; i < H; i++) h += '<i class="bl-h" data-t="h"></i>';
-      for (i = 0; i < Te; i++) h += '<i class="bl-t" data-t="t"></i>';
-      for (i = 0; i < O; i++) h += '<i class="bl-o" data-t="o"></i>';
+      var h = '', rm = A.L(['Remove ', 'إزالة ']), lh = esc(rm + T('Hundred')), lt = esc(rm + T('Ten')), lo = esc(rm + T('One')); var i;
+      for (i = 0; i < H; i++) h += '<i class="bl-h" tabindex="0" role="button" data-t="h" aria-label="' + lh + '"></i>';
+      for (i = 0; i < Te; i++) h += '<i class="bl-t" tabindex="0" role="button" data-t="t" aria-label="' + lt + '"></i>';
+      for (i = 0; i < O; i++) h += '<i class="bl-o" tabindex="0" role="button" data-t="o" aria-label="' + lo + '"></i>';
       area.innerHTML = h || '<span class="bl-empty">&nbsp;</span>';
       read.textContent = N(H * 100 + Te * 10 + O);
-      $$('i', area).forEach(function (el) { el.onclick = function () { var t = el.dataset.t; if (t === 'h') H--; if (t === 't') Te--; if (t === 'o') O--; Fx.tap(); paint(); }; });
+      $$('i', area).forEach(function (el) {
+        var rmOne = function () { var t = el.dataset.t; if (t === 'h') H--; if (t === 't') Te--; if (t === 'o') O--; Fx.tap(); paint(); };
+        el.onclick = rmOne;
+        el.onkeydown = function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); rmOne(); } };
+      });
     }
     $$('.blb', c.el).forEach(function (b) { b.onclick = function () { var t = b.dataset.t; if (t === 'h' && H < 9) H++; if (t === 't' && Te < 9) Te++; if (t === 'o' && O < 9) O++; Fx.tap(); paint(); }; });
     paint();
@@ -214,9 +218,9 @@
     var bar = $('.fr-bar', c.el);
     function paint() {
       bar.innerHTML = '';
-      for (var i = 0; i < parts; i++) { var p = document.createElement('button'); p.className = 'fr-p' + (shade[i] ? ' on' : ''); p.dataset.i = i; p.onclick = tog; if (!A.reduced()) p.animate([{ transform: 'scaleX(.6)', opacity: .4 }, { transform: 'none', opacity: 1 }], { duration: 260, delay: i * 30, fill: 'backwards' }); bar.appendChild(p); }
+      for (var i = 0; i < parts; i++) { var p = document.createElement('button'); p.type = 'button'; p.className = 'fr-p' + (shade[i] ? ' on' : ''); p.dataset.i = i; p.setAttribute('aria-label', A.L(['Part ', 'الجزء ']) + N(i + 1) + ' / ' + N(parts)); p.setAttribute('aria-pressed', shade[i] ? 'true' : 'false'); p.onclick = tog; if (!A.reduced()) p.animate([{ transform: 'scaleX(.6)', opacity: .4 }, { transform: 'none', opacity: 1 }], { duration: 260, delay: i * 30, fill: 'backwards' }); bar.appendChild(p); }
     }
-    function tog(e) { var i = +e.currentTarget.dataset.i; shade[i] = !shade[i]; e.currentTarget.classList.toggle('on', shade[i]); Fx.tap(); }
+    function tog(e) { var i = +e.currentTarget.dataset.i; shade[i] = !shade[i]; e.currentTarget.classList.toggle('on', shade[i]); e.currentTarget.setAttribute('aria-pressed', shade[i] ? 'true' : 'false'); Fx.tap(); }
     $$('[data-f]', c.el).forEach(function (b) { b.onclick = function () { parts = +b.dataset.f; shade = {}; $$('[data-f]', c.el).forEach(function (x) { x.classList.toggle('sel', x === b); }); Fx.tap(); paint(); }; });
     paint();
     $('.tf-go button', c.el).onclick = function () {
@@ -231,14 +235,15 @@
   /* fair sharing: every plate gets one in turn */
   I.share = function (c) {
     var s = c.step, obj = s.obj || 'date', left = s.n, counts = []; for (var k = 0; k < s.k; k++) counts.push(0);
-    c.el.innerHTML = '<div class="sh-pile"></div><div class="sh-plates" style="--k:' + s.k + '">' + counts.map(function (_, i) { return '<button class="sh-plate" data-p="' + i + '"><div class="sh-in"></div></button>'; }).join('') + '</div><div class="tf-go"><button class="btn pri big">' + A.icon('check', 22) + '<span>' + esc(T('Check')) + '</span></button></div>';
+    c.el.innerHTML = '<div class="sh-pile"></div><div class="sh-plates" style="--k:' + s.k + '">' + counts.map(function (_, i) { return '<button type="button" class="sh-plate" data-p="' + i + '" aria-label="' + esc(A.L(['Plate ', 'طبق ']) + N(i + 1)) + '"><div class="sh-in"></div></button>'; }).join('') + '</div><div class="tf-go"><button class="btn pri big">' + A.icon('check', 22) + '<span>' + esc(T('Check')) + '</span></button></div>';
     var pile = $('.sh-pile', c.el);
     function paintPile() { pile.innerHTML = ''; for (var i = 0; i < left; i++) pile.insertAdjacentHTML('beforeend', '<span>' + A.art(obj, 32) + '</span>'); }
     paintPile();
     $$('.sh-plate', c.el).forEach(function (p) {
       p.onclick = function () {
         if (left <= 0) return;
-        left--; counts[+p.dataset.p]++;
+        left--; var pi = +p.dataset.p; counts[pi]++;
+        p.setAttribute('aria-label', A.L(['Plate ', 'طبق ']) + N(pi + 1) + ' (' + N(counts[pi]) + ')');
         $('.sh-in', p).insertAdjacentHTML('beforeend', '<span class="drop">' + A.art(obj, 30) + '</span>');
         paintPile(); Fx.tap();
       };
@@ -257,16 +262,25 @@
     var s = c.step, h = s.startH != null ? s.startH : 12, m = 0;
     var nums = ''; for (var i = 1; i <= 12; i++) { var an = (i * 30 - 90) * Math.PI / 180; nums += '<text x="' + (100 + Math.cos(an) * 72) + '" y="' + (106 + Math.sin(an) * 72) + '" class="clk-n">' + N(i) + '</text>'; }
     var ticks = ''; for (var ti = 0; ti < 60; ti++) { var big = ti % 5 === 0, ta = ti * 6 * Math.PI / 180; ticks += '<line x1="' + (100 + Math.sin(ta) * (big ? 80 : 83)).toFixed(1) + '" y1="' + (100 - Math.cos(ta) * (big ? 80 : 83)).toFixed(1) + '" x2="' + (100 + Math.sin(ta) * 86).toFixed(1) + '" y2="' + (100 - Math.cos(ta) * 86).toFixed(1) + '" stroke="#3a2a18" stroke-width="' + (big ? 2.2 : .9) + '" stroke-linecap="round"/>'; }
-    c.el.innerHTML = '<svg class="clk" viewBox="0 0 200 200" dir="ltr"><circle cx="100" cy="103" r="98" fill="rgba(0,0,0,.28)"/><circle cx="100" cy="100" r="98" fill="url(#gWood)"/><circle cx="100" cy="100" r="98" fill="url(#rShade)"/><circle cx="100" cy="100" r="89" fill="#4a2f17"/><circle cx="100" cy="100" r="87" fill="url(#gCream)"/><circle cx="100" cy="100" r="87" fill="url(#rShade)" opacity=".35"/>' + ticks + nums + '<g class="clk-m"><path d="M97.500 106h5l-1.200-78h-2.600z" fill="#7a5a1c"/></g><g class="clk-h"><path d="M96 106h8l-1.800-54a2 2 0 0 0-4.400 0z" fill="#20160c"/></g><circle cx="100" cy="100" r="7" fill="url(#gGold)"/><circle cx="100" cy="100" r="2.400" fill="#7a5a1c"/></svg><div class="tf-go"><button class="btn pri big">' + A.icon('check', 22) + '<span>' + esc(T('Check')) + '</span></button></div>';
-    var svg = $('svg', c.el), H = $('.clk-h', c.el), Mi = $('.clk-m', c.el), active = null;
+    var ctrls = '<div class="clk-ctrl" dir="ltr" style="display:flex;gap:8px;justify-content:center;align-items:center;flex-wrap:wrap;margin-top:8px">' +
+      '<button type="button" class="btn sec sm" data-dh="-1" aria-label="' + esc(A.L(['Hour back', 'ساعة للخلف'])) + '">' + esc(A.L(['−1h', '−١ س'])) + '</button>' +
+      '<button type="button" class="btn sec sm" data-dh="1" aria-label="' + esc(A.L(['Hour forward', 'ساعة للأمام'])) + '">' + esc(A.L(['+1h', '+١ س'])) + '</button>' +
+      (s.minutes ? '<button type="button" class="btn sec sm" data-dm="-5" aria-label="' + esc(A.L(['Five minutes back', 'خمس دقائق للخلف'])) + '">' + esc(A.L(['−5m', '−٥ د'])) + '</button><button type="button" class="btn sec sm" data-dm="5" aria-label="' + esc(A.L(['Five minutes forward', 'خمس دقائق للأمام'])) + '">' + esc(A.L(['+5m', '+٥ د'])) + '</button>' : '') +
+      '<span class="clk-sr" aria-live="polite" style="position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)"></span></div>';
+    c.el.innerHTML = '<svg class="clk" viewBox="0 0 200 200" dir="ltr" aria-hidden="true"><circle cx="100" cy="103" r="98" fill="rgba(0,0,0,.28)"/><circle cx="100" cy="100" r="98" fill="url(#gWood)"/><circle cx="100" cy="100" r="98" fill="url(#rShade)"/><circle cx="100" cy="100" r="89" fill="#4a2f17"/><circle cx="100" cy="100" r="87" fill="url(#gCream)"/><circle cx="100" cy="100" r="87" fill="url(#rShade)" opacity=".35"/>' + ticks + nums + '<g class="clk-m"><path d="M97.500 106h5l-1.200-78h-2.600z" fill="#7a5a1c"/></g><g class="clk-h"><path d="M96 106h8l-1.800-54a2 2 0 0 0-4.400 0z" fill="#20160c"/></g><circle cx="100" cy="100" r="7" fill="url(#gGold)"/><circle cx="100" cy="100" r="2.400" fill="#7a5a1c"/></svg>' + ctrls + '<div class="tf-go"><button class="btn pri big">' + A.icon('check', 22) + '<span>' + esc(T('Check')) + '</span></button></div>';
+    var svg = $('svg', c.el), H = $('.clk-h', c.el), Mi = $('.clk-m', c.el), sr = $('.clk-sr', c.el), active = null;
     function paint() {
       var ha = ((h % 12) + (m / 60)) * 30, ma = m * 6;
       H.setAttribute('transform', 'rotate(' + ha + ' 100 100)'); Mi.setAttribute('transform', 'rotate(' + ma + ' 100 100)');
+      if (sr) sr.textContent = N(h) + ':' + (m < 10 ? N(0) : '') + N(m);
     }
     function ang(e) { var r = svg.getBoundingClientRect(), x = e.clientX - r.left - r.width / 2, y = e.clientY - r.top - r.height / 2; var a = Math.atan2(x, -y) * 180 / Math.PI; return a < 0 ? a + 360 : a; }
     svg.addEventListener('pointerdown', function (e) { var a = ang(e), r = svg.getBoundingClientRect(), d = Math.hypot(e.clientX - r.left - r.width / 2, e.clientY - r.top - r.height / 2) / (r.width / 2); active = (s.minutes && d > .62) ? 'm' : 'h'; try { svg.setPointerCapture(e.pointerId); } catch (x) { } mv(e); e.preventDefault(); });
     svg.addEventListener('pointermove', function (e) { if (active) mv(e); });
     svg.addEventListener('pointerup', function () { active = null; });
+    svg.addEventListener('pointercancel', function () { active = null; });
+    $$('[data-dh]', c.el).forEach(function (b) { b.onclick = function () { h = ((h - 1 + (+b.dataset.dh) + 12) % 12) + 1; Fx.tap(); paint(); }; });
+    $$('[data-dm]', c.el).forEach(function (b) { b.onclick = function () { m = (m + (+b.dataset.dm) + 60) % 60; Fx.tap(); paint(); }; });
     function mv(e) {
       var a = ang(e);
       if (active === 'm') { var nm = (Math.round(a / 30) * 5) % 60; if (nm !== m) { m = nm; Fx.tap(); } }

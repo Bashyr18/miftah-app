@@ -123,12 +123,14 @@
     if (saveT) { clearTimeout(saveT); saveT = null; }
     A.S.savedAt = Date.now();
     var s = JSON.stringify(A.S);
-    /* if the browser store is full, it must not keep an out-of-date copy */
-    try { localStorage.setItem(KEY, s); } catch (e) { try { localStorage.removeItem(KEY); } catch (e2) { } }
+    /* Keep the last successful browser copy if this write runs out of space. */
+    try { localStorage.setItem(KEY, s); } catch (e) { }
     A.N.call('saveState', s);
     A.N.sync && A.N.sync();
   };
   A.save = function () { if (saveT) clearTimeout(saveT); saveT = setTimeout(A.saveNow, 250); };
+  document.addEventListener('visibilitychange', function () { if (document.hidden && saveT) A.saveNow(); });
+  window.addEventListener('pagehide', function () { if (saveT) A.saveNow(); });
 
   /* profiles */
   A.P = function () { var S = A.S; for (var i = 0; i < S.profiles.length; i++) if (S.profiles[i].id === S.cur) return S.profiles[i]; return null; };
@@ -136,11 +138,22 @@
     pid = pid || A.S.cur;
     var d = A.S.data[pid];
     if (!d) d = A.S.data[pid] = { led: [], keys: {}, hifz: {}, path: null, time: {}, obs: [], placed: {}, recs: {} };
-    /* added since the first version: a restored backup may not have these */
-    if (!d.pending) { d.pending = []; d.notyet = {}; d.screen = {}; d.extra = {}; d.seenWeek = 0; }
+    /* initialise each field independently so a partial backup or sync never wipes sibling maps */
+    if (!d.led) d.led = [];
+    if (!d.keys) d.keys = {};
+    if (!d.hifz) d.hifz = {};
+    if (!d.time) d.time = {};
+    if (!d.obs) d.obs = [];
+    if (!d.placed) d.placed = {};
+    if (!d.recs) d.recs = {};
+    if (!d.pending) d.pending = [];
+    if (!d.notyet) d.notyet = {};
+    if (!d.screen) d.screen = {};
+    if (!d.extra) d.extra = {};
+    if (d.seenWeek == null) d.seenWeek = 0;
     return d;
   };
-  A.age = function (p) { var n = A.now(); return Math.max(0, n.getFullYear() - p.by - ((n.getMonth() + 1) < (p.bm || 1) ? 1 : 0)); };
+  A.age = function (p) { if (!p || !Number.isFinite(+p.by)) return 7; var n = A.now(); return Math.max(0, n.getFullYear() - (+p.by) - ((n.getMonth() + 1) < (p.bm || 1) ? 1 : 0)); };
   /* the stage governs presentation; levels are per room and per skill */
   A.stage = function (p) { p = p || A.P(); if (!p) return 1; if (p.stage != null && p.stage >= 0) return p.stage; var a = A.age(p); return a < 5 ? 0 : a < 8 ? 1 : a < 12 ? 2 : a < 15 ? 3 : 4; };
   A.STAGES = [
@@ -167,12 +180,14 @@
   var cur = null, stack = [];
   A.go = function (h, opts) { opts = opts || {}; if (opts.replace) { history.replaceState(null, '', '#/' + h); render(); } else { location.hash = '#/' + h; } };
   A.route = function () { return (location.hash || '#/').replace(/^#\//, ''); };
-  function parse(h) { var p = h.split('/').filter(Boolean); return { name: p[0] || 'home', args: p.slice(1).map(decodeURIComponent), hash: h }; }
+  function dec(x) { try { return decodeURIComponent(x); } catch (e) { return x; } }
+  function parse(h) { var p = h.split('/').filter(Boolean); return { name: p[0] || 'home', args: p.slice(1).map(dec), hash: h }; }
 
   /* a redraw of the same screen (after a tap, on resume, after printing) keeps its place and does not fade: only a new screen enters */
   var lastHash = null, inVT = false;
   function render() {
     var r = parse(A.route());
+    if (A.grownOpen) A.grownOpen();
     var el = A.$('#app'), same = r.hash === lastHash, y = same ? window.scrollY : 0, vy = same && A.$('.view', el) ? A.$('.view', el).scrollTop : 0, ey = same ? el.scrollTop : 0;
     lastHash = r.hash;
     try {
@@ -243,6 +258,10 @@
     var t = e.target.closest && e.target.closest('[data-a]'); if (!t) return;
     var fn = A.acts[t.dataset.a]; if (fn) { fn(t, e); }
   });
+  document.addEventListener('error', function (e) {
+    var t = e.target;
+    if (t && t.tagName === 'IMG' && t.matches && t.matches('.shelf-t img, .mth img')) t.remove();
+  }, true);
 
   /* ---------- theme: by default the world follows the sun ---------- */
   A.isDay = function () { var h = A.now().getHours(); return h >= 6 && h < 18; };
@@ -296,16 +315,23 @@
   A.quranAll = function (done) {
     var Q = window.QURAN; done = done || function () { };
     if (Q.all) { done(); return; }
-    var fin = false, go = function () {
-      if (fin) return; fin = true;
+    var fin = false;
+    function merge() {
       var R = window.QURAN_REST;
-      if (R) { Q.order = Q.order.concat(R.order); Object.keys(R.q).forEach(function (n) { Q.q[n] = R.q[n]; }); Q.all = true; window.QURAN_REST = null; }
-      done();
-    };
+      if (R && !Q.all) { Q.order = Q.order.concat(R.order); Object.keys(R.q).forEach(function (n) { Q.q[n] = R.q[n]; }); Q.all = true; window.QURAN_REST = null; }
+    }
+    function go() { merge(); if (fin) return; fin = true; done(); }
     var s = document.createElement('script'); s.src = 'quran-rest.js'; s.onload = go; s.onerror = go; document.head.appendChild(s);
     setTimeout(go, 2500);
   };
-  A.needsQuranAll = function () { return (A.S.profiles || []).some(function (p) { var d = (A.S.data || {})[p.id]; return A.stage(p) >= 3 || (d && d.hifz && d.hifz.i >= window.QURAN.order.length) || p.quranAll; }); };
+  A.needsQuranAll = function () {
+    var Q = window.QURAN;
+    return (A.S.profiles || []).some(function (p) {
+      var d = (A.S.data || {})[p.id], h = d && d.hifz;
+      var hasExtra = !!(h && h.u && Object.keys(h.u).some(function (k) { var s = +k.split(':')[0]; return s && !Q.q[s]; }));
+      return A.stage(p) >= 3 || (h && h.i >= Q.order.length) || hasExtra || p.quranAll;
+    });
+  };
   A.boot = function () {
     A.load(); A.applyTheme(); if (A.preloadArt) A.preloadArt();
     if (A.needsQuranAll()) { A.quranAll(A.boot2); return; }

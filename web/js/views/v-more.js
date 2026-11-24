@@ -6,7 +6,8 @@
   /* Finding the level: a short search through the room's lessons. Two right answers and it looks further on; a miss and it looks further back.
      Nothing is forged by this: the lessons below the result are simply treated as already known, and a parent can undo it. */
   A.V.place = function (args) {
-    var pid = args[0], rid = args[1], p = A.profile(pid), r = C.rooms[rid]; if (!p || !r) return { redirect: 'parent' };
+    if (!A.grownOpen()) return A.grownGate();
+    var pid = args[0], rid = args[1], p = A.profile(pid), r = C.rooms[rid]; if (!p || !Object.prototype.hasOwnProperty.call(C.rooms, rid)) return { redirect: 'parent' };
     A.S.cur = pid;
     var st = A.stage(p), list = []; r.units.forEach(function (u) { if (u.band > st || u.strand) return; u.skills.forEach(function (s) { if (s.band <= st && s.review) list.push(s); }); });
     var lo = 0, hi = list.length - 1, rng = A.rng(A.seed()), host = null;
@@ -14,7 +15,7 @@
       if (lo > hi || !list.length) return finish();
       var mid = Math.floor((lo + hi) / 2), sk = list[mid], steps = [];
       for (var i = 0; i < 2; i++) { var x = sk.review(rng); (Array.isArray(x) ? x.slice(0, 1) : [x]).forEach(function (q) { steps.push(Object.assign({}, q, { ph: 'solo', hint: null, noHelp: true })); }); }
-      Player.start(host, { steps: steps, hue: r.hue, rng: rng, mode: 'review', onExit: function () { A.go('parent/' + pid + '/rooms'); }, onDone: function (res) { if (res.solo && res.soloOk === res.solo) lo = mid + 1; else hi = mid - 1; probe(); } });
+      Player.start(host, { steps: steps, hue: r.hue, rng: rng, mode: 'review', exam: true, onExit: function () { A.go('parent/' + pid + '/rooms'); }, onDone: function (res) { if (res.solo && res.soloOk === res.solo) lo = mid + 1; else hi = mid - 1; probe(); } });
     }
     function finish() {
       var d = A.D(pid); for (var i = 0; i < lo; i++) if (!M.met(list[i].id, pid)) d.placed[list[i].id] = 1; d.path = null; A.saveNow();
@@ -33,11 +34,12 @@
     return rng.shuffle(k);
   }
   A.V.cards = function (args) {
-    var pid = args[0], kind = args[1], p = A.profile(pid); if (!p) return { redirect: 'parent' };
+    var pid = args[0], kind = args[1], p = A.profile(pid);
+    if (!p || (kind !== 'cards-ar' && kind !== 'cards-en')) return { redirect: 'parent' };
     var list = cardsFor(kind, pid), i = 0;
     return {
       bare: true, hue: 'gold',
-      html: '<div class="pl h-gold"><div class="pl-top"><a class="pl-x" href="#/parent/' + pid + '/sheet/' + kind + '" aria-label="' + esc(T('Leave')) + '">' + A.icon('close', 24) + '</a><div class="pl-bar" id="cd-n" style="text-align:center;color:var(--t2)"></div><div style="width:48px"></div></div><div class="pl-body"><div class="step" id="cd"></div></div><div class="pl-foot"><button class="btn pri big" id="cd-next" style="margin-inline-start:auto"><span>' + esc(T('Next')) + '</span>' + A.icon('next', 24).replace('class="ic"', 'class="ic ic-flip"') + '</button></div></div>',
+      html: '<div class="pl h-gold"><div class="pl-top"><a class="pl-x" href="#/parent/' + esc(pid) + '/sheet/' + esc(kind) + '" aria-label="' + esc(T('Leave')) + '">' + A.icon('close', 24) + '</a><div class="pl-bar" id="cd-n" style="text-align:center;color:var(--t2)"></div><div style="width:48px"></div></div><div class="pl-body"><div class="step" id="cd"></div></div><div class="pl-foot"><button class="btn pri big" id="cd-next" style="margin-inline-start:auto"><span>' + esc(T('Next')) + '</span>' + A.icon('next', 24).replace('class="ic"', 'class="ic ic-flip"') + '</button></div></div>',
       mount: function (v) {
         function show() {
           var c = list[i], el = $('#cd', v);

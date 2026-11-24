@@ -44,9 +44,9 @@
   var DOW = { en: ['S', 'M', 'T', 'W', 'T', 'F', 'S'], ar: ['أح', 'إث', 'ثل', 'أر', 'خم', 'جم', 'سب'] };
   function iso(y, m, d) { return y + '-' + ('0' + (m + 1)).slice(-2) + '-' + ('0' + d).slice(-2); }
   function enhanceDate(inp) {
-    var label = function () { if (!inp.value) return L(['Choose a date', 'اختر تاريخًا']); var q = inp.value.split('-'), l = A.ar() ? 'ar-u-nu-arab' : 'en'; return A.num(+q[2]) + ' ' + MON[l][+q[1] - 1] + ' ' + A.num(q[0]); };
+    var label = function () { if (!inp.value) return L(['Choose a date', 'اختر تاريخًا']); var q = inp.value.split('-'), l = A.ar() ? 'ar' : 'en'; return A.num(+q[2]) + ' ' + MON[l][+q[1] - 1] + ' ' + A.num(q[0]); };
     wrapControl(inp, label, function (after) {
-      var now = A.now(), base = inp.value ? inp.value.split('-') : null, y = base ? +base[0] : now.getFullYear(), m = base ? +base[1] - 1 : now.getMonth(), l = A.ar() ? 'ar-u-nu-arab' : 'en';
+      var now = A.now(), base = inp.value ? inp.value.split('-') : null, y = base ? +base[0] : now.getFullYear(), m = base ? +base[1] - 1 : now.getMonth(), l = A.ar() ? 'ar' : 'en';
       A.sheet(L(['Choose a date', 'اختر تاريخًا']), '<div class="cal"></div>', function (sh) {
         var host = A.$('.cal', sh);
         (function draw() {
@@ -84,7 +84,15 @@
   /* long pages become sections */
   function foldCard(card, open) {
     var h = card.querySelector(':scope > h3'); if (!h || card.dataset.acc) return; card.dataset.acc = '1'; card.classList.add('acc'); if (!open) card.classList.add('shut');
-    h.insertAdjacentHTML('beforeend', chev); h.setAttribute('role', 'button'); h.onclick = function () { var sh = !card.classList.contains('shut'); A.$$('.card.acc', card.parentNode).forEach(function (c) { c.classList.add('shut'); }); if (sh) return; card.classList.remove('shut'); };
+    h.insertAdjacentHTML('beforeend', chev); h.setAttribute('role', 'button'); h.tabIndex = 0; h.setAttribute('aria-expanded', open ? 'true' : 'false');
+    h.onclick = function () {
+      var sh = !card.classList.contains('shut');
+      A.$$('.card.acc', card.parentNode).forEach(function (c) { c.classList.add('shut'); var ch = c.querySelector(':scope > h3'); if (ch) ch.setAttribute('aria-expanded', 'false'); });
+      if (sh) return;
+      card.classList.remove('shut');
+      h.setAttribute('aria-expanded', 'true');
+    };
+    h.onkeydown = function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); h.click(); } };
   }
   /* four tabs, and everything else under More */
   var KEEP = /\/(today|log|hear|make)$/;
@@ -104,7 +112,7 @@
     A.$$('input[type=time]:not([data-ui])').forEach(enhanceTime);
     A.$$('.card > p:not([data-ui])', app).forEach(function (p) { var st = p.getAttribute('style') || ''; if (st.indexOf('--t2') >= 0 && p.textContent.length > 45 && !p.classList.contains('keep') && !/[0-9٠-٩]/.test(p.textContent)) foldNote(p); });
     A.$$('.ph > p, .th p', app).forEach(function (p) { if (p.textContent.length > 38 && !p.classList.contains('dates')) p.hidden = true; });
-    A.$$('.wrap > p, .wrap > .ref, .dwrap > p', app).forEach(function (p) { if (p.textContent.length > 45) p.hidden = true; });
+    A.$$('.wrap > p, .dwrap > p', app).forEach(function (p) { if (p.textContent.length > 45 && !p.classList.contains('bk-intro') && !p.classList.contains('keep')) p.hidden = true; });
     A.$$('.tabs', app).forEach(foldTabs);
     var r = route();
     if (/^parent\/[^/]+\/log$/.test(r)) { A.$$('.card', app).filter(function (c) { return !c.classList.contains('pending'); }).forEach(function (c, i) { foldCard(c, i === 0); }); }

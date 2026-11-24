@@ -13,7 +13,7 @@
   function stats(p) {
     var pid = p.id, pl = Plan.today(pid), done = pl.stops.filter(function (s) { return s.done; }).length, wk = M.week ? M.week(pid) : [], d = A.D(pid), ret = M.retention(pid, 30), c = M.counts(pid);
     var since = A.dayNum() - 7, fresh = (d.hist || []).filter(function (h) { return h.n > since && h.p; }).length;
-    var sc = d.screen || {}, time = 0, bars = []; for (var i = 6; i >= 0; i--) { var k = A.day(new Date(A.now().getTime() - i * DAY)), ms = (sc[k] || 0) + ((d.time || {})[k] || 0); time += ms; bars.push(ms); }
+    var sc = d.screen || {}, time = 0, bars = [], now = A.now(); for (var i = 6; i >= 0; i--) { var k = A.day(new Date(now.getFullYear(), now.getMonth(), now.getDate() - i)), ms = (sc[k] || 0) + ((d.time || {})[k] || 0); time += ms; bars.push(ms); }
     return { pl: pl, done: done, total: pl.stops.length, week: time, bars: bars, recall: ret.of >= 3 ? Math.round(ret.ok / ret.of * 100) : null, keys: c.forged, proven: c.proven, deep: c.deep, fresh: fresh, need: Flow.inbox(pid).length, due: M.due(pid).length };
   }
   var UPD = '<svg class="ic" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V5M7 9.5l5-5 5 5M5 20h14"/></svg>';
@@ -103,14 +103,14 @@
   var KIND = { youtube: 'play', video: 'video', audio: 'speak', image: 'eye', html: 'sparkle' };
   function thumb(m) {
     var ic = '<i class="mth-ic">' + A.icon(KIND[m.kind] || 'note', 20) + '</i>';
-    if (m.kind === 'youtube') return '<span class="mth"><img src="https://i.ytimg.com/vi/' + esc(m.ref) + '/mqdefault.jpg" alt="" onerror="this.remove()">' + ic + '</span>';
+    if (m.kind === 'youtube') return '<span class="mth"><img src="https://i.ytimg.com/vi/' + esc(m.ref) + '/mqdefault.jpg" alt="">' + ic + '</span>';
     if (m.kind === 'image') return '<span class="mth"><img src="media/' + encodeURIComponent(m.ref) + '" alt="">' + '</span>';
-    return '<span class="mth mth-' + m.kind + '">' + ic + '</span>';
+    return '<span class="mth mth-' + esc(m.kind) + '">' + ic + '</span>';
   }
   function roomOf(m) { var a = m.attach || {}; if (a.type === 'room') return a.id; if (a.type === 'unit') return C.units[a.id] && C.units[a.id].room; var s = C.skill(a.id); return s && s.room; }
   function mediaLib() {
     var list = Media.list().slice().reverse();
-    return { html: appbar(L(['Media', 'الوسائط']), '', 'parent') + '<div class="dwrap">' + (list.length ? '<div class="mgrid">' + list.map(function (m) { var R = C.rooms[roomOf(m)]; return '<button class="mi" data-a="m-edit" data-id="' + m.id + '">' + thumb(m) + '<b>' + esc(m.title) + '</b><small>' + esc(R ? L(R.name) : '') + '</small></button>'; }).join('') + '</div>' : '<button class="mempty" data-a="m-add"><span>' + PLUS + '</span><b>' + esc(L(['Add your first', 'أضف أول عنصر'])) + '</b></button>') + '</div>' + (list.length ? '<button class="fab" data-a="m-add" aria-label="' + esc(L(['Add', 'إضافة'])) + '">' + PLUS + '</button>' : '') };
+    return { html: appbar(L(['Media', 'الوسائط']), '', 'parent') + '<div class="dwrap">' + (list.length ? '<div class="mgrid">' + list.map(function (m) { var R = C.rooms[roomOf(m)]; return '<button class="mi" data-a="m-edit" data-id="' + esc(m.id) + '">' + thumb(m) + '<b>' + esc(m.title) + '</b><small>' + esc(R ? L(R.name) : '') + '</small></button>'; }).join('') + '</div>' : '<button class="mempty" data-a="m-add"><span>' + PLUS + '</span><b>' + esc(L(['Add your first', 'أضف أول عنصر'])) + '</b></button>') + '</div>' + (list.length ? '<button class="fab" data-a="m-add" aria-label="' + esc(L(['Add', 'إضافة'])) + '">' + PLUS + '</button>' : '') };
   }
   A.acts['m-add'] = function () {
     var opt = function (a, ic, t) { return '<button class="ao" data-add="' + a + '">' + (ic.charAt(0) === '<' ? ic : A.icon(ic, 26)) + '<span>' + esc(L(t)) + '</span></button>'; };

@@ -306,7 +306,8 @@
   kind('certificate', 'reward', ['Certificate', 'شهادة'], ['For the newest lantern they have lit', 'لآخر فانوس أضاءه'], function (c) {
     var lit = Flow.lanterns(c.pid).filter(function (x) { return x.lit; }), d = A.D(c.pid).units || {}; lit.sort(function (a, b) { return d[b.id].t - d[a.id].t; });
     var u = lit[0]; if (!u) return null;
-    return { html: page(c, '', '', '<div class="cert fill">' + A.art('key', 160) + '<p>' + esc(T('With thanks to Allah, this key is earned by')) + '</p><h1>' + esc(c.p.name) + '</h1><p>' + esc(L(C.rooms[u.room].name)) + '</p><h2>' + esc(L(u.title)) + '</h2><p>' + esc(new Date(d[u.id].t).toLocaleDateString(A.ar() ? 'ar-u-nu-arab' : 'en', { year: 'numeric', month: 'long', day: 'numeric' })) + (Voice.dates().h ? ' · ' + esc(Voice.dates().h) : '') + '</p></div>', { bare: 1, nofoot: 1 }) };
+    var dt = new Date(d[u.id].t), hDate = Voice.dates(false, dt).h;
+    return { html: page(c, '', '', '<div class="cert fill">' + A.art('key', 160) + '<p>' + esc(T('With thanks to Allah, this key is earned by')) + '</p><h1>' + esc(c.p.name) + '</h1><p>' + esc(L(C.rooms[u.room].name)) + '</p><h2>' + esc(L(u.title)) + '</h2><p>' + esc(dt.toLocaleDateString(A.ar() ? 'ar-u-nu-arab' : 'en', { year: 'numeric', month: 'long', day: 'numeric' })) + (hDate ? ' · ' + esc(hDate) : '') + '</p></div>', { bare: 1, nofoot: 1 }) };
   }, { need: function (pid) { return Flow.lanterns(pid).some(function (x) { return x.lit; }); } });
   kind('poster', 'reward', ['My keys poster', 'ملصق مفاتيحي'], ['Everything they have earned so far, and what comes next, to go on the wall', 'كل ما حققه حتى الآن وما يليه، ليعلق على الحائط'], function (c) {
     /* every cell is 13 mm and every room heading 11 mm, so the pages are packed by arithmetic, never by luck; a long room carries on over the page */
@@ -371,7 +372,7 @@
   };
   Print.mark = function (code, right, pid) {
     var d = A.D(pid), sh = (d.sheets || []).filter(function (x) { return x.id === code; })[0]; if (!sh || sh.marked) return;
-    sh.q.forEach(function (q, i) { M.log(q.s, { k: 'production', ok: !!right[i], by: 'parent', e: right[i] ? null : 'understanding' }, pid); });
+    sh.q.forEach(function (q, i) { var k0 = M.key(q.s, pid); M.log(q.s, { k: 'production', ok: !!right[i], by: 'parent', rv: !!(k0 && k0.forged), e: right[i] ? null : 'understanding' }, pid); });
     sh.marked = A.now().getTime(); sh.right = right.filter(Boolean).length; A.saveNow();
   };
   /* what is worth printing today */

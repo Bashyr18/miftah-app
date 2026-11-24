@@ -122,11 +122,11 @@
     text.split(' ').forEach(function (t) { if (/[ء-يٮ-ۓۺ-ۿ]/.test(t)) { i++; out.push({ t: t, i: i }); } else if (out.length) out[out.length - 1].t += ' ' + t; });
     return out;
   };
-  V.hijri = function () {
+  V.hijri = function (when) {
     try {
       var f = new Intl.DateTimeFormat('en-u-ca-islamic-umalqura-nu-latn', { day: 'numeric', month: 'numeric', timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone });
       if (!/^islamic/.test(f.resolvedOptions().calendar)) return '';
-      var parts = {}; f.formatToParts(A.now()).forEach(function (p) { parts[p.type] = parseInt(p.value, 10); });
+      var parts = {}; f.formatToParts(when || A.now()).forEach(function (p) { parts[p.type] = parseInt(p.value, 10); });
       var EN = ['Muḥarram', 'Ṣafar', 'Rabīʿ al-Awwal', 'Rabīʿ ath-Thānī', 'Jumādā al-Ūlā', 'Jumādā al-Ākhirah', 'Rajab', 'Shaʿbān', 'Ramaḍān', 'Shawwāl', 'Dhū al-Qaʿdah', 'Dhū al-Ḥijjah'];
       var AR = ['محرم', 'صفر', 'ربيع الأول', 'ربيع الآخر', 'جمادى الأولى', 'جمادى الآخرة', 'رجب', 'شعبان', 'رمضان', 'شوال', 'ذو القعدة', 'ذو الحجة'];
       if (!(parts.month >= 1 && parts.month <= 12) || !parts.day) return '';
@@ -135,14 +135,14 @@
   };
   /* both calendars for one day: { g: 'Thursday 13 November', h: '22 Jumādā al-Ūlā 1448 AH' }. h is '' where the device has no
      Islamic calendar; g is always there. short: 'Thu 13 Nov' for tight places. */
-  V.dates = function (short) {
-    var d = A.now(), g = '', h = '';
+  V.dates = function (short, when) {
+    var d = when || A.now(), g = '', h = '';
     try { g = d.toLocaleDateString(A.ar() ? 'ar-u-nu-arab' : 'en-GB', short ? { weekday: 'short', day: 'numeric', month: 'short' } : { weekday: 'long', day: 'numeric', month: 'long' }); } catch (e) { g = d.toDateString(); }
     try {
       var f = new Intl.DateTimeFormat('en-u-ca-islamic-umalqura-nu-latn', { day: 'numeric', month: 'numeric', year: 'numeric', timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone });
       if (/^islamic/.test(f.resolvedOptions().calendar)) {
         var y = 0; f.formatToParts(d).forEach(function (p) { if (p.type === 'year') y = parseInt(p.value, 10); });
-        var dm = V.hijri(); if (dm) h = dm + (y ? ' ' + A.num(y) + (A.ar() ? 'هـ' : ' AH') : '');
+        var dm = V.hijri(d); if (dm) h = dm + (y ? ' ' + A.num(y) + (A.ar() ? 'هـ' : ' AH') : '');
       }
     } catch (e) { }
     return { g: g, h: h };

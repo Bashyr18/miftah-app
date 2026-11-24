@@ -29,6 +29,8 @@
   addEventListener('message', function (e) {
     var d = e.data; if (!d || typeof d !== 'object' || typeof d.miftahLab !== 'string' || !d.done || !A.P()) return;
     if (!(C.SIMBY && C.SIMBY[d.miftahLab])) return;
+    var fromSim = Array.prototype.some.call(document.querySelectorAll('iframe.simf'), function (f) { return f.contentWindow === e.source && /^sims\/index\.html#/.test(f.getAttribute('src') || ''); });
+    if (!fromSim) return;
     var D = A.D(); D.lab = D.lab || {}; if (!D.lab[d.miftahLab]) { D.lab[d.miftahLab] = A.now().getTime(); A.saveNow(); }
   });
   A.V.lab = function (args) {
@@ -59,7 +61,7 @@
 
   /* ---------- lesson tracking for parents ---------- */
   function ledgerBySkill(pid) { var o = {}; A.D(pid).led.forEach(function (e) { var x = o[e.s] || (o[e.s] = { n: 0, ok: 0, first: e.t, last: e.t }); if (e.k === 'forge') { x.forged = e.t; } else { x.n++; if (e.ok) x.ok++; } x.last = e.t; }); return o; }
-  function dayOf(t) { return t ? new Date(t).toISOString().slice(0, 10) : ''; }
+  function dayOf(t) { return t ? A.day(new Date(t)) : ''; }
   A.tLog = function (p) {
     var pid = p.id, st = A.stage(p), by = ledgerBySkill(pid), d = A.D(pid), secs = '';
     var stuck = M.stuck(pid).map(function (s) { var sk = C.skill(s), rc = Flow.rootCause(s, pid); return '<div class="li"><span class="grow"><b>' + esc(L(sk.title)) + '</b><small>' + esc(L(C.rooms[sk.room].name)) + (rc ? ' · ' + esc(L(['Likely cause: ', 'السبب المحتمل: '])) + esc(L(rc.skill.title)) + ' (' + esc(L(C.rooms[rc.skill.room].name)) + ')' : '') + '</small></span></div>'; }).join('');
@@ -90,7 +92,7 @@
     var room = args[0], y = +args[1], R = C.rooms[room], d = A.D(); if (!R) return { redirect: 'home' };
     var pool = yearSkills(room, y, A.P().id).filter(function (s) { return M.met(s.id) && s.review; }); if (pool.length < 3) return { redirect: 'room/' + room };
     var t0 = 0;
-    return { bare: true, hue: R.hue, html: '<div id="t-exam"></div>', mount: function (v) {
+    return { bare: true, hue: R.hue, html: '<div id="t-exam"></div>', unmount: function () { window.Player.stop(); Voice.stop(); }, mount: function (v) {
       var rng = A.rng(A.seed()), steps = [], list = rng.shuffle(pool); t0 = A.now().getTime();
       list.slice(0, 20).forEach(function (sk) { var st = sk.review(rng); (Array.isArray(st) ? st.slice(0, 1) : [st]).forEach(function (x) { steps.push(Object.assign({}, x, { ph: 'solo', skill: sk.id, hint: null, noHelp: true })); }); });
       window.Player.start($('#t-exam', v), { steps: steps, hue: R.hue, rng: rng, mode: 'review', exam: true, onExit: function () { A.go('room/' + room); }, onDone: function (res, host) {
@@ -138,10 +140,10 @@
   /* ---------- parent controls ---------- */
   var par0 = A.V.parent;
   A.V.parent = function (args, r) {
-    var v = par0(args, r); if (!v || !v.html) return v;
+    var v = par0(args, r); if (!v || !v.html || (A.grownOpen && !A.grownOpen())) return v;
     if (args && args[0] === 'settings') {
       var S = A.S, seg = function (k, val, label, sub) { return '<button class="seg ' + ((S[k] || (k === 'motion' ? 'calm' : '')) === val ? 'on' : '') + '" data-a="c-g" data-k="' + k + '" data-v="' + val + '">' + esc(L(label)) + '</button>'; };
-      v.html = addAfter(v.html, '<div class="card"><h3>' + esc(L(['Animation', 'الحركة'])) + '</h3><div class="segs">' + seg('motion', 'calm', ['Calm', 'هادئة']) + seg('motion', 'full', ['Full', 'كاملة']) + seg('motion', 'off', ['Off', 'بلا']) + '</div><p style="color:var(--t2);font-size:13.5px;line-height:1.45;margin-top:8px">' + esc(L(['Calm opens the door once a day and keeps everything else still.', 'الهادئة تفتح الباب مرة في اليوم وتبقي الباقي ساكنًا.'])) + '</p></div><div class="card"><h3>' + esc(L(['Parent PIN', 'رمز الوالدين'])) + '</h3><p style="color:var(--t2);font-size:13.5px;line-height:1.45;margin-bottom:8px">' + esc(L(['Older children can solve the sum. A PIN keeps these pages yours.', 'يستطيع الأكبر حل المسألة، والرمز يحفظ هذه الصفحات لك.'])) + '</p><div class="trow"><input class="tin" id="c-pin" inputmode="numeric" maxlength="6" placeholder="' + esc(L(['4 to 6 digits', '٤ إلى ٦ أرقام'])) + '" value="' + esc(S.pin || '') + '"><button class="btn sec" data-a="c-pin">' + esc(L(['Save', 'حفظ'])) + '</button></div></div>');
+      v.html = addAfter(v.html, '<div class="card"><h3>' + esc(L(['Animation', 'الحركة'])) + '</h3><div class="segs">' + seg('motion', 'calm', ['Calm', 'هادئة']) + seg('motion', 'full', ['Full', 'كاملة']) + seg('motion', 'off', ['Off', 'بلا']) + '</div><p style="color:var(--t2);font-size:13.5px;line-height:1.45;margin-top:8px">' + esc(L(['Calm opens the door once a day and keeps everything else still.', 'الهادئة تفتح الباب مرة في اليوم وتبقي الباقي ساكنًا.'])) + '</p></div><div class="card"><h3>' + esc(L(['Parent PIN', 'رمز الوالدين'])) + '</h3><p style="color:var(--t2);font-size:13.5px;line-height:1.45;margin-bottom:8px">' + esc(L(['Older children can solve the sum. A PIN keeps these pages yours.', 'يستطيع الأكبر حل المسألة، والرمز يحفظ هذه الصفحات لك.'])) + '</p><div class="trow"><input class="tin" id="c-pin" type="password" inputmode="numeric" maxlength="6" placeholder="' + esc(S.pin ? L(['PIN is set (leave blank to clear)', 'الرمز مفعّل (اتركه فارغًا لإلغائه)']) : L(['4 to 6 digits', '٤ إلى ٦ أرقام'])) + '"><button class="btn sec" data-a="c-pin">' + esc(L(['Save', 'حفظ'])) + '</button></div></div>');
     }
     /* what a child recorded in a lesson: hear it, and mark it. Only a person ever judges recitation. */
     if (args && args[0] && args[1] === 'hear') {
@@ -167,9 +169,9 @@
     }
     return v;
   };
-  A.acts['c-g'] = function (t) { A.S[t.dataset.k] = t.dataset.v; A.saveNow(); A.rerender(); };
-  A.acts['c-pin'] = function () { var v = ($('#c-pin').value || '').trim(); if (v && !/^\d{4,6}$/.test(v)) { A.toast(L(['Use 4 to 6 digits', 'استعمل ٤ إلى ٦ أرقام'])); return; } A.S.pin = v; A.saveNow(); A.toast(L(['Saved', 'حُفظ'])); };
-  A.acts['c-p'] = function (t) { var p = A.profile(t.dataset.p), k = t.dataset.k, v = t.dataset.v; if (k === 'hifzSize') p.hifzSize = v ? +v : 0; else if (k === 'ahead') p.ahead = !!v; else p[k] = v; A.D(p.id).path = null; A.saveNow(); A.rerender(); };
+  A.acts['c-g'] = function (t) { if (A.grownOpen && !A.grownOpen()) return; A.S[t.dataset.k] = t.dataset.v; A.saveNow(); A.rerender(); };
+  A.acts['c-pin'] = function () { var input = $('#c-pin'); if (input) A.pinSet(input); };
+  A.acts['c-p'] = function (t) { if (A.grownOpen && !A.grownOpen()) return; var p = A.profile(t.dataset.p), k = t.dataset.k, v = t.dataset.v; if (k === 'hifzSize') p.hifzSize = v ? +v : 0; else if (k === 'ahead') p.ahead = !!v; else p[k] = v; A.D(p.id).path = null; A.saveNow(); A.rerender(); };
   /* the microphone, explained honestly */
   A.micHelp = function () { if (A.N.call('micAllowed') === true) A.toast(L(['The microphone is busy. Close other apps using it, then try again.', 'الميكروفون مشغول. أغلق التطبيقات التي تستعمله وحاول مجددًا.'])); };
   window.__native = window.__native || {};

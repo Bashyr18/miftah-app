@@ -8,7 +8,8 @@
 use std::fs;
 use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
-use std::sync::{Mutex, OnceLock};
+use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::{Condvar, Mutex, OnceLock};
 
 use serde_json::{json, Map, Value};
 
@@ -16,7 +17,10 @@ pub struct Dirs { pub root: PathBuf, pub media: PathBuf, pub voice: PathBuf, pub
 static DIRS: OnceLock<Dirs> = OnceLock::new();
 static APP: OnceLock<PathBuf> = OnceLock::new();
 static STATE: Mutex<()> = Mutex::new(());
+struct SaveQ { pending: Option<String>, writing: bool }
+static SAVE_Q: OnceLock<(Mutex<SaveQ>, Condvar)> = OnceLock::new();
 static DESK: Mutex<Option<Map<String, Value>>> = Mutex::new(None);
+static MEDIA_SEQ: AtomicU64 = AtomicU64::new(0);
 
 pub fn init() {
     let root = miftah_common::installer::data_dir();
@@ -30,7 +34,7 @@ pub fn root() -> &'static Path { &dirs().root }
 pub fn set_app_dir(p: PathBuf) { let _ = APP.set(p); }
 pub fn app_dir() -> &'static Path { APP.get().map(|p| p.as_path()).unwrap_or(Path::new(".")) }
 
-/* written whole to a side file, then swapped in, so a power cut never leaves half a record */
+/* written whole to a side file, then swapped in, so a power cut never leaves half a record; retries briefly for AV/indexer locks */
 pub fn write_atomic(path: &Path, bytes: &[u8]) -> std::io::Result<()> {
     let mut tmp = path.as_os_str().to_owned();
     tmp.push(".tmp");
@@ -40,28 +44,72 @@ pub fn write_atomic(path: &Path, bytes: &[u8]) -> std::io::Result<()> {
         f.write_all(bytes)?;
         f.sync_all()?;
     }
-    fs::rename(&tmp, path)
+    for i in 0..5 {
+        match fs::rename(&tmp, path) {
+            Ok(()) => return Ok(()),
+            Err(_) if i < 4 => std::thread::sleep(std::time::Duration::from_millis(30)),
+            Err(e) => { let _ = fs::remove_file(&tmp); return Err(e); }
+        }
+    }
+    Ok(())
 }
 
 /* ---------- the record ---------- */
+fn write_state_now(json: &str) {
+    let _g = STATE.lock().unwrap();
+    if write_atomic(&dirs().state, json.as_bytes()).is_err() { return; }
+    let today = dirs().backups.join(format!("{}.json", today()));
+    if !today.exists() {
+        let _ = write_atomic(&today, json.as_bytes());
+        let mut all = json_files(&dirs().backups);
+        all.sort();
+        let n = all.len();
+        for f in all.into_iter().take(n.saturating_sub(30)) { let _ = fs::remove_file(f); }
+    }
+}
+fn save_queue() -> &'static (Mutex<SaveQ>, Condvar) {
+    SAVE_Q.get_or_init(|| {
+        let pair = (Mutex::new(SaveQ { pending: None, writing: false }), Condvar::new());
+        std::thread::Builder::new().name("state-writer".into()).spawn(|| {
+            let (m, cv) = save_queue();
+            loop {
+                let next = {
+                    let mut g = m.lock().unwrap();
+                    while g.pending.is_none() { g = cv.wait(g).unwrap(); }
+                    g.writing = true;
+                    g.pending.take().unwrap()
+                };
+                write_state_now(&next);
+                let mut g = m.lock().unwrap();
+                g.writing = false;
+                cv.notify_all();
+            }
+        }).ok();
+        pair
+    })
+}
 pub fn load_state() -> Option<String> {
+    flush_state();
     let _g = STATE.lock().unwrap();
     fs::read_to_string(&dirs().state).ok().map(|s| s.trim_start_matches('\u{feff}').to_string())
 }
 pub fn save_state(json: String) {
     if json.len() < 2 || json.len() > 60_000_000 { return; }
-    std::thread::spawn(move || {
-        let _g = STATE.lock().unwrap();
-        if write_atomic(&dirs().state, json.as_bytes()).is_err() { return; }
-        let today = dirs().backups.join(format!("{}.json", today()));
-        if !today.exists() {
-            let _ = fs::copy(&dirs().state, &today);
-            let mut all = json_files(&dirs().backups);
-            all.sort();
-            let n = all.len();
-            for f in all.into_iter().take(n.saturating_sub(30)) { let _ = fs::remove_file(f); }
-        }
-    });
+    let (m, cv) = save_queue();
+    let mut g = m.lock().unwrap();
+    g.pending = Some(json);
+    cv.notify_all();
+}
+pub fn flush_state() {
+    let Some((m, cv)) = SAVE_Q.get() else { return };
+    let mut g = m.lock().unwrap();
+    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(5);
+    while g.pending.is_some() || g.writing {
+        let left = deadline.saturating_duration_since(std::time::Instant::now());
+        if left.is_zero() { break; }
+        let (ng, _) = cv.wait_timeout(g, left).unwrap();
+        g = ng;
+    }
 }
 fn json_files(dir: &Path) -> Vec<PathBuf> {
     fs::read_dir(dir).map(|r| r.flatten().map(|e| e.path()).filter(|p| p.extension().map(|e| e == "json").unwrap_or(false)).collect()).unwrap_or_default()
@@ -77,30 +125,65 @@ pub fn read_backup(name: &str) -> Option<String> {
 }
 
 /* ---------- this computer's own settings ---------- */
+fn read_desk_file(path: &Path) -> Result<Map<String, Value>, std::io::Error> {
+    for i in 0..3 {
+        match fs::read_to_string(path) {
+            Ok(s) => {
+                return serde_json::from_str(s.trim_start_matches('\u{feff}')).map_err(std::io::Error::other);
+            }
+            Err(e) if e.kind() == std::io::ErrorKind::NotFound => return Ok(Map::new()),
+            Err(_) if i < 2 => std::thread::sleep(std::time::Duration::from_millis(30)),
+            Err(e) => return Err(e),
+        }
+    }
+    Ok(Map::new())
+}
 fn with_desk<R>(f: impl FnOnce(&mut Map<String, Value>) -> R) -> R {
     let mut g = DESK.lock().unwrap();
     if g.is_none() {
-        let m = fs::read_to_string(&dirs().desk).ok().and_then(|s| serde_json::from_str::<Value>(s.trim_start_matches('\u{feff}')).ok()).and_then(|v| v.as_object().cloned()).unwrap_or_default();
-        *g = Some(m);
+        match read_desk_file(&dirs().desk) {
+            Ok(m) => *g = Some(m),
+            Err(_) => { let mut tmp = Map::new(); return f(&mut tmp); }
+        }
     }
     f(g.as_mut().unwrap())
 }
 pub fn get(k: &str) -> Option<Value> { with_desk(|d| d.get(k).cloned().filter(|v| !v.is_null())) }
 pub fn get_str(k: &str) -> Option<String> { get(k).and_then(|v| v.as_str().map(String::from)) }
 pub fn flag(k: &str) -> bool { get(k).and_then(|v| v.as_bool()).unwrap_or(false) }
-pub fn set(k: &str, v: Value) {
-    with_desk(|d| {
-        d.insert(k.to_string(), v);
-        let s = serde_json::to_string(d).unwrap_or_else(|_| "{}".into());
-        let _ = write_atomic(&dirs().desk, s.as_bytes());
-    });
+pub fn set(k: &str, v: Value) -> bool {
+    let mut g = DESK.lock().unwrap();
+    if g.is_none() {
+        let Ok(m) = read_desk_file(&dirs().desk) else { return false };
+        *g = Some(m);
+    }
+    let d = g.as_mut().unwrap();
+    let old = d.insert(k.to_string(), v);
+    let saved = serde_json::to_vec(d).is_ok_and(|s| write_atomic(&dirs().desk, &s).is_ok());
+    if !saved {
+        match old { Some(value) => { d.insert(k.to_string(), value); } None => { d.remove(k); } }
+    }
+    saved
 }
 
 /* ---------- the family's files ---------- */
 pub fn safe(name: &str) -> Option<String> {
-    let n = name.rsplit(['/', '\\']).next().unwrap_or("");
-    if n.is_empty() || n.contains("..") || n.chars().any(|c| (c as u32) < 32 || "<>:\"/\\|?*".contains(c)) { return None; }
-    Some(n.to_string())
+    if name.is_empty() || name.len() > 120 || name == "." || name == ".."
+        || name.contains("..") || name.ends_with('.') || name.ends_with(' ')
+        || name.chars().any(|c| (c as u32) < 32 || "<>:\"/\\|?*".contains(c))
+    {
+        return None;
+    }
+    let stem = name.split('.').next().unwrap_or("").to_ascii_uppercase();
+    if matches!(
+        stem.as_str(),
+        "CON" | "PRN" | "AUX" | "NUL"
+            | "COM1" | "COM2" | "COM3" | "COM4" | "COM5" | "COM6" | "COM7" | "COM8" | "COM9"
+            | "LPT1" | "LPT2" | "LPT3" | "LPT4" | "LPT5" | "LPT6" | "LPT7" | "LPT8" | "LPT9"
+    ) {
+        return None;
+    }
+    Some(name.to_string())
 }
 pub fn ext(path: &Path) -> String { path.extension().map(|e| format!(".{}", e.to_string_lossy().to_lowercase())).unwrap_or_default() }
 pub fn kind_of(path: &Path) -> Option<&'static str> {
@@ -116,7 +199,8 @@ pub fn kind_of(path: &Path) -> Option<&'static str> {
 pub fn import_media(path: &Path) -> Option<String> {
     let e = ext(path);
     let ticks = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|d| d.as_nanos() / 100).unwrap_or(0);
-    let name = format!("m{:x}{}", ticks, if e == ".htm" { ".html".to_string() } else { e });
+    let seq = MEDIA_SEQ.fetch_add(1, Ordering::Relaxed);
+    let name = format!("m{:x}_{:x}{}", ticks, seq, if e == ".htm" { ".html".to_string() } else { e });
     fs::copy(path, dirs().media.join(&name)).ok()?;
     Some(name)
 }
@@ -153,6 +237,10 @@ pub fn pack_one(path: &Path, entry: &str, json: &str) -> bool {
     };
     go().is_ok()
 }
+const MAX_ZIP_ENTRIES: usize = 5000;
+const MAX_ZIP_JSON: u64 = 60_000_000;
+const MAX_ZIP_TOTAL: u64 = 2 * 1024 * 1024 * 1024;
+
 /* reads a family file, a plain record or a challenge; files land only in their own folder and never replace what is here.
    Answers (the record's text, whether the file was a zip). */
 pub fn read_import(path: &Path) -> Option<(String, bool)> {
@@ -161,36 +249,56 @@ pub fn read_import(path: &Path) -> Option<(String, bool)> {
     if n == 2 && &head == b"PK" {
         let mut z = zip::ZipArchive::new(fs::File::open(path).ok()?).ok()?;
         let mut json = None;
-        for i in 0..z.len() {
-            let Ok(mut e) = z.by_index(i) else { continue };
+        let mut total = 0u64;
+        for i in 0..z.len().min(MAX_ZIP_ENTRIES) {
+            let Ok(e) = z.by_index(i) else { continue };
             let full = e.name().to_string();
-            if full == "family.json" || full == "challenge.json" { let mut s = String::new(); if e.read_to_string(&mut s).is_ok() { json = Some(s); } continue; }
-            let dir = if full.starts_with("media/") { &dirs().media } else if full.starts_with("voice/") { &dirs().voice } else { continue };
-            let Some(n) = safe(&full) else { continue };
-            let dst = dir.join(n);
-            if !dst.exists() {
-                let tmp = dst.with_extension("tmp");
+            if full == "family.json" || full == "challenge.json" {
+                let mut s = String::new();
+                if e.take(MAX_ZIP_JSON).read_to_string(&mut s).is_ok() { json = Some(s); }
+                continue;
+            }
+            let (dir, rest, media) = if let Some(r) = full.strip_prefix("media/") { (&dirs().media, r, true) }
+                else if let Some(r) = full.strip_prefix("voice/") { (&dirs().voice, r, false) }
+                else { continue };
+            let Some(n) = safe(rest) else { continue };
+            if media { if kind_of(Path::new(&n)).is_none() { continue; } }
+            else if !n.to_ascii_lowercase().ends_with(".m4a") { continue; }
+            let dst = dir.join(&n);
+            if !dst.exists() && total < MAX_ZIP_TOTAL {
+                let mut tmp = dst.as_os_str().to_owned();
+                tmp.push(".tmp");
+                let tmp = PathBuf::from(tmp);
+                let budget = MAX_ZIP_TOTAL.saturating_sub(total);
                 if let Ok(mut o) = fs::File::create(&tmp) {
-                    if std::io::copy(&mut e, &mut o).is_ok() { drop(o); let _ = fs::rename(&tmp, &dst); } else { drop(o); let _ = fs::remove_file(&tmp); }
+                    match std::io::copy(&mut e.take(budget), &mut o) {
+                        Ok(copied) => { total = total.saturating_add(copied); drop(o); let _ = fs::rename(&tmp, &dst); }
+                        Err(_) => { drop(o); let _ = fs::remove_file(&tmp); }
+                    }
                 }
             }
         }
         json.map(|j| (j, true))
     } else {
-        if fs::metadata(path).ok()?.len() > 60_000_000 { return None; }
+        if fs::metadata(path).ok()?.len() > MAX_ZIP_JSON { return None; }
         let s = fs::read_to_string(path).ok()?;
         Some((s.trim_start_matches('\u{feff}').to_string(), false))
     }
 }
 
 /* ---------- recitations that do not ship with the app: fetched once from their source, then kept ---------- */
+pub fn valid_audio_rel(rel: &str) -> bool {
+    let b = rel.as_bytes();
+    if b.len() < 4 || b[1] != b'/' || !matches!(b[0], b'h' | b'a' | b'w' | b'd' | b's') { return false; }
+    let f = &rel[2..];
+    !f.is_empty() && !f.contains("..") && f.chars().all(|c| c.is_ascii_digit() || c == '_' || c == '.' || c == '-' || c.is_ascii_lowercase())
+}
 pub fn cached_audio(rel: &str) -> Option<PathBuf> {
+    if !valid_audio_rel(rel) { return None; }
     let in_app = app_dir().join("audio").join(rel.replace('/', "\\"));
     if in_app.is_file() { return Some(in_app); }
     let b = rel.as_bytes();
-    if b.len() < 4 || b[1] != b'/' { return None; }
     let f = &rel[2..];
-    if !f.chars().all(|c| c.is_ascii_digit() || c == '_' || c == '.' || c.is_ascii_lowercase()) || f.contains("..") { return None; }
     let from: Vec<String> = match b[0] {
         b'h' => vec![format!("https://everyayah.com/data/Husary_Muallim_128kbps/{}", f)],
         b'a' => vec![format!("https://everyayah.com/data/Alafasy_128kbps/{}", f)],
@@ -246,3 +354,49 @@ pub fn mime(path: &Path) -> &'static str {
 pub fn now_local() -> windows::Win32::Foundation::SYSTEMTIME { unsafe { windows::Win32::System::SystemInformation::GetLocalTime() } }
 pub fn today() -> String { let t = now_local(); format!("{:04}-{:02}-{:02}", t.wYear, t.wMonth, t.wDay) }
 pub fn now_ms() -> u64 { std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|d| d.as_millis() as u64).unwrap_or(0) }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn missing_and_damaged_settings_are_distinct() {
+        let dir = std::env::temp_dir().join(format!("miftah-settings-{}-{}", std::process::id(), now_ms()));
+        fs::create_dir(&dir).unwrap();
+        let path = dir.join("desk.json");
+        let missing = read_desk_file(&path);
+        fs::write(&path, "{\"phones\":").unwrap();
+        let damaged = read_desk_file(&path);
+        fs::remove_file(&path).unwrap();
+        fs::remove_dir(dir).unwrap();
+        assert!(missing.unwrap().is_empty());
+        assert!(damaged.is_err());
+    }
+
+    #[test]
+    fn safe_rejects_traversal_and_reserved() {
+        assert_eq!(safe("abc123.png").as_deref(), Some("abc123.png"));
+        assert!(safe("").is_none());
+        assert!(safe(".").is_none());
+        assert!(safe("..").is_none());
+        assert!(safe("../secret").is_none());
+        assert!(safe("a/b.png").is_none());
+        assert!(safe("a\\b.png").is_none());
+        assert!(safe("CON.txt").is_none());
+        assert!(safe("nul").is_none());
+        assert!(safe("foo. ").is_none());
+        assert!(safe("foo.").is_none());
+    }
+
+    #[test]
+    fn valid_audio_rel_blocks_traversal() {
+        assert!(valid_audio_rel("h/001001.mp3"));
+        assert!(valid_audio_rel("w/001_001_001.mp3"));
+        assert!(valid_audio_rel("d/001.ogg"));
+        assert!(!valid_audio_rel("../../secret.mp3"));
+        assert!(!valid_audio_rel("h/../secret.mp3"));
+        assert!(!valid_audio_rel("h/sub/a.mp3"));
+        assert!(!valid_audio_rel("C:/Windows/a.mp3"));
+        assert!(!valid_audio_rel("\\\\attacker\\share\\a.mp3"));
+    }
+}

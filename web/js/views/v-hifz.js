@@ -5,15 +5,25 @@
   var A = window.A, $ = A.$, $$ = A.$$, esc = A.esc, L = A.L, T = A.T, Hifz = window.Hifz, Q = window.QURAN;
   var AN = function (n) { return String(n).replace(/[0-9]/g, function (d) { return '٠١٢٣٤٥٦٧٨٩'[+d]; }); };
 
+  var alive = false, timers = [];
+  function later(fn, ms) { var id = setTimeout(function () { timers = timers.filter(function (x) { return x !== id; }); if (alive) fn(); }, ms); timers.push(id); return id; }
+  function clearTimers() { timers.forEach(clearTimeout); timers = []; }
+
   function ayahWords(s, a) {
     var v = Q.q[s].v[a - 1][1];
-    return Voice.words(v).map(function (w) { return '<span class="w" data-w="' + w.i + '">' + w.t + '</span>'; }).join(' ') + '&nbsp;<span class="w-end">﴿' + AN(a) + '﴾</span>';
+    return Voice.words(v).map(function (w) { return '<span class="w" tabindex="0" role="button" data-w="' + w.i + '">' + w.t + '</span>'; }).join(' ') + '&nbsp;<span class="w-end">﴿' + AN(a) + '﴾</span>';
   }
   function SN(s) { return A.ar() ? Q.q[s].ar.replace(/^سُورَةُ\s*/, '') : Q.q[s].name; }
   A.surahName = SN;
   function bsmFor(s, a) { return a === 1 && s !== 1 && s !== 9 ? '<div class="bsm">' + Q.bsm + '</div>' : ''; }
   function trans(s, a) { return A.ar() ? '' : '<div class="tx-p"><div class="tx-l">' + esc(T('Translation')) + '</div><div class="tx-t" dir="ltr">' + esc(Q.q[s].v[a - 1][2]) + '</div></div>'; }
-  function bindWords(root, s, a) { $$('.w', root).forEach(function (w) { w.onclick = function () { if (w.classList.contains('hid')) { w.classList.add('peek'); return; } Voice.word(s, a, +w.dataset.w); }; }); }
+  function bindWords(root, s, a) {
+    $$('.w', root).forEach(function (w) {
+      var act = function () { if (w.classList.contains('hid')) { w.classList.add('peek'); return; } Voice.word(s, a, +w.dataset.w); };
+      w.onclick = act;
+      w.onkeydown = function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); act(); } };
+    });
+  }
 
   Hifz.summary = function () {
     var t = Hifz.today(), parts = [];
@@ -30,8 +40,8 @@
     return {
       bare: true, hue: 'emerald',
       html: '<div class="pl h-emerald quiet" id="hf"><div class="pl-top"><a class="pl-x" href="#/home" aria-label="' + esc(T('Leave')) + '">' + A.icon('close', 24) + '</a><div class="pl-bar"><div class="hf-tier" id="hf-tier"></div><div class="ayahs" id="hf-dots" style="margin-top:6px"></div></div><div style="width:48px"></div></div><div class="pl-body" id="hf-body"></div><div class="pl-foot" id="hf-foot"></div></div>',
-      mount: function () { startSession(stopI); },
-      unmount: function () { Voice.stop(); stopRec(); }
+      mount: function () { alive = true; startSession(stopI); },
+      unmount: function () { alive = false; clearTimers(); Voice.stop(); stopRec(); }
     };
   };
 
@@ -62,17 +72,19 @@
 
   /* learn a new āyah: hear it, say it with the reciter, let the words go, then be heard */
   function learn(it, done) {
-    var s = it.s, a = it.a, body = $('#hf-body'), foot = $('#hf-foot'), stage = 0;
+    var s = it.s, a = it.a, body = $('#hf-body'), foot = $('#hf-foot'), stage = 0, gen = 0;
     $('#hf-tier').textContent = T('New portion') + ' · ' + SN(s) + ' ' + A.num(a);
     function hear(times, cb) {
-      var n = 0;
+      var n = 0, my = ++gen;
       (function go() {
+        if (!alive || my !== gen) return;
         if (n++ >= times) { cb && cb(); return; }
         var vv = $('#hf-v'); if (vv) vv.classList.add('reciting');
-        Voice.ayah(s, a).then(function (ok) { var v2 = $('#hf-v'); if (v2) v2.classList.remove('reciting'); if (ok === false) { cb && cb(); return; } setTimeout(go, 700); });
+        Voice.ayah(s, a).then(function (ok) { var v2 = $('#hf-v'); if (v2) v2.classList.remove('reciting'); if (!alive || my !== gen) return; if (ok === false) { cb && cb(); return; } later(go, 700); });
       })();
     }
     function paint() {
+      gen++;
       var levels = [0, 0, .34, .67, 1];
       body.innerHTML = '<div class="step tx">' + bsmFor(s, a) + '<div class="quran" lang="ar" dir="rtl" id="hf-v">' + ayahWords(s, a) + '</div>' + (stage <= 1 ? trans(s, a) : '') + '</div>';
       var ws = $$('#hf-v .w', body), frac = levels[stage] || 0;
@@ -80,11 +92,11 @@
       ws.forEach(function (w, j) { if (j >= Math.ceil(ws.length * (1 - frac)) && j > 0) w.classList.add('hid'); });
       bindWords(body, s, a);
       var labels = [T('Listen three times'), T('Say it with the reciter'), T('Say it, some words hidden'), T('Say it, more hidden'), T('Now say it all from your heart')];
-      foot.innerHTML = '<div style="flex:1;text-align:center;display:grid;gap:9px;justify-items:center"><div style="color:var(--t2);font-size:15px">' + esc(labels[stage]) + '</div><div class="rec-row"><button class="round" id="hf-play" aria-label="' + esc(T('Listen')) + '">' + A.icon('play', 28) + '</button>' + recBtn(s, a) + '<button class="round off" id="hf-next" aria-label="' + esc(T('Next')) + '">' + A.icon('next', 28).replace('class="ic"', 'class="ic ic-flip"') + '</button></div></div>';
+      foot.innerHTML = '<div style="flex:1;text-align:center;display:grid;gap:9px;justify-items:center"><div style="color:var(--t2);font-size:15px">' + esc(labels[stage]) + '</div><div class="rec-row"><button class="round" id="hf-play" aria-label="' + esc(T('Listen')) + '">' + A.icon('play', 28) + '</button>' + recBtn(s, a) + '<button class="round off" id="hf-next" aria-label="' + esc(T('Next')) + '">' + A.icon('next', 28) + '</button></div></div>';
       $('#hf-play').onclick = function () { hear(stage === 0 ? 3 : 1); };
-      $('#hf-next').onclick = function () { Voice.stop(); stage++; if (stage >= 5) grade(); else paint(); };
+      $('#hf-next').onclick = function () { gen++; clearTimers(); Voice.stop(); stage++; if (stage >= 5) grade(); else paint(); };
       bindRec(s, a);
-      if (stage === 0) setTimeout(function () { hear(3); }, 300);
+      if (stage === 0) later(function () { hear(3); }, 300);
     }
     function grade() { gradeScreen(s, a, function (g, by) { Hifz.mark(s, a, g, by); done(g); }, true); }
     paint();
@@ -123,7 +135,7 @@
     var key = 'rec_' + A.S.cur + '_' + s + '_' + a;
     b.onclick = function () {
       if (!recOn) { if (A.N.call('recStart', key)) { recOn = true; b.classList.add('rec'); b.classList.remove('off'); A.toast(A.L(['Recording. Recite, then tap again.', 'جارٍ التسجيل. اقرأ ثم انقر مجددًا.'])); } else A.micHelp(); }
-      else { stopRec(); b.classList.remove('rec'); b.classList.add('off'); var d = A.D(); d.recs = d.recs || {}; d.recs[s + ':' + a] = A.now().getTime(); A.save(); A.toast(A.L(['Saved. Listen to yourself, and your parent can hear it too.', 'حُفظ. استمع إلى نفسك، ويمكن لوالديك سماعه.'])); Voice.refreshVoices(); setTimeout(function () { Voice.play('voice/' + key + '.m4a'); }, 300); }
+      else { stopRec(); b.classList.remove('rec'); b.classList.add('off'); var d = A.D(); d.recs = d.recs || {}; d.recs[s + ':' + a] = A.now().getTime(); A.save(); A.toast(A.L(['Saved. Listen to yourself, and your parent can hear it too.', 'حُفظ. استمع إلى نفسك، ويمكن لوالديك سماعه.'])); Voice.refreshVoices(); later(function () { Voice.play('voice/' + key + '.m4a'); }, 300); }
     };
   }
 

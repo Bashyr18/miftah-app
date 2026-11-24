@@ -4,28 +4,50 @@
   'use strict';
   var A = window.A, M = window.M, $ = A.$, L = A.L, esc = A.esc;
   var Sync = A.Sync = {};
+  Sync.parse = function (txt) {
+    return JSON.parse(txt, function (k, v) { return k === '__proto__' || k === 'constructor' || k === 'prototype' ? undefined : v; });
+  };
   function sameChild(a, b) { return a.id === b.id || (String(a.name).trim().toLowerCase() === String(b.name).trim().toLowerCase() && a.by === b.by); }
-  function unionBy(a, b, keyOf, pick) { var m = {}, order = []; (a || []).concat(b || []).forEach(function (x) { var k = keyOf(x); if (m[k] === undefined) { m[k] = x; order.push(k); } else if (pick) m[k] = pick(m[k], x); }); return order.map(function (k) { return m[k]; }); }
+  function unionBy(a, b, keyOf, pick) { var m = Object.create(null), order = []; (a || []).concat(b || []).forEach(function (x) { var k = String(keyOf(x)); if (m[k] === undefined) { m[k] = x; order.push(k); } else if (pick) m[k] = pick(m[k], x); }); return order.map(function (k) { return m[k]; }); }
   function maxMap(a, b) { var o = Object.assign({}, a || {}); Object.keys(b || {}).forEach(function (k) { o[k] = Math.max(+o[k] || 0, +b[k] || 0); }); return o; }
   function fill(a, b) { return Object.assign({}, b || {}, a || {}); }
+  function mergeUnits(a, b) {
+    var o = Object.assign({}, b || {}, a || {});
+    Object.keys(b || {}).forEach(function (k) {
+      var x = (a || {})[k], y = b[k];
+      if (x && y && !x.t && y.t) o[k] = y;
+      else if (x && y && x.t && y.t) o[k] = y.t < x.t ? y : x;
+    });
+    return o;
+  }
   function newer(a, b) { return (b.t || 0) > (a.t || 0) ? b : a; }
-  /* recitation: each āyah keeps the furthest state either device reached */
+  /* recitation: each āyah keeps the furthest state either device reached, and (surah, āyah) advance as a pair */
   function mergeHifz(a, b) {
     if (!b || !b.u) return a || {}; if (!a || !a.u) return b;
     var u = Object.assign({}, a.u);
-    Object.keys(b.u).forEach(function (k) { var x = u[k], y = b.u[k]; if (!x) { u[k] = y; return; } var o = Object.assign({}, x, y); Object.keys(o).forEach(function (f) { if (typeof x[f] === 'number' && typeof y[f] === 'number') o[f] = Math.max(x[f], y[f]); }); u[k] = o; });
-    return Object.assign({}, a, { u: u, i: Math.max(a.i || 0, b.i || 0), a: Math.max(a.a || 1, b.a || 1), log: unionBy(a.log, b.log, JSON.stringify), finished: unionBy(a.finished, b.finished, String) });
+    Object.keys(b.u).forEach(function (k) {
+      var x = u[k], y = b.u[k]; if (!x) { u[k] = y; return; }
+      var o = Object.assign({}, x, y);
+      Object.keys(o).forEach(function (f) {
+        if (typeof x[f] === 'number' && typeof y[f] === 'number') o[f] = f === 't' ? Math.min(x[f], y[f]) : Math.max(x[f], y[f]);
+      });
+      u[k] = o;
+    });
+    var ai = a.i || 0, bi = b.i || 0, ni = bi > ai ? bi : ai;
+    var na = bi > ai ? (b.a || 1) : ai > bi ? (a.a || 1) : Math.max(a.a || 1, b.a || 1);
+    return Object.assign({}, a, { u: u, i: ni, a: na, log: unionBy(a.log, b.log, JSON.stringify), finished: unionBy(a.finished, b.finished, String) });
   }
   function mergeKeys(led, ka, kb) {
-    var out = {}, bySkill = {}; led.forEach(function (e) { (bySkill[e.s] = bySkill[e.s] || []).push(e); });
+    var out = Object.create(null), bySkill = Object.create(null);
+    led.forEach(function (e) { if (e && e.s) (bySkill[e.s] = bySkill[e.s] || []).push(e); });
     Object.keys(fill(ka, kb)).concat(Object.keys(bySkill)).forEach(function (s) {
       if (out[s]) return; var x = (ka || {})[s], y = (kb || {})[s];
-      if (!x || !y) { var only = x || y; if (only) { out[s] = only; return; } }
+      if (!x || !y) { var only = x || y; if (only) { out[s] = JSON.parse(JSON.stringify(only)); return; } }
       var k = M.blank(); (bySkill[s] || []).forEach(function (e) { M.apply(k, e); });
       [x, y].forEach(function (o) { if (!o) return; ['forged', 'proven', 'deep', 'first'].forEach(function (f) { if (o[f]) k[f] = k[f] ? Math.min(k[f], o[f]) : o[f]; }); ['lastOk', 'h'].forEach(function (f) { k[f] = Math.max(k[f] || 0, o[f] || 0); }); });
       out[s] = k;
     });
-    return out;
+    return Object.assign({}, out);
   }
   function mergeChild(a, b) {
     a = a || {}; b = b || {};
@@ -34,11 +56,12 @@
     var o = Object.assign({}, b, a, {
       led: led, keys: mergeKeys(led, a.keys, b.keys), hifz: mergeHifz(a.hifz, b.hifz), path: a.path || null, resume: a.resume || null,
       time: maxMap(a.time, b.time), screen: maxMap(a.screen, b.screen), extra: maxMap(a.extra, b.extra), recs: maxMap(a.recs, b.recs),
-      placed: fill(a.placed, b.placed), notyet: fill(a.notyet, b.notyet), units: fill(a.units, b.units), obs: unionBy(a.obs, b.obs, JSON.stringify),
+      lab: maxMap(a.lab, b.lab), read: maxMap(a.read, b.read), rounds: maxMap(a.rounds, b.rounds), watched: maxMap(a.watched, b.watched),
+      placed: fill(a.placed, b.placed), notyet: fill(a.notyet, b.notyet), units: mergeUnits(a.units, b.units), obs: unionBy(a.obs, b.obs, JSON.stringify),
       pending: unionBy(a.pending, b.pending, JSON.stringify), pin: unionBy(a.pin, b.pin, String),
       hist: unionBy(a.hist, b.hist, JSON.stringify),
       /* printed sheets: every sheet from either phone, and a mark or a tick made on either one counts (the first marking wins: its evidence is already logged) */
-      sheets: unionBy(a.sheets, b.sheets, function (x) { return x.id; }, function (p, q) { var w = p.marked ? p : q.marked ? q : Object.assign({}, p, { done: p.done || q.done, skip: p.done || q.done ? undefined : p.skip || q.skip }); /* on-screen writing: the finished version, else the one with more on it; a parent's red marks from either side */ var size = function (x) { return JSON.stringify(x.ink || {}).length; }, ink = (p.sub || 0) !== (q.sub || 0) ? ((p.sub || 0) > (q.sub || 0) ? p : q).ink : (size(p) >= size(q) ? p : q).ink; var o = Object.assign({}, w, { n: Math.max(p.n || 1, q.n || 1), t: Math.max(p.t || 0, q.t || 0) }); if (p.scr || q.scr) { o.scr = Math.max(p.scr || 0, q.scr || 0); o.ink = ink; o.mk = (size({ ink: p.mk }) >= size({ ink: q.mk }) ? p.mk : q.mk) || undefined; o.again = Math.max(p.again || 0, q.again || 0) || undefined; o.againT = Math.max(p.againT || 0, q.againT || 0) || undefined; var sub = Math.max(p.sub || 0, q.sub || 0); /* a finish counts only if it came after the last "another go" */ o.sub = sub > (o.againT || 0) ? sub : undefined; if (!o.sub && !o.marked) { delete o.done; } } return o; }).sort(function (x, y) { return x.t - y.t; }).slice(-120),
+      sheets: unionBy(a.sheets, b.sheets, function (x) { return x.id; }, function (p, q) { var w = p.marked ? p : q.marked ? q : Object.assign({}, p, { done: p.done || q.done, skip: p.done || q.done ? undefined : p.skip || q.skip }); /* on-screen writing: a finish only counts if it came after the last "another go" */ var size = function (x) { return JSON.stringify(x.ink || {}).length; }, againT = Math.max(p.againT || 0, q.againT || 0), pSub = (p.sub || 0) > againT ? p.sub : 0, qSub = (q.sub || 0) > againT ? q.sub : 0, ink = pSub !== qSub ? (pSub > qSub ? p : q).ink : (p.againT || 0) !== (q.againT || 0) ? ((p.againT || 0) > (q.againT || 0) ? p : q).ink : (size(p) >= size(q) ? p : q).ink; var o = Object.assign({}, w, { n: Math.max(p.n || 1, q.n || 1), t: Math.max(p.t || 0, q.t || 0) }); if (p.scr || q.scr) { o.scr = Math.max(p.scr || 0, q.scr || 0); o.ink = ink; o.mk = (size({ ink: p.mk }) >= size({ ink: q.mk }) ? p.mk : q.mk) || undefined; o.again = Math.max(p.again || 0, q.again || 0) || undefined; o.againT = againT || undefined; var sub = Math.max(pSub, qSub); o.sub = sub || undefined; if (!o.sub && !o.marked) { delete o.done; } } return o; }).sort(function (x, y) { return x.t - y.t; }).slice(-120),
       exams: unionBy(a.exams, b.exams, function (x) { return x.r + x.y + x.t; }), papers: unionBy(a.papers, b.papers, function (x) { return x.r + x.t; }),
       certs: unionBy(a.certs, b.certs, function (x) { return x.r + x.y; }, function (p, q) { return q.p > p.p ? q : p; }),
       cards: unionBy(a.cards, b.cards, function (x) { return x.f; }, function (p, q) { return (q.next || 0) > (p.next || 0) ? q : p; }),
@@ -89,8 +112,9 @@
   /* ---------- the phone and the family's computer, on the home Wi-Fi (Android with Miftāḥ for Windows) ---------- */
   var B = function () { return window.AndroidBridge && window.AndroidBridge.lanInfo ? window.AndroidBridge : null; };
   Sync.lan = function () { var b = B(); if (!b) return null; try { return JSON.parse(b.lanInfo()); } catch (e) { return null; } };
-  function stateOut() { return JSON.stringify(Object.assign({}, A.S, { familyFile: 1 })); }
-  Sync.lanNow = function (quiet) { var b = B(), i = Sync.lan(); if (!b || !i || !i.paired || Sync.busy) return false; Sync.busy = true; b.lanSync(stateOut(), !!quiet); return true; };
+  Sync.recordOut = function () { var c = Object.assign({}, A.S); delete c.pin; delete c.gate; delete c.upd; return c; };
+  Sync.stateOut = function () { return JSON.stringify(Object.assign(Sync.recordOut(), { familyFile: 1 })); };
+  Sync.lanNow = function (quiet) { var b = B(), i = Sync.lan(); if (!b || !i || !i.paired || Sync.busy) return false; Sync.busy = true; b.lanSync(Sync.stateOut(), !!quiet); return true; };
   var WHY = {
     away: ['Your computer was not found. Is Miftāḥ open on it, on the same Wi-Fi?', 'لم يُعثر على حاسوبك. هل مفتاح مفتوح عليه، على الشبكة نفسها؟'],
     forgotten: ['The computer no longer knows this phone. Pair them again.', 'لم يعد الحاسوب يعرف هذا الهاتف. اقرنهما من جديد.'],
@@ -101,9 +125,9 @@
   };
   window.__native.onLanSynced = function (ok, merged, name, got, sent, quiet) {
     Sync.busy = false;
-    if (!ok) { if (!quiet || name === 'forgotten') A.toast(L(WHY[name] || WHY.fail)); if (name === 'forgotten') { var b = B(); if (b) b.lanForget(); } return; }
+    if (!ok) { if (!quiet || name === 'forgotten') A.toast(L(WHY[name] || WHY.fail)); return; }
     try {
-      var o = JSON.parse(merged), r = Sync.merge(A.S, o, true); A.S = A.shape(r.S);
+      var o = Sync.parse(merged), r = Sync.merge(A.S, o, true); A.S = A.shape(r.S);
       if (window.Voice && Voice.refreshVoices) Voice.refreshVoices(); A.saveNow(); A.rerender();
       var gotL = r.report.reduce(function (n, x) { return n + Math.max(0, x.lessons) + Math.max(0, x.ayat); }, 0);
       A.toast(L(['Joined with', 'تم الدمج مع']) + ' ' + name + (gotL ? ' · +' + A.num(gotL) : '') + (got ? ' · ' + A.num(got) + ' ' + L(['files', 'ملفات']) : ''));
@@ -122,9 +146,9 @@
   };
   function askCode(pc) {
     var box = $('#sy-lan'); if (!box) return;
-    box.innerHTML = '<p class="sy-p">' + esc(L(['Type the six digits shown on', 'اكتب الأرقام الستة الظاهرة على'])) + ' <b>' + esc(pc.name) + '</b></p><input class="tin sy-code" id="sy-code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="••••••" dir="ltr"><button class="btn pri wide" id="sy-pair" style="margin-top:10px">' + esc(L(['Pair', 'اقرن'])) + '</button><small class="sy-st" id="sy-st"></small>';
+    box.innerHTML = '<p class="sy-p">' + esc(L(['Enter the pairing code shown on', 'أدخل رمز الاقتران الظاهر على'])) + ' <b>' + esc(pc.name) + '</b></p><input class="tin sy-code" id="sy-code" autocomplete="off" spellcheck="false" autocapitalize="off" maxlength="48" dir="ltr" aria-label="' + esc(L(['Pairing code', 'رمز الاقتران'])) + '"><button class="btn pri wide" id="sy-pair" style="margin-top:10px">' + esc(L(['Pair', 'اقرن'])) + '</button><small class="sy-st" id="sy-st"></small>';
     var i = $('#sy-code', box), go = $('#sy-pair', box); i.focus();
-    var send = function () { var c = i.value.replace(/[٠-٩]/g, function (d) { return '٠١٢٣٤٥٦٧٨٩'.indexOf(d); }).replace(/\D/g, ''); if (c.length !== 6) { Fx.shake(i); return; } go.disabled = true; $('#sy-st', box).textContent = L(['Pairing…', 'جارٍ الاقتران…']); B().lanPair(pc.ip, pc.port || 47731, pc.id, c); };
+    var send = function () { var c = i.value.toLowerCase().replace(/[٠-٩]/g, function (d) { return '٠١٢٣٤٥٦٧٨٩'.indexOf(d); }).replace(/[\s-]/g, ''); if (!/^[a-f0-9]{32}$/.test(c)) { Fx.shake(i); return; } go.disabled = true; $('#sy-st', box).textContent = L(['Pairing…', 'جارٍ الاقتران…']); B().lanPair(pc.ip, pc.port || 47731, pc.id, c); };
     go.onclick = send; i.onkeydown = function (e) { if (e.key === 'Enter') send(); };
   }
   function lanBlock() {
@@ -153,8 +177,8 @@
     A.sheet(L(['Your other device', 'جهازك الآخر']), '<div class="sy">' + (B() ? '<h4 class="sy-h">' + esc(L(['My computer', 'حاسوبي'])) + '</h4>' + lanBlock() + '<h4 class="sy-h">' + esc(L(['Or with a file', 'أو بملف'])) + '</h4>' : '') + '<button class="btn pri wide" id="sy-out">' + esc(L(['Send to my other device', 'أرسل إلى جهازي الآخر'])) + '</button><ol class="sy-how"><li>' + esc(L(['Choose Quick Share, Bluetooth or WhatsApp', 'اختر المشاركة السريعة أو البلوتوث أو واتساب'])) + '</li><li>' + esc(L(['On the other device, open the file with Miftāḥ', 'في الجهاز الآخر افتح الملف بتطبيق مفتاح'])) + '</li></ol><button class="btn ghost wide" id="sy-in">' + esc(L(['Open a file I have', 'افتح ملفًا لدي'])) + '</button>' + (when ? '<small class="sy-last">' + esc(L(['Last joined', 'آخر دمج'])) + ' · ' + esc(when) + '</small>' : '') + '</div>', function (sh) {
       bindLan(sh);
       $('#sy-out', sh).onclick = function () {
-        var json = JSON.stringify(Object.assign({}, A.S, { familyFile: 1 })); A.S.lastSync = A.now().getTime(); A.saveNow(); A.closeSheet();
-        if (A.N.has()) A.N.call('shareFamily', json); else { var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([json], { type: 'application/json' })); a.download = 'miftah-family.json'; a.click(); }
+        var json = Sync.stateOut(); A.S.lastSync = A.now().getTime(); A.saveNow(); A.closeSheet();
+        if (A.N.has()) A.N.call('shareFamily', json); else { var u = URL.createObjectURL(new Blob([json], { type: 'application/json' })), a = document.createElement('a'); a.href = u; a.download = 'miftah-family.json'; a.click(); setTimeout(function () { URL.revokeObjectURL(u); }, 10000); }
       };
       $('#sy-in', sh).onclick = function () {
         A.closeSheet(); A.__syncIn = true;
@@ -167,12 +191,15 @@
   window.__native.onImport = function (txt, withFiles, shared) {
     if (!A.__syncIn && !shared) return import0(txt);
     A.__syncIn = false;
-    try {
-      var o = JSON.parse(txt); if (!o || !Array.isArray(o.profiles)) throw 0;
-      var r = Sync.merge(A.S, o, withFiles); A.S = A.shape(r.S); if (withFiles && window.Voice && Voice.refreshVoices) Voice.refreshVoices(); A.saveNow(); A.rerender();
-      var rows = r.report.map(function (x) { return '<div class="row2"><span class="grow"><b>' + esc(x.name) + '</b></span>' + (x.fresh ? '<span class="cnt hot">+</span>' : '') + '<span class="cnt">+' + A.num(Math.max(0, x.lessons)) + ' ' + esc(L(['lessons', 'دروس'])) + '</span>' + (x.ayat > 0 ? '<span class="cnt">+' + A.num(x.ayat) + ' ' + esc(L(['āyāt', 'آيات'])) + '</span>' : '') + '</div>'; }).join('');
-      A.go('parent');
-      A.sheet(L(['Joined', 'تم الدمج']), '<div class="card" style="box-shadow:none">' + (rows || '') + '</div>');
-    } catch (e) { A.toast(L(['That file could not be read', 'تعذرت قراءة الملف'])); }
+    var doMerge = function () {
+      try {
+        var o = Sync.parse(txt); if (!o || !Array.isArray(o.profiles)) throw 0;
+        var r = Sync.merge(A.S, o, withFiles); A.S = A.shape(r.S); if (withFiles && window.Voice && Voice.refreshVoices) Voice.refreshVoices(); A.saveNow(); A.rerender();
+        var rows = r.report.map(function (x) { return '<div class="row2"><span class="grow"><b>' + esc(x.name) + '</b></span>' + (x.fresh ? '<span class="cnt hot">+</span>' : '') + '<span class="cnt">+' + A.num(Math.max(0, x.lessons)) + ' ' + esc(L(['lessons', 'دروس'])) + '</span>' + (x.ayat > 0 ? '<span class="cnt">+' + A.num(x.ayat) + ' ' + esc(L(['āyāt', 'آيات'])) + '</span>' : '') + '</div>'; }).join('');
+        A.go('parent');
+        A.sheet(L(['Joined', 'تم الدمج']), '<div class="card" style="box-shadow:none">' + (rows || '') + '</div>');
+      } catch (e) { A.toast(L(['That file could not be read', 'تعذرت قراءة الملف'])); }
+    };
+    if (shared && A.grownOpen && !A.grownOpen() && A.askGrown) A.askGrown(doMerge); else doMerge();
   };
 })();

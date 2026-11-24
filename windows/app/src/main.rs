@@ -169,7 +169,7 @@ impl App {
     }
     fn menu(&self) {
         unsafe {
-            let m = CreatePopupMenu().unwrap();
+            let Ok(m) = CreatePopupMenu() else { return; };
             let add = |id: usize, t: &str| { let _ = AppendMenuW(m, MF_STRING, id, &h(t)); };
             add(ID_OPEN, "Open Miftāḥ");
             add(ID_PARENT, "Parent area");
@@ -293,11 +293,12 @@ extern "system" fn wndproc(hwnd: HWND, msg: u32, wp: WPARAM, lp: LPARAM) -> LRES
                     a.link.stop();
                     a.tray(false);
                     if let Some(w) = a.web.borrow_mut().take() { let _ = w.controller.Close(); }
+                    store::flush_state();
                 }
                 let _ = DestroyWindow(hwnd);
                 return LRESULT(0);
             }
-            WM_DESTROY => { PostQuitMessage(0); return LRESULT(0); }
+            WM_DESTROY => { mc::set_ui(HWND(std::ptr::null_mut())); PostQuitMessage(0); return LRESULT(0); }
             _ => {}
         }
         DefWindowProcW(hwnd, msg, wp, lp)
@@ -306,9 +307,10 @@ extern "system" fn wndproc(hwnd: HWND, msg: u32, wp: WPARAM, lp: LPARAM) -> LRES
 
 /* ---------- a second launch hands its request to the window already open ---------- */
 fn listen() {
-    std::thread::Builder::new().name("single-instance".into()).spawn(|| loop {
+    let pipe = installer::pipe_name();
+    std::thread::Builder::new().name("single-instance".into()).spawn(move || loop {
         unsafe {
-            let p = CreateNamedPipeW(&h(installer::PIPE), PIPE_ACCESS_INBOUND, PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT, 1, 0, 65536, 0, None);
+            let p = CreateNamedPipeW(&h(&pipe), PIPE_ACCESS_INBOUND, PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT | PIPE_REJECT_REMOTE_CLIENTS, 1, 0, 65536, 0, None);
             if p.is_invalid() { std::thread::sleep(std::time::Duration::from_millis(200)); continue; }
             let connected = ConnectNamedPipe(p, None).is_ok() || GetLastError() == ERROR_PIPE_CONNECTED;
             let mut all = vec![];
@@ -317,7 +319,9 @@ fn listen() {
                 loop {
                     let mut n = 0u32;
                     if ReadFile(p, Some(&mut buf), Some(&mut n), None).is_err() || n == 0 { break; }
-                    all.extend_from_slice(&buf[..n as usize]);
+                    let take = (n as usize).min(65536usize.saturating_sub(all.len()));
+                    all.extend_from_slice(&buf[..take]);
+                    if all.len() >= 65536 { break; }
                 }
             }
             let _ = DisconnectNamedPipe(p);
@@ -449,6 +453,7 @@ fn main() {
         return;
     }
     let code = mc::pump();
+    store::flush_state();
     let _ = mutex;
     let _ = PWSTR::null();
     std::process::exit(code);

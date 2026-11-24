@@ -63,36 +63,158 @@
 
   /* ===== the gate: quick for a grown-up, slow for a toddler ===== */
   var unlocked = 0;
-  function gate(next) {
-    if (A.S.pin) return {
-      bare: true,
-      html: '<div class="ph h-gold"><a class="backp" href="#/home">' + A.icon('back', 18) + '<span>' + esc(T('Today')) + '</span></a></div><div class="gate wrap">' + A.art('lock', 90) + '<h1 style="font-size:24px">' + esc(T('For grown-ups')) + '</h1><input class="tin" id="gp-pin" type="password" inputmode="numeric" maxlength="6" style="max-width:240px;text-align:center" placeholder="' + esc(A.L(['Parent PIN', 'رمز الوالدين'])) + '"><button class="btn pri" id="gp-go" style="width:100%;max-width:240px">' + esc(A.L(['Open', 'فتح'])) + '</button></div>',
-      mount: function (v) { var i = $('#gp-pin', v), go = function () { if (i.value === A.S.pin) { unlocked = Date.now(); A.rerender(); } else { Fx.shake(i); i.value = ''; } }; $('#gp-go', v).onclick = go; i.onkeydown = function (e) { if (e.key === 'Enter') go(); }; }
+  var pinBusy = false;
+  var pinRecord = /^v1\$([a-f0-9]{32})\$([a-f0-9]{64})\$([a-f0-9]{64})$/;
+  function hex(bytes) { return Array.from(new Uint8Array(bytes), function (b) { return b.toString(16).padStart(2, '0'); }).join(''); }
+  function randomCode() { return hex(crypto.getRandomValues(new Uint8Array(16))); }
+  function bytes(s) { return new TextEncoder().encode(s); }
+  async function pinHash(pin, salt) {
+    var key = await crypto.subtle.importKey('raw', bytes(pin), 'PBKDF2', false, ['deriveBits']);
+    return hex(await crypto.subtle.deriveBits({ name: 'PBKDF2', salt: bytes('miftah-pin:' + salt), iterations: 600000, hash: 'SHA-256' }, key, 256));
+  }
+  async function recoveryHash(code, salt) { return hex(await crypto.subtle.digest('SHA-256', bytes('miftah-recovery:' + salt + ':' + code))); }
+  async function makePin(pin) {
+    var salt = randomCode(), code = randomCode();
+    return { record: ['v1', salt, await pinHash(pin, salt), await recoveryHash(code, salt)].join('$'), code: code };
+  }
+  function showRecovery(code) {
+    A.sheet(L(['Save your recovery code', 'احفظ رمز الاسترداد']), '<p>' + esc(L(['Keep this code somewhere private. You can use it to clear a forgotten PIN.', 'احتفظ بهذا الرمز في مكان خاص. يمكنك استخدامه لإلغاء رمز والدين منسي.'])) + '</p><p id="gp-recovery-code" dir="ltr" style="overflow-wrap:anywhere;user-select:text"><code>' + esc(code.match(/.{8}/g).join(' ')) + '</code></p>');
+  }
+  function pinError() { A.toast(L(['PIN security is unavailable here', 'حماية رمز الوالدين غير متاحة هنا'])); }
+  A.pinSet = async function (input) {
+    var pin = input.value.trim(), state = A.S;
+    if (pinBusy || !open()) return;
+    if (pin && !/^\d{4,6}$/.test(pin)) { A.toast(L(['Use 4 to 6 digits', 'استعمل ٤ إلى ٦ أرقام'])); return; }
+    pinBusy = true;
+    try {
+      var next = pin ? await makePin(pin) : null;
+      if (!input.isConnected || state !== A.S || !open()) return;
+      state.pin = next ? next.record : ''; state.gate = { a: 0 }; A.saveNow(); A.rerender();
+      if (next) showRecovery(next.code); else A.toast(T('Saved'));
+    } catch (e) { pinError(); } finally { pinBusy = false; }
+  };
+  function pinLockLeft() { var g = A.S.gate || {}; return g.until && g.until > Date.now() ? Math.ceil((g.until - Date.now()) / 1000) : 0; }
+  async function checkPin(val, recovery, input) {
+    var left = pinLockLeft();
+    if (left > 0) { A.toast(L(['Wait ' + left + 's before trying again', 'انتظر ' + A.num(left) + ' ثانية قبل المحاولة'])); return null; }
+    var state = A.S, stored = state.pin, record = pinRecord.exec(stored), route = A.route(), match = false, next = null;
+    if (recovery) {
+      val = val.toLowerCase().replace(/[\s-]/g, '');
+      match = record && /^[a-f0-9]{32}$/.test(val) && await recoveryHash(val, record[1]) === record[3];
+    } else if (/^\d{4,6}$/.test(val)) {
+      match = record ? await pinHash(val, record[1]) === record[2] : val === stored;
+      if (match && !record) next = await makePin(val);
+    }
+    var sheet = input.closest('.sheet');
+    if (!input.isConnected || (sheet && (!sheetEl || sheetEl[1] !== sheet)) || route !== A.route() || state !== A.S || state.pin !== stored) return null;
+    if (match) {
+      if (recovery || next) state.pin = next ? next.record : '';
+      state.gate = { a: 0 }; A.saveNow();
+      return { code: next && next.code };
+    }
+    var g = state.gate = state.gate || { a: 0 };
+    g.a = (g.a || 0) + 1;
+    if (g.a >= 5) g.until = Date.now() + Math.min(240, 30 * Math.pow(2, Math.min(3, g.a - 5))) * 1000;
+    A.saveNow();
+    return null;
+  }
+  function pinFields(prefix) {
+    return '<input class="tin" id="' + prefix + '-pin" type="password" inputmode="numeric" maxlength="6" autocomplete="off" dir="ltr" aria-label="' + esc(L(['Parent PIN', 'رمز الوالدين'])) + '" placeholder="' + esc(L(['Parent PIN', 'رمز الوالدين'])) + '"><button class="btn pri wide" id="' + prefix + '-go">' + esc(L(['Open', 'فتح'])) + '</button>' + (pinRecord.test(A.S.pin) ? '<button class="btn ghost wide" id="' + prefix + '-recover">' + esc(L(['Use recovery code', 'استخدم رمز الاسترداد'])) + '</button>' : '');
+  }
+  function bindPin(el, prefix, accept) {
+    var i = $('#' + prefix + '-pin', el), go = $('#' + prefix + '-go', el), recover = $('#' + prefix + '-recover', el);
+    var usingRecovery = false;
+    go.onclick = async function () {
+      if (pinBusy) return;
+      pinBusy = go.disabled = true;
+      try {
+        var result = await checkPin(i.value.trim(), usingRecovery, i);
+        if (result) { accept(); if (result.code) showRecovery(result.code); }
+        else if (i.isConnected) { Fx.shake(i); i.value = ''; }
+      } catch (e) { pinError(); } finally { pinBusy = go.disabled = false; }
     };
-    var r = A.rng(A.seed()), a = r.int(27, 68), b = r.int(14, 39), ans = a + b, opts = r.shuffle([ans, ans + 10, ans - 10]);
-    return {
-      bare: true,
-      html: '<div class="ph h-gold"><a class="backp" href="#/home">' + A.icon('back', 18) + '<span>' + esc(T('Today')) + '</span></a></div><div class="gate wrap">' + A.art('lock', 90) + '<h1 style="font-size:24px">' + esc(T('For grown-ups')) + '</h1><p style="color:var(--t2)">' + A.num(a) + ' + ' + A.num(b) + ' = ?</p><div class="numrow" style="width:100%;max-width:340px">' + opts.map(function (o) { return '<button class="numopt" data-v="' + o + '">' + A.num(o) + '</button>'; }).join('') + '</div></div>',
-      mount: function (v) { $$('.numopt', v).forEach(function (b) { b.onclick = function () { if (+b.dataset.v === ans) { unlocked = Date.now(); A.rerender(); } else { Fx.shake(b); b.disabled = true; } }; }); }
+    i.onkeydown = function (e) { if (e.key === 'Enter') go.click(); };
+    if (recover) recover.onclick = function () {
+      if (pinBusy) return;
+      usingRecovery = !usingRecovery;
+      i.value = ''; i.maxLength = usingRecovery ? 48 : 6; i.inputMode = usingRecovery ? 'text' : 'numeric';
+      i.placeholder = usingRecovery ? L(['Recovery code', 'رمز الاسترداد']) : L(['Parent PIN', 'رمز الوالدين']);
+      i.setAttribute('aria-label', i.placeholder);
+      recover.textContent = usingRecovery ? L(['Use parent PIN', 'استخدم رمز الوالدين']) : L(['Use recovery code', 'استخدم رمز الاسترداد']);
+      i.focus();
     };
   }
-  function open() { return Date.now() - unlocked < 20 * 60000; }
+  function mathSum() {
+    var r = A.rng(A.seed() ^ (Date.now() & 0xffff)), a = r.int(27, 68), b = r.int(14, 39), ans = a + b;
+    var sets = [[10, -10], [10, 20], [-10, -20], [9, -11], [11, -9]], d = r.pick(sets);
+    return { a: a, b: b, ans: ans, opts: r.shuffle([ans, ans + d[0], ans + d[1]]) };
+  }
+  function gate() {
+    if (A.S.pin) return {
+      bare: true,
+      html: '<div class="ph h-gold"><a class="backp" href="#/home">' + A.icon('back', 18) + '<span>' + esc(T('Today')) + '</span></a></div><div class="gate wrap">' + A.art('lock', 90) + '<h1 style="font-size:24px">' + esc(T('For grown-ups')) + '</h1><div style="width:100%;max-width:270px;display:grid;gap:8px">' + pinFields('gp') + '</div></div>',
+      mount: function (v) { bindPin(v, 'gp', function () { unlocked = Date.now(); A.rerender(); }); }
+    };
+    var q = mathSum();
+    return {
+      bare: true,
+      html: '<div class="ph h-gold"><a class="backp" href="#/home">' + A.icon('back', 18) + '<span>' + esc(T('Today')) + '</span></a></div><div class="gate wrap">' + A.art('lock', 90) + '<h1 style="font-size:24px">' + esc(T('For grown-ups')) + '</h1><p id="gp-q" dir="ltr" style="color:var(--t2)">' + A.num(q.a) + ' + ' + A.num(q.b) + ' = ?</p><div class="numrow" id="gp-opts" style="width:100%;max-width:340px">' + q.opts.map(function (o) { return '<button class="numopt" data-v="' + o + '">' + A.num(o) + '</button>'; }).join('') + '</div></div>',
+      mount: function (v) {
+        function bind(cur) {
+          $$('.numopt', v).forEach(function (b) {
+            b.onclick = function () {
+              if (+b.dataset.v === cur.ans) { unlocked = Date.now(); A.rerender(); return; }
+              Fx.shake(b);
+              var nq = mathSum();
+              $('#gp-q', v).textContent = A.num(nq.a) + ' + ' + A.num(nq.b) + ' = ?';
+              $('#gp-opts', v).innerHTML = nq.opts.map(function (o) { return '<button class="numopt" data-v="' + o + '">' + A.num(o) + '</button>'; }).join('');
+              bind(nq);
+            };
+          });
+        }
+        bind(q);
+      }
+    };
+  }
+  function parentRoute() { return /^(parent|place|desk|marking)(\/|$)/.test(A.route()); }
+  function open() {
+    if (!parentRoute()) unlocked = 0;
+    return unlocked !== 0 && Date.now() - unlocked < 20 * 60000;
+  }
   A.grownOpen = open;
+  A.grownGate = gate;
   /* leaving the parent area locks it again: a child should not walk back in behind you */
-  window.addEventListener('hashchange', function () { if (!/^(parent|place|desk)/.test(A.route())) unlocked = 0; });
+  window.addEventListener('hashchange', open);
   function dayMs(d, k) { return Math.max(d.time[k] || 0, (d.screen || {})[k] || 0); }
-  /* a quick check before something only a grown-up may decide */
+  /* a quick check before something only a grown-up may decide; does not leave the parent area unlocked when called from a child screen */
   A.askGrown = function (done) {
     if (open()) { done(); return; }
+    var route = A.route();
+    function accept() {
+      A.closeSheet();
+      if (A.route() !== route) return;
+      if (parentRoute()) unlocked = Date.now();
+      done();
+    }
     if (A.S.pin) {
-      A.sheet(A.L(['For grown-ups', 'للكبار']), '<input class="tin" id="g-pin" type="password" inputmode="numeric" maxlength="6" placeholder="' + esc(A.L(['Parent PIN', 'رمز الوالدين'])) + '"><button class="btn pri wide" id="g-go" style="margin-top:10px">' + esc(A.L(['Open', 'فتح'])) + '</button>', function (el) {
-        $('#g-go', el).onclick = function () { if ($('#g-pin', el).value === A.S.pin) { unlocked = Date.now(); A.closeSheet(); done(); } else { Fx.shake($('#g-pin', el)); $('#g-pin', el).value = ''; } };
-      });
+      A.sheet(L(['For grown-ups', 'للكبار']), pinFields('g'), function (el) { bindPin(el, 'g', accept); });
       return;
     }
-    var r = A.rng(A.seed()), a = r.int(27, 68), b = r.int(14, 39), ans = a + b, opts = r.shuffle([ans, ans + 10, ans - 10]);
-    A.sheet(T('For grown-ups'), '<p style="color:var(--t2);text-align:center;font-size:20px">' + A.num(a) + ' + ' + A.num(b) + ' = ?</p><div class="numrow" style="margin-top:12px">' + opts.map(function (o) { return '<button class="numopt" data-v="' + o + '">' + A.num(o) + '</button>'; }).join('') + '</div>', function (el) {
-      $$('.numopt', el).forEach(function (x) { x.onclick = function () { if (+x.dataset.v === ans) { unlocked = Date.now(); A.closeSheet(); done(); } else { Fx.shake(x); x.disabled = true; } }; });
+    var q = mathSum();
+    A.sheet(T('For grown-ups'), '<p id="g-q" dir="ltr" style="color:var(--t2);text-align:center;font-size:20px">' + A.num(q.a) + ' + ' + A.num(q.b) + ' = ?</p><div class="numrow" id="g-opts" style="margin-top:12px">' + q.opts.map(function (o) { return '<button class="numopt" data-v="' + o + '">' + A.num(o) + '</button>'; }).join('') + '</div>', function (el) {
+      function bind(cur) {
+        $$('.numopt', el).forEach(function (x) {
+          x.onclick = function () {
+            if (+x.dataset.v === cur.ans) { accept(); return; }
+            Fx.shake(x);
+            var nq = mathSum();
+            $('#g-q', el).textContent = A.num(nq.a) + ' + ' + A.num(nq.b) + ' = ?';
+            $('#g-opts', el).innerHTML = nq.opts.map(function (o) { return '<button class="numopt" data-v="' + o + '">' + A.num(o) + '</button>'; }).join('');
+            bind(nq);
+          };
+        });
+      }
+      bind(q);
     });
   };
 
@@ -112,7 +234,7 @@
   };
   function head(title, sub, back, label) { return '<div class="ph h-gold"><a class="backp" href="#/' + back + '">' + A.icon('back', 18) + '<span>' + esc(label) + '</span></a><h1>' + esc(title) + '</h1>' + (sub ? '<p>' + esc(sub) + '</p>' : '') + '</div>'; }
   function hrs(ms) { var m = Math.round(ms / 60000); if (m < 60) return A.num(m) + ' ' + T('min'); return A.num(Math.floor(m / 60)) + ' ' + T('h') + ' ' + A.num(m % 60) + ' ' + T('min'); }
-  function week(pid) { var d = A.D(pid), out = [], now = A.now(); for (var i = 6; i >= 0; i--) { var x = new Date(now.getTime() - i * 864e5), k = A.day(x); out.push({ k: k, ms: dayMs(d, k), l: x.toLocaleDateString(A.ar() ? 'ar-u-nu-arab' : 'en', { weekday: 'narrow' }) }); } return out; }
+  function week(pid) { var d = A.D(pid), out = [], now = A.now(); for (var i = 6; i >= 0; i--) { var x = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i), k = A.day(x); out.push({ k: k, ms: dayMs(d, k), l: x.toLocaleDateString(A.ar() ? 'ar-u-nu-arab' : 'en', { weekday: 'narrow' }) }); } return out; }
 
   function addChild() {
     return { html: '<div class="ph h-gold"><a class="backp" href="#/parent">' + A.icon('back', 18) + '<span>' + esc(T('Parents')) + '</span></a></div><div class="wrap" id="af" style="display:grid;gap:14px;justify-items:center;padding-top:10px"></div>', mount: function (v) { A.V.__form($('#af', v), null, function (p) { A.placeDefault(p); A.saveNow(); A.go('parent'); }); } };
@@ -395,7 +517,7 @@
   var WD = [0, 1, 2, 3, 4, 5, 6];
   function wdName(i) { return new Date(2023, 0, 1 + i).toLocaleDateString(A.ar() ? 'ar-u-nu-arab' : 'en', { weekday: 'short' }); }
   function setupPlan(p) {
-    var days = p.days || WD, light = p.light == null ? 5 : p.light, pace = p.pace || 'steady', focus = p.focus || {};
+    var days = p.days || Flow.WEEK, light = p.light == null ? 5 : p.light, pace = p.pace || 'steady', focus = p.focus || {};
     return '<div class="card"><h3>' + esc(T('School days')) + '</h3><div class="wk7">' + WD.map(function (i) { return '<button class="seg ' + (days.indexOf(i) >= 0 ? 'on' : '') + '" data-day="' + i + '">' + esc(wdName(i)) + '</button>'; }).join('') + '</div><p class="ref" style="margin:8px 0;text-align:start">' + esc(T('On other days: only the Qurʾān and something real.')) + '</p><h3 style="margin-top:10px">' + esc(T('The remembering day')) + '</h3><div class="wk7">' + WD.map(function (i) { return '<button class="seg ' + (light === i ? 'on' : '') + '" data-light="' + i + '">' + esc(wdName(i)) + '</button>'; }).join('') + '</div><p class="ref" style="margin-top:8px;text-align:start">' + esc(L(['No new lessons that day: review, making and movement. Strong learning needs one.', 'بلا دروس جديدة ذلك اليوم: مراجعة وصنع وحركة. يحتاجه التعلم القوي.'])) + '</p></div>' +
       '<div class="card"><h3>' + esc(T('Pace')) + '</h3><div class="segs">' + [['gentle', 'Gentle'], ['steady', 'Steady'], ['strong', 'Strong']].map(function (x) { return '<button class="seg ' + (pace === x[0] ? 'on' : '') + '" data-pace="' + x[0] + '">' + esc(T(x[1])) + '</button>'; }).join('') + '</div><p class="ref" style="margin-top:8px;text-align:start">' + esc(T('It also adjusts by itself, from how well they remember.')) + '</p></div>' +
       '<div class="card"><h3>' + esc(T('More or less of a subject')) + '</h3><div class="lst">' + C.order.filter(function (r) { return r !== 'quran'; }).map(function (r) { var f = focus[r] || 1; return '<div class="li"><span class="grow"><b>' + esc(L(C.rooms[r].name)) + '</b></span><div class="segs mini">' + [[.5, 'Less'], [1, 'Normal'], [1.5, 'More']].map(function (x) { return '<button class="seg ' + (f === x[0] ? 'on' : '') + '" data-focus="' + r + '" data-v="' + x[0] + '">' + esc(T(x[1])) + '</button>'; }).join('') + '</div></div>'; }).join('') + '</div></div>' +
@@ -403,7 +525,7 @@
   }
   function bindPlan(p, v) {
     var re = function () { A.D(p.id).path = null; A.saveNow(); A.rerender(); };
-    $$('[data-day]', v).forEach(function (b) { b.onclick = function () { var i = +b.dataset.day, d = (p.days || WD).slice(), at = d.indexOf(i); if (at >= 0) { if (d.length > 1) d.splice(at, 1); } else d.push(i); p.days = d; re(); }; });
+    $$('[data-day]', v).forEach(function (b) { b.onclick = function () { var i = +b.dataset.day, d = (p.days || Flow.WEEK).slice(), at = d.indexOf(i); if (at >= 0) { if (d.length > 1) d.splice(at, 1); } else d.push(i); p.days = d; re(); }; });
     $$('[data-light]', v).forEach(function (b) { b.onclick = function () { p.light = +b.dataset.light; re(); }; });
     $$('[data-pace]', v).forEach(function (b) { b.onclick = function () { p.pace = b.dataset.pace; re(); }; });
     $$('[data-focus]', v).forEach(function (b) { b.onclick = function () { p.focus = p.focus || {}; p.focus[b.dataset.focus] = +b.dataset.v; re(); }; });
@@ -475,9 +597,9 @@
         var tm = $('#s-time', v); if (tm) tm.onchange = function () { var q = this.value.split(':'); S.remind.h = +q[0]; S.remind.m = +q[1]; A.saveNow(); A.toast(T('Saved')); };
         var wd = $('#s-wid', v); if (wd) wd.onclick = function () { if (!A.N.call('pinWidget')) A.toast(T('Add it from your home screen’s widget list')); };
         $('#s-exp', v).onclick = function () {
-          A.S.lastBackup = A.now().getTime(); A.saveNow(); var json = JSON.stringify(A.S), name = 'miftah-backup-' + A.day() + '.json';
+          A.S.lastBackup = A.now().getTime(); A.saveNow(); var json = JSON.stringify(A.Sync.recordOut()), name = 'miftah-backup-' + A.day() + '.json';
           if (A.N.has()) A.N.call('exportFile', name, json);
-          else { var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([json], { type: 'application/json' })); a.download = name; a.click(); }
+          else { var u = URL.createObjectURL(new Blob([json], { type: 'application/json' })), a = document.createElement('a'); a.href = u; a.download = name; a.click(); setTimeout(function () { URL.revokeObjectURL(u); }, 60000); }
         };
         $('#s-imp', v).onclick = function () {
           if (A.N.has()) { A.N.call('importFile'); return; }
@@ -487,7 +609,8 @@
     };
   }
   window.__native.onImport = function (txt) {
-    try { var o = JSON.parse(txt); if (!o || !Array.isArray(o.profiles)) throw 0; A.S = A.shape(o); A.saveNow(); A.toast(T('Restored')); A.go('parent'); A.rerender(); } catch (e) { A.toast(T('That file could not be read')); }
+    if (!A.grownOpen()) return;
+    try { var o = A.Sync.parse(txt); if (!o || !Array.isArray(o.profiles)) throw 0; delete o.upd; o.pin = A.S.pin; o.gate = A.S.gate; A.S = A.shape(o); A.saveNow(); A.toast(T('Restored')); A.go('parent'); A.rerender(); } catch (e) { A.toast(T('That file could not be read')); }
   };
   window.__native.onExported = function (ok) { A.toast(T(ok ? 'Saved' : 'Not saved')); };
 
@@ -568,18 +691,46 @@
   }
 
   /* sheet */
-  var sheetEl = null;
+  var sheetEl = null, sheetPrev = null, sheetKey = null;
+  var FOCUSABLE = 'button:not([disabled]),a[href],input:not([disabled]):not([type="hidden"]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])';
+  function sheetFocusables(sh) {
+    return Array.prototype.slice.call(sh.querySelectorAll(FOCUSABLE)).filter(function (el) { return !el.hidden && el.offsetParent !== null; });
+  }
   A.sheet = function (title, html, mount) {
+    var prev = sheetEl ? sheetPrev : document.activeElement;
     A.closeSheet();
+    sheetPrev = prev;
     var bg = document.createElement('div'); bg.className = 'sheetbg'; var sh = document.createElement('div'); sh.className = 'sheet';
     /* a header that stays, with a way to close; the content scrolls under it */
-    sh.setAttribute('role', 'dialog'); sh.setAttribute('aria-modal', 'true');
-    sh.innerHTML = '<div class="sheet-h"><h2>' + esc(title) + '</h2><button class="sheet-x" type="button" aria-label="' + esc(A.L(['Close', 'إغلاق'])) + '">' + A.icon('close', 20) + '</button></div><div class="sheet-b">' + html + '</div>';
+    sh.setAttribute('role', 'dialog'); sh.setAttribute('aria-modal', 'true'); sh.setAttribute('aria-labelledby', 'sheet-title'); sh.tabIndex = -1;
+    sh.innerHTML = '<div class="sheet-h"><h2 id="sheet-title">' + esc(title) + '</h2><button class="sheet-x" type="button" aria-label="' + esc(A.L(['Close', 'إغلاق'])) + '">' + A.icon('close', 20) + '</button></div><div class="sheet-b">' + html + '</div>';
     sh.querySelector('.sheet-x').onclick = function () { A.closeSheet(); };
     document.body.appendChild(bg); document.body.appendChild(sh);
     sheetEl = [bg, sh]; bg.onclick = A.closeSheet;
+    sheetKey = function (e) {
+      if (!sheetEl) return;
+      if (e.key === 'Escape') { e.preventDefault(); A.closeSheet(); return; }
+      if (e.key !== 'Tab') return;
+      var list = sheetFocusables(sh);
+      if (!list.length) { e.preventDefault(); sh.focus(); return; }
+      var first = list[0], last = list[list.length - 1];
+      if (e.shiftKey) { if (document.activeElement === first || !sh.contains(document.activeElement)) { e.preventDefault(); last.focus(); } }
+      else { if (document.activeElement === last || !sh.contains(document.activeElement)) { e.preventDefault(); first.focus(); } }
+    };
+    document.addEventListener('keydown', sheetKey);
     requestAnimationFrame(function () { bg.classList.add('on'); sh.classList.add('on'); });
     if (mount) mount(sh);
+    var bodyEl = sh.querySelector('.sheet-b'), firstInBody = bodyEl && sheetFocusables(bodyEl)[0];
+    var target = firstInBody || sh.querySelector('.sheet-x') || sh;
+    try { target.focus({ preventScroll: true }); } catch (e) { try { target.focus(); } catch (e2) { } }
   };
-  A.closeSheet = function () { if (!sheetEl) return false; var s = sheetEl; sheetEl = null; s[0].classList.remove('on'); s[1].classList.remove('on'); setTimeout(function () { s[0].remove(); s[1].remove(); }, 300); return true; };
+  A.closeSheet = function () {
+    if (!sheetEl) return false;
+    var s = sheetEl, prev = sheetPrev; sheetEl = null; sheetPrev = null;
+    if (sheetKey) { document.removeEventListener('keydown', sheetKey); sheetKey = null; }
+    s[0].classList.remove('on'); s[1].classList.remove('on');
+    setTimeout(function () { s[0].remove(); s[1].remove(); }, 300);
+    if (prev && prev.isConnected && typeof prev.focus === 'function') { try { prev.focus({ preventScroll: true }); } catch (e) { try { prev.focus(); } catch (e2) { } } }
+    return true;
+  };
 })();

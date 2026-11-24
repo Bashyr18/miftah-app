@@ -68,7 +68,7 @@
         return '<button class="ti ' + (met ? 'done' : now ? 'now' : open ? '' : 'lock') + '" data-a="room-open" data-id="' + s.id + '"><span class="dot"></span><span class="grow"><b>' + esc(L(s.title)) + '</b></span>' + (met ? '<span class="num">' + Math.round(M.light(s.id) * 100) + '%</span>' : '') + '</button>';
       }).join('') + '</div>';
     }).join('');
-    return { hue: R.hue, mount: function (v) { var yb = $('.ryear.on', v); if (yb) yb.parentNode.scrollLeft = yb.offsetLeft - 40; }, html: head(L(R.name), L(R.tag), ['rooms', ['Subjects', 'المواد']]) + bar + '<div class="tw">' + body + (year < fl ? '<p style="color:var(--t2);font-size:13px;margin-top:10px">' + esc(L(['Earlier years are here for when you want to go back.', 'السنوات السابقة هنا إذا أردت العودة.'])) + '</p>' : '') + '</div>' + nav('rooms') };
+    return { hue: R.hue, mount: function (v) { var yb = $('.ryear.on', v); if (yb && yb.scrollIntoView) yb.scrollIntoView({ inline: 'center', block: 'nearest' }); }, html: head(L(R.name), L(R.tag), ['rooms', ['Subjects', 'المواد']]) + bar + '<div class="tw">' + body + (year < fl ? '<p style="color:var(--t2);font-size:13px;margin-top:10px">' + esc(L(['Earlier years are here for when you want to go back.', 'السنوات السابقة هنا إذا أردت العودة.'])) + '</p>' : '') + '</div>' + nav('rooms') };
   };
   /* ---------- record ---------- */
   A.acts['t-transcript'] = function () {
@@ -105,32 +105,48 @@
     var d = A.D(), work = d.work || [], id = args && args[0];
     if (id == null) return { html: head(L(['Essays', 'المقالات']), L(['Written work stays yours. A parent sees it only if you share it.', 'أعمالك المكتوبة لك، ولا يراها الوالدان إلا إذا شاركتها.']), ['study', ['Study', 'الدراسة']]) + '<div class="tw"><input class="tin" id="t-w-t" placeholder="' + esc(L(['Title or question', 'العنوان أو السؤال'])) + '"><button class="btn pri wide" style="margin-top:8px" data-a="t-w-new">' + esc(L(['Start writing', 'ابدأ الكتابة'])) + '</button><div class="tsec">' + esc(L(['My work', 'أعمالي'])) + '</div><div class="tl">' + (work.map(function (w, i) { return '<a class="ti" href="#/write/' + i + '"><span class="grow"><b>' + esc(w.title) + '</b><small>' + N(words(w.text)) + ' ' + esc(L(['words', 'كلمة'])) + (w.shared ? ' · ' + esc(L(['shared', 'مشارَك'])) : '') + '</small></span></a>'; }).reverse().join('') || '<div class="ti"><span class="grow"><small>' + esc(L(['Nothing yet.', 'لا شيء بعد.'])) + '</small></span></div>') + '</div></div>' };
     var w = work[+id]; if (!w) return { redirect: 'write' };
-    var ch = (w.check || []);
-    return { unmount: function () { saveDraft(+id); }, mount: function (v) { var ta = $('#t-w-b', v); var cnt = $('#t-w-c', v); ta.oninput = function () { cnt.textContent = N(words(ta.value)) + ' ' + L(['words', 'كلمة']); clearTimeout(ta._t); ta._t = setTimeout(function () { saveDraft(+id); }, 800); }; }, html: head(w.title, '', ['write', ['Essays', 'المقالات']]) + '<div class="tw"><textarea class="tin" id="t-w-p" style="min-height:90px" placeholder="' + esc(L(['Plan: your main point, then three reasons.', 'الخطة: فكرتك الرئيسة ثم ثلاثة أسباب.'])) + '">' + esc(w.plan || '') + '</textarea><textarea class="tin" id="t-w-b" style="margin-top:8px;min-height:300px" placeholder="' + esc(L(['Draft', 'المسودة'])) + '">' + esc(w.text || '') + '</textarea><p id="t-w-c" style="color:var(--t2);font-size:13px;margin-top:4px">' + N(words(w.text)) + ' ' + esc(L(['words', 'كلمة'])) + '</p><div class="tsec">' + esc(L(['Before you finish', 'قبل أن تنتهي'])) + '</div>' + CHECK.map(function (c, i) { return '<button class="wcheck ' + (ch[i] ? 'on' : '') + '" data-a="t-w-check" data-i="' + i + '" data-w="' + id + '"><i></i><span>' + esc(L(c)) + '</span></button>'; }).join('') + '<button class="btn sec wide" style="margin-top:10px" data-a="t-w-share" data-w="' + id + '">' + esc(w.shared ? L(['Stop sharing with parents', 'أوقف المشاركة']) : L(['Share with parents for marking', 'شاركه مع الوالدين للتصحيح'])) + '</button>' + (w.mark ? '<div class="tsec">' + esc(L(['Feedback', 'الملاحظات'])) + '</div><p>' + esc(w.mark) + '</p>' : '') + '</div>' };
+    var ch = (w.check || []), saveTimer = null, bEl = null, pEl = null;
+    function flushDraft() { clearTimeout(saveTimer); saveDraft(w, bEl, pEl); }
+    return { unmount: flushDraft, mount: function (v) {
+      bEl = $('#t-w-b', v); pEl = $('#t-w-p', v); var cnt = $('#t-w-c', v);
+      function queueDraft() {
+        cnt.textContent = N(words(bEl.value)) + ' ' + L(['words', 'كلمة']);
+        clearTimeout(saveTimer);
+        saveTimer = setTimeout(flushDraft, 800);
+      }
+      bEl.oninput = pEl.oninput = queueDraft;
+    }, html: head(w.title, '', ['write', ['Essays', 'المقالات']]) + '<div class="tw"><textarea class="tin" id="t-w-p" style="min-height:90px" placeholder="' + esc(L(['Plan: your main point, then three reasons.', 'الخطة: فكرتك الرئيسة ثم ثلاثة أسباب.'])) + '">' + esc(w.plan || '') + '</textarea><textarea class="tin" id="t-w-b" style="margin-top:8px;min-height:300px" placeholder="' + esc(L(['Draft', 'المسودة'])) + '">' + esc(w.text || '') + '</textarea><p id="t-w-c" style="color:var(--t2);font-size:13px;margin-top:4px">' + N(words(w.text)) + ' ' + esc(L(['words', 'كلمة'])) + '</p><div class="tsec">' + esc(L(['Before you finish', 'قبل أن تنتهي'])) + '</div>' + CHECK.map(function (c, i) { return '<button class="wcheck ' + (ch[i] ? 'on' : '') + '" data-a="t-w-check" data-i="' + i + '" data-w="' + id + '"><i></i><span>' + esc(L(c)) + '</span></button>'; }).join('') + '<button class="btn sec wide" style="margin-top:10px" data-a="t-w-share" data-w="' + id + '">' + esc(w.shared ? L(['Stop sharing with parents', 'أوقف المشاركة']) : L(['Share with parents for marking', 'شاركه مع الوالدين للتصحيح'])) + '</button>' + (w.mark ? '<div class="tsec">' + esc(L(['Feedback', 'الملاحظات'])) + '</div><p>' + esc(w.mark) + '</p>' : '') + '</div>' };
   };
   var CHECK = [['I answered the actual question', 'أجبت عن السؤال نفسه'], ['Each paragraph has one main point', 'لكل فقرة فكرة رئيسة'], ['I gave evidence and examples', 'قدمت أدلة وأمثلة'], ['I was fair to the other side', 'أنصفت الرأي الآخر'], ['I read it aloud and fixed what sounded wrong', 'قرأته بصوت عالٍ وأصلحت ما بدا خطأ']];
   function words(t) { return (t || '').trim().split(/\s+/).filter(Boolean).length; }
-  function saveDraft(i) { var w = (A.D().work || [])[i], b = $('#t-w-b'), p0 = $('#t-w-p'); if (!w || !b) return; if (w.text !== b.value && w.text && Math.abs(words(w.text) - words(b.value)) > 40) { w.versions = (w.versions || []).concat([{ t: A.now().getTime(), text: w.text }]).slice(-6); } w.text = b.value; w.plan = p0 ? p0.value : w.plan; w.t = A.now().getTime(); A.save(); }
+  function saveDraft(w, b, p0) { if (!w || !b || (w.text === b.value && w.plan === p0.value)) return; if (w.text !== b.value && w.text && Math.abs(words(w.text) - words(b.value)) > 40) { w.versions = (w.versions || []).concat([{ t: A.now().getTime(), text: w.text }]).slice(-6); } w.text = b.value; w.plan = p0.value; w.t = A.now().getTime(); A.save(); }
   A.acts['t-w-new'] = function () { var t = val('t-w-t'); if (!t) return; var d = A.D(); d.work = (d.work || []).concat([{ title: t, text: '', plan: '', t: A.now().getTime() }]); A.saveNow(); A.go('write/' + (d.work.length - 1)); };
   A.acts['t-w-check'] = function (t) { var w = A.D().work[+t.dataset.w], i = +t.dataset.i; w.check = w.check || []; w.check[i] = !w.check[i]; t.classList.toggle('on', w.check[i]); A.save(); };
-  A.acts['t-w-share'] = function (t) { var i = +t.dataset.w, w = A.D().work[i]; saveDraft(i); w.shared = !w.shared; A.saveNow(); A.rerender(); };
+  A.acts['t-w-share'] = function (t) { var i = +t.dataset.w, w = A.D().work[i]; saveDraft(w, $('#t-w-b'), $('#t-w-p')); w.shared = !w.shared; A.saveNow(); A.rerender(); };
   /* ---------- a timed paper: mixed, no hints; what goes wrong returns to the plan ---------- */
 
   /* ---------- new instruments ---------- */
   /* typed maths: negatives, decimals, fractions, algebra. Accepts anything equal in value, or any listed form. */
   function norm(s) { return String(s).replace(/\s+/g, '').replace(/−/g, '-').replace(/×/g, '*').toLowerCase(); }
+  function exprNum(s) {
+    if (/^-?(?:\d+\.?\d*|\.\d+)$/.test(s)) return Number(s);
+    var m = /^(-?(?:\d+\.?\d*|\.\d+))\/((?:\d+\.?\d*|\.\d+))$/.exec(s);
+    if (m && +m[2] !== 0) return Number(m[1]) / Number(m[2]);
+    return NaN;
+  }
   I.expr = function (c) {
     var s = c.step, val0 = '', keys = (s.keys || '789+x456-y123/^0.()').split(''), acc = (Array.isArray(s.a) ? s.a : [s.a]).map(norm);
     c.el.innerHTML = (s.html ? '<div class="pad-v">' + s.html + '</div>' : '') + (function () { if (!s.eq) return ''; var k = A.eqKind(s.eq); return k.code ? '<pre class="pad-code" dir="ltr">' + A.esc(k.eq.replace(/;\s*/g, '\n')) + '</pre>' : k.given ? '<div class="pad-given" dir="' + (k.rtl ? 'rtl' : 'ltr') + '">' + (k.rtl ? A.esc(A.num(k.text)) : A.bidi(A.esc(A.num(k.text)))) + '</div>' : '<div class="pad-eq" dir="ltr">' + A.esc(s.eq) + '</div>'; })() + '<div class="xout" aria-live="polite"><span>&nbsp;</span></div><div class="xkeys" dir="ltr">' + keys.map(function (k) { return '<button data-k="' + A.esc(k) + '">' + (k === '-' ? '−' : k === '/' ? '⁄' : A.esc(k)) + '</button>'; }).join('') + '<button class="w2" data-k="del" aria-label="' + A.esc(L(['Delete', 'حذف'])) + '">⌫</button><button class="w2 ok" data-k="ok" style="grid-column:span 4">' + A.esc(L(['Check', 'تحقق'])) + '</button></div>';
-    var out = A.$('.xout span', c.el);
-    A.$$('.xkeys button', c.el).forEach(function (b) { b.onclick = function () {
+    var out = A.$('.xout span', c.el), btns = A.$$('.xkeys button', c.el);
+    if (c.onReveal) c.onReveal(function () { out.textContent = String(Array.isArray(s.a) ? s.a[0] : s.a).replace(/-/g, '−'); btns.forEach(function (b) { b.disabled = true; }); });
+    btns.forEach(function (b) { b.onclick = function () {
       var k = b.dataset.k;
       if (k === 'del') val0 = val0.slice(0, -1);
       else if (k === 'ok') {
         if (!val0) return;
         var v = norm(val0), right = acc.indexOf(v) >= 0;
-        if (!right) { var n = parseFloat(v), m = /^(-?\d+)\/(\d+)$/.exec(v); if (m) n = +m[1] / +m[2]; right = !/[a-z(^]/.test(v) && !isNaN(n) && acc.some(function (a) { var x = parseFloat(a), mm = /^(-?\d+)\/(\d+)$/.exec(a); if (mm) x = +mm[1] / +mm[2]; return !isNaN(x) && !/[a-z(^]/.test(a) && Math.abs(x - n) < 1e-6; }); }
-        if (right) c.ok(); else { c.bad(); val0 = ''; }
+        if (!right) { var n = exprNum(v); right = !isNaN(n) && acc.some(function (a) { var x = exprNum(a); return !isNaN(x) && Math.abs(x - n) < 1e-6; }); }
+        if (right) { btns.forEach(function (x) { x.disabled = true; }); c.ok(); } else { c.bad(); val0 = ''; }
       } else if (val0.length < 16) val0 += k;
       out.innerHTML = A.esc(val0.replace(/-/g, '−')) || '&nbsp;';
     }; });
@@ -154,6 +170,7 @@
   'use strict';
   var A = window.A, $ = A.$, esc = A.esc, L = A.L, N = function (x) { return A.num(x); };
   A.V.marking = function () {
+    if (!A.grownOpen()) return A.grownGate();
     if (!A.P()) return { redirect: 'home' };
     var ch = A.S.profiles.filter(function (p) { return A.stage(p) >= 3; }), html = '';
     ch.forEach(function (p) {
@@ -161,21 +178,28 @@
       html += '<div class="tsec">' + esc(p.name) + '</div><div class="tl"><div class="ti"><span class="grow"><b>' + esc(L(['Goal this week', 'هدف هذا الأسبوع'])) + '</b><small>' + esc(wk.goal || L(['None set', 'لم يُحدد'])) + '</small></span></div>' + (papers.length ? '<div class="ti"><span class="grow"><b>' + esc(L(['Recent practice papers', 'آخر الاختبارات'])) + '</b><small>' + papers.map(function (x) { return esc(L(window.C.rooms[x.r].name)) + ' ' + N(x.p) + '%'; }).join(' · ') + '</small></span></div>' : '') + (p.exams || []).map(function (e) { return '<div class="ti"><span class="grow"><b>' + esc(e.title) + '</b><small>' + esc(e.date) + '</small></span></div>'; }).join('') + '</div>' +
         (shared.length ? shared.map(function (x) { return '<div class="card" style="margin-top:10px"><h3>' + esc(x.w.title) + '</h3><p style="white-space:pre-wrap;line-height:1.5;margin:8px 0">' + esc(x.w.text || '') + '</p><textarea class="tin" style="min-height:80px" data-mark="' + esc(p.id) + ':' + x.i + '" placeholder="' + esc(L(['Your feedback', 'ملاحظاتك'])) + '">' + esc(x.w.mark || '') + '</textarea></div>'; }).join('') : '<p style="color:var(--t2);font-size:13.5px;margin-top:8px">' + esc(L(['Written work appears here only when they share it.', 'تظهر الأعمال المكتوبة هنا فقط عند مشاركتها.'])) + '</p>');
     });
-    return { html: '<header class="th"><div class="grow"><a class="backp" href="#/parent">' + A.icon('back', 18) + '<span>' + esc(L(['Parents', 'الوالدان'])) + '</span></a><h1>' + esc(L(['Older students', 'الطلاب الأكبر'])) + '</h1><p>' + esc(L(['A summary, as you agreed together.', 'ملخص كما اتفقتم.'])) + '</p></div></header><div class="tw">' + html + '</div>', mount: function (v) { A.$$('[data-mark]', v).forEach(function (t) { t.onchange = function () { var q = t.dataset.mark.split(':'); A.D(q[0]).work[+q[1]].mark = t.value; A.saveNow(); }; }); } };
+    return { html: '<header class="th"><div class="grow"><a class="backp" href="#/parent">' + A.icon('back', 18) + '<span>' + esc(L(['Parents', 'الوالدان'])) + '</span></a><h1>' + esc(L(['Older students', 'الطلاب الأكبر'])) + '</h1><p>' + esc(L(['A summary, as you agreed together.', 'ملخص كما اتفقتم.'])) + '</p></div></header><div class="tw">' + html + '</div>', mount: function (v) {
+      A.$$('[data-mark]', v).forEach(function (t) {
+        t.onchange = function () {
+          if (!A.grownOpen()) { A.rerender(); return; }
+          var key = t.dataset.mark, i = key.lastIndexOf(':'), work = (A.D(key.slice(0, i)).work || [])[+key.slice(i + 1)];
+          if (!work || !work.shared) return;
+          work.mark = t.value; A.saveNow();
+        };
+      });
+    } };
   };
   /* recordings: what is kept on this device, and keeping more */
   function bytesText(n) { return A.num(Math.round(n / 1e6)) + ' MB'; }
   var parent2 = A.V.parent;
   A.V.parent = function (a, r) {
-    var v = parent2(a, r); if (!v || !v.html || !a || a[0] !== 'settings' || !A.N.has()) return v;
+    var v = parent2(a, r); if (!v || !v.html || (A.grownOpen && !A.grownOpen()) || !a || a[0] !== 'settings' || !A.N.has()) return v;
     var st = window.Voice.stats();
     v.html = v.html.replace(/<div class="wrap"[^>]*>/, function (w0) { return w0 + '<div class="card" style="margin-bottom:12px"><h3>' + esc(L(['Recordings on this device', 'التسجيلات على هذا الجهاز'])) + '</h3><p style="color:var(--t2);line-height:1.45;font-size:14px;margin:6px 0 10px">' + esc(L(['Al-Ḥuṣarī’s Juzʾ ʿAmma and all adhkār come with the app. Other recordings download once when first played, then stay here.', 'يأتي جزء عمّ بصوت الحصري وكل الأذكار مع التطبيق، وتُنزَّل التسجيلات الأخرى مرة واحدة ثم تبقى.'])) + '</p><p style="font-size:14px;margin-bottom:10px"><b>' + bytesText(st.bytes || 0) + '</b> · <span id="au-prog"></span></p><button class="btn sec wide" data-a="au-keep">' + esc(L(['Download Juzʾ ʿAmma extras now', 'نزّل إضافات جزء عمّ الآن'])) + '</button><button class="btn ghost wide" data-a="au-clear">' + esc(L(['Remove downloaded recordings', 'احذف التسجيلات المنزلة'])) + '</button></div>'; });
     return v;
   };
-  A.acts['au-keep'] = function () { window.QURAN.order.slice(0, 38).forEach(function (n) { window.Voice.keep(n); }); A.toast(L(['Downloading…', 'جارٍ التنزيل…'])); };
-  A.acts['au-clear'] = function () { A.N.call('audioClear'); A.rerender(); };
+  A.acts['au-keep'] = function () { if (A.grownOpen && !A.grownOpen()) return; window.QURAN.order.slice(0, 38).forEach(function (n) { window.Voice.keep(n); }); A.toast(L(['Downloading…', 'جارٍ التنزيل…'])); };
+  A.acts['au-clear'] = function () { if (A.grownOpen && !A.grownOpen()) return; A.N.call('audioClear'); A.rerender(); };
   window.__native = window.__native || {};
   window.__native.onAudioKeep = function (d, t, bad) { var e = $('#au-prog'); if (e) e.textContent = A.num(d) + ' / ' + A.num(t) + (bad ? ' · ' + L(['some failed', 'تعذر بعضها']) : ''); };
-  /* keep the sūrah being memorised ready, so it plays straight away tomorrow, even offline */
-  setTimeout(function () { try { if (!A.N.has() || !A.P()) return; var sa = window.Hifz.today().sabaq; if (sa && window.Voice.keep) window.Voice.keep(sa.s); } catch (e) { } }, 6000);
 })();

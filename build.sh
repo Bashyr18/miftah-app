@@ -60,6 +60,9 @@ node tools/strings.js | head -1
 
 echo "[2/8] stage web assets"
 "$PY" tools/bundle.py web "$OUT/assets/www"
+if [ -n "${MIFTAH_UPDATE_PUBLIC_KEY:-}" ]; then
+  printf '%s' "$MIFTAH_UPDATE_PUBLIC_KEY" > "$OUT/assets/update-public-key.txt"
+fi
 if [ "${FINAL:-0}" = "1" ]; then "$PY" tools/standalone.py "$OUT/assets/www" "dist/$APP.html" "dist/$APP-share.html"; fi
 
 echo "[3/8] aapt2 compile"

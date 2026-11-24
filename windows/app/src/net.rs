@@ -15,25 +15,33 @@ fn agent() -> &'static ureq::Agent {
         b.build()
     })
 }
+const MAX_DOWNLOAD: u64 = 256 * 1024 * 1024;
+
 pub fn text(url: &str, max: usize) -> Result<String, String> {
+    if !url.starts_with("https://") { return Err("https required".into()); }
     let r = agent().get(url).call().map_err(|e| e.to_string())?;
+    if !r.get_url().starts_with("https://") { return Err("https required".into()); }
     let mut s = String::new();
     r.into_reader().take(max as u64).read_to_string(&mut s).map_err(|e| e.to_string())?;
     Ok(s)
 }
 /* the whole file to `to`; progress runs from 0 to 1 when the size is known */
 pub fn download(url: &str, to: &Path, progress: &dyn Fn(f64)) -> Result<(), String> {
+    if !url.starts_with("https://") { return Err("https required".into()); }
     let r = agent().get(url).call().map_err(|e| e.to_string())?;
+    if !r.get_url().starts_with("https://") { return Err("https required".into()); }
     let len: u64 = r.header("Content-Length").and_then(|v| v.parse().ok()).unwrap_or(0);
-    let mut rd = r.into_reader();
+    if len > MAX_DOWNLOAD { return Err("too large".into()); }
+    let mut rd = r.into_reader().take(MAX_DOWNLOAD + 1);
     let mut o = fs::File::create(to).map_err(|e| e.to_string())?;
     let mut buf = vec![0u8; 256 * 1024];
     let mut got = 0u64;
     loop {
         let n = rd.read(&mut buf).map_err(|e| e.to_string())?;
         if n == 0 { break; }
-        o.write_all(&buf[..n]).map_err(|e| e.to_string())?;
         got += n as u64;
+        if got > MAX_DOWNLOAD { return Err("too large".into()); }
+        o.write_all(&buf[..n]).map_err(|e| e.to_string())?;
         if len > 0 { progress(got as f64 / len as f64); }
     }
     if len > 0 && got != len { return Err("short".into()); }

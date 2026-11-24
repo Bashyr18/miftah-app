@@ -183,8 +183,16 @@
 
   /* ---- pushes and surfaces ---- */
   SIMS.ramp = function (h, s, c, done) {
-    var surf = 0, S = null, x = 0, v = 0, st = 'ready', res = [];
+    var surf = 0, S = null, x = 0, v = 0, st = 'ready', res = {}, finished = false, doneT = 0;
     var SURF = [{ n: T('Carpet'), f: .985 - .06, c: ['#a1718e', '#6e4560'] }, { n: T('Wood'), f: .974, c: ['#c79660', '#7f5a30'] }, { n: T('Ice'), f: .996, c: ['#e3f6fd', '#9ad5ee'] }];
+    function checkDone() {
+      if (finished) return;
+      var ks = Object.keys(res);
+      if (ks.length < 2) return;
+      finished = true;
+      var mn = Math.min.apply(null, ks.map(Number)), mx = Math.max.apply(null, ks.map(Number));
+      done(res[mx] > res[mn] ? 'far' : 'near');
+    }
     S = sim(h, 190, function (g, W, H) {
       var sf = SURF[surf], wall = g.createLinearGradient(0, 0, 0, 140); wall.addColorStop(0, '#f2e7d2'); wall.addColorStop(1, '#d1bea0'); g.fillStyle = wall; g.fillRect(0, 0, W, 140);
       var fl = g.createLinearGradient(0, 140, 0, H); fl.addColorStop(0, sf.c[0]); fl.addColorStop(1, sf.c[1]); g.fillStyle = fl; g.fillRect(0, 140, W, 50);
@@ -192,13 +200,13 @@
       if (surf === 2) { g.strokeStyle = 'rgba(255,255,255,.7)'; g.lineWidth = 1; for (var pi = 0; pi < 7; pi++) { g.beginPath(); g.moveTo(40 + pi * 46, 150 + (pi % 3) * 12); g.lineTo(62 + pi * 46, 156 + (pi % 3) * 12); g.stroke(); } }
       var rp = g.createLinearGradient(0, 60, 84, 140); rp.addColorStop(0, '#d7a974'); rp.addColorStop(1, '#8a5c31'); g.fillStyle = rp; g.beginPath(); g.moveTo(0, 60); g.lineTo(84, 140); g.lineTo(0, 140); g.closePath(); g.fill();
       g.strokeStyle = '#6d4526'; g.lineWidth = 2; g.beginPath(); g.moveTo(0, 60); g.lineTo(84, 140); g.stroke();
-      if (st === 'go') { if (x < 84) { v += .34; x += v; } else { x += v; v *= sf.f; } if (v < .08 && x >= 84) { st = 'done'; res[surf] = Math.round(x); setTimeout(function () { if (Object.keys(res).length >= 2) done(res[2] > res[1] ? 'far' : 'near'); }, 200); } if (x > W - 14) { x = W - 14; st = 'done'; res[surf] = Math.round(x); if (Object.keys(res).length >= 2) done('far'); } }
+      if (st === 'go') { if (x < 84) { v += .34; x += v; } else { x += v; v *= sf.f; } if (v < .08 && x >= 84) { st = 'done'; res[surf] = Math.round(x); doneT = setTimeout(checkDone, 200); } if (x > W - 14) { x = W - 14; st = 'done'; res[surf] = Math.round(x); checkDone(); } }
       var bx = Math.max(6, x), by = x < 84 ? 60 + x * (80 / 84) - 12 : 128, bcx = bx + 6;
       g.fillStyle = 'rgba(0,0,0,.26)'; g.beginPath(); g.ellipse(bcx + 3, by + 12, 12, 3, 0, 0, 7); g.fill();
       var bg = g.createRadialGradient(bcx - 4, by - 5, 1, bcx, by, 13); bg.addColorStop(0, '#fff'); bg.addColorStop(.25, '#ee7b9a'); bg.addColorStop(1, '#9c2a4f'); g.fillStyle = bg; g.beginPath(); g.arc(bcx, by, 12, 0, 7); g.fill();
       txt(g, sf.n, W - 50, 172, surf === 2 ? '#123' : '#fff', 15);
     });
-    c.setCleanup(S.stop);
+    c.setCleanup(function () { clearTimeout(doneT); S.stop(); });
     var row = document.createElement('div'); row.className = 'sim-ctrl'; row.style.marginTop = '8px';
     row.innerHTML = SURF.map(function (x_, i) { return '<button class="tgl' + (i === 0 ? ' on' : '') + '" data-s="' + i + '">' + esc(x_.n) + '</button>'; }).join('') + '<button class="btn pri sm" data-go="1">' + esc(T('Let go')) + '</button>';
     h.appendChild(row);

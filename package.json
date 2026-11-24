@@ -1,8 +1,8 @@
 {
   "name": "miftah",
-  "version": "2.0.0",
+  "version": "2.4.1",
   "private": true,
-  "description": "Miftāḥ, an Islamic homeschool for children aged 2 to 18. Offline Android app built from a web core.",
+  "description": "Miftāḥ, an Islamic homeschool for children aged 2 to 18. Offline Android and Windows apps built from a web core.",
   "license": "MIT",
   "scripts": {
     "test": "node tools/test.js && node tools/smoke.js && node tools/teach-check.js && node tools/strings.js && node tools/bridge-check.js",

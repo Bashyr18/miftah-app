@@ -280,7 +280,7 @@
     var p = A.profile(pid), st = A.stage(p), left = 0, total = 0, w = WEIGHT[st] || WEIGHT[1], sum = 0;
     C.rooms[room].units.forEach(function (u) { if (u.band > st) return; u.skills.forEach(function (s) { if (s.band > st) return; total++; if (!M.met(s.id, pid)) left++; }); });
     Object.keys(w).forEach(function (r) { if (!(p.off || {})[r]) sum += w[r] * ((p.focus || {})[r] || 1); });
-    var schoolDays = Math.max(1, (p.days || [0, 1, 2, 3, 4, 5, 6]).length - 1), share = sum && w[room] ? w[room] * ((p.focus || {})[room] || 1) / sum : 0;
+    var schoolDays = Math.max(1, (p.days || Flow.WEEK).length - 1), share = sum && w[room] ? w[room] * ((p.focus || {})[room] || 1) / sum : 0;
     var perWeek = Flow.pace(pid).news * schoolDays * share;
     return { left: left, total: total, weeks: perWeek ? Math.ceil(left / perWeek) : null };
   };

@@ -12,12 +12,13 @@
   G.week = function (pid) {
     var d = A.D(pid), since = A.now().getTime() - 7 * DAY, seen = {}, list = [], ms = 0, sc = d.screen || {}, tm = d.time || {};
     (d.led || []).forEach(function (e) { if (e.k !== 'forge' || e.t < since) return; var sk = C.skill(e.s); if (!sk) return; var base = sk.part2 ? C.skill(sk.part2) : sk; if (!base || seen[base.id]) return; seen[base.id] = 1; list.push(base); });
-    for (var i = 0; i < 7; i++) { var k = A.day(new Date(A.now().getTime() - i * DAY)); ms += (sc[k] || 0) + (tm[k] || 0); }
+    var now = A.now();
+    for (var i = 0; i < 7; i++) { var k = A.day(new Date(now.getFullYear(), now.getMonth(), now.getDate() - i)); ms += (sc[k] || 0) + (tm[k] || 0); }
     var rooms = {}; list.forEach(function (s) { rooms[s.room] = (rooms[s.room] || 0) + 1; });
     return { list: list, mins: Math.round(ms / 60000), rooms: Object.keys(rooms).length };
   };
   function who(p, showName) { var y = A.stage(p) === 0 ? L(['Early years', 'الطفولة المبكرة']) : L(C.yearName(Flow.yearOf(p))); return showName ? p.name + ' · ' + y : L(['A learner in ', 'متعلم في ']) + y; }
-  function range() { var o = { day: 'numeric', month: 'short' }, loc = A.ar() ? 'ar-u-nu-arab' : 'en', a = new Date(A.now().getTime() - 6 * DAY).toLocaleDateString(loc, o), b = new Date(A.now()).toLocaleDateString(loc, o); return A.num(a + ' – ' + b); }
+  function range() { var o = { day: 'numeric', month: 'short' }, loc = A.ar() ? 'ar-u-nu-arab' : 'en', now = A.now(), a = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 6).toLocaleDateString(loc, o), b = now.toLocaleDateString(loc, o); return A.num(a + ' – ' + b); }
   function hueOf(room) { var e = document.createElement('i'); e.className = 'h-' + ((C.rooms[room] || {}).hue || 'gold'); e.style.display = 'none'; document.body.appendChild(e); var v = getComputedStyle(e).getPropertyValue('--h2').trim() || '#d9b26f'; e.remove(); return v; }
 
   /* ---------- drawing a card ---------- */
@@ -141,30 +142,40 @@
     });
   };
   G.keep = function (ch) { var list = A.S.challenges || []; if (!list.some(function (x) { return x.seed === ch.seed; })) list = list.concat([{ room: ch.room, y: +ch.y, n: Math.min(20, Math.max(3, +ch.n || 10)), seed: +ch.seed, made: ch.made, got: A.day(), res: {} }]).slice(-30); A.S.challenges = list; A.saveNow(); };
-  G.valid = function (o) { return o && o.miftahChallenge === 1 && C.rooms[o.room] && years(o.room).indexOf(+o.y) >= 0 && isFinite(+o.seed); };
+  G.valid = function (o) { return o && o.miftahChallenge === 1 && Object.prototype.hasOwnProperty.call(C.rooms, o.room) && years(o.room).indexOf(+o.y) >= 0 && isFinite(+o.seed); };
   /* a pack arrives: say what it is, and let a parent choose who takes it */
   G.arrived = function (o) {
-    G.keep(o);
-    A.go('parent');
-    setTimeout(function () {
-      A.sheet(L(['A challenge from your group', 'تحدٍّ من مجموعتك']), '<div class="grp-in"><b>' + esc(L(C.rooms[o.room].name)) + ' · ' + esc(L(C.yearName(+o.y))) + '</b><p>' + esc(L(['Ten questions, the same for every child in the group. No hints, one try each.', 'عشرة أسئلة، هي نفسها لكل أطفال المجموعة. بلا تلميح، ومحاولة واحدة لكل سؤال.'])) + '</p><small>' + esc(L(['Who will take it?', 'من سيأخذه؟'])) + '</small><div class="lst">' + A.S.profiles.map(function (p) { return '<button class="li" data-pid="' + p.id + '"><span class="grow"><b>' + esc(p.name) + '</b><small>' + esc(who(p, false)) + '</small></span>' + A.icon('next', 16) + '</button>'; }).join('') + '</div></div>', function (sh) {
-        $$('[data-pid]', sh).forEach(function (b) { b.onclick = function () { A.closeSheet(); A.S.cur = b.dataset.pid; A.saveNow(); A.go('challenge/' + o.seed); }; });
+    var open = function () {
+      G.keep(o);
+      A.sheet(L(['A challenge from your group', 'تحدٍّ من مجموعتك']), '<div class="grp-in"><b>' + esc(L(C.rooms[o.room].name)) + ' · ' + esc(L(C.yearName(+o.y))) + '</b><p>' + esc(L(['Each learner gets one attempt. Leaving early ends it.', 'لكل متعلّم محاولة واحدة، والخروج مبكرًا ينهيها.'])) + '</p><small>' + esc(L(['Who will take it?', 'من سيأخذه؟'])) + '</small><div class="lst">' + A.S.profiles.map(function (p) { return '<button class="li" data-pid="' + esc(p.id) + '"><span class="grow"><b>' + esc(p.name) + '</b><small>' + esc(who(p, false)) + '</small></span>' + A.icon('next', 16) + '</button>'; }).join('') + '</div></div>', function (sh) {
+        $$('[data-pid]', sh).forEach(function (b) { b.onclick = function () { A.closeSheet(); A.S.cur = b.dataset.pid; A.saveNow(); A.go('challenge/' + (+o.seed)); }; });
       });
-    }, 300);
+    };
+    if (A.grownOpen && !A.grownOpen() && A.askGrown) A.askGrown(open); else open();
   };
 
   /* ---------- taking a challenge ---------- */
   A.V.challenge = function (args) {
     var ch = (A.S.challenges || []).filter(function (x) { return String(x.seed) === String(args[0]); })[0], p = A.P();
-    if (!ch || !p) return { redirect: 'home' };
+    if (!ch || !p || !Object.prototype.hasOwnProperty.call(C.rooms, ch.room)) return { redirect: 'home' };
     var R = C.rooms[ch.room];
-    return { bare: true, hue: R.hue, html: '<div id="t-ch"></div>', mount: function (v) {
-      var steps = G.questions(ch, p.id); if (!steps.length) { A.go('home'); return; }
-      window.Player.start($('#t-ch', v), { steps: steps, hue: R.hue, rng: A.rng(ch.seed + 1), mode: 'review', exam: true, label: ['Group challenge', 'تحدي المجموعة'], onExit: function () { A.go('home'); }, onDone: function (res, host) {
-        var r = { ok: res.soloOk, n: res.solo, t: A.now().getTime() }; ch.res = ch.res || {}; if (!ch.res[p.id]) ch.res[p.id] = r; A.saveNow();
+    return { bare: true, hue: R.hue, html: '<div id="t-ch"></div>', unmount: function () { window.Player.stop(); Voice.stop(); }, mount: function (v) {
+      var host = $('#t-ch', v), results = ch.res = ch.res || {};
+      function showResult(r) {
+        if (r.incomplete) {
+          host.innerHTML = '<div class="tres"><h2>' + esc(L(['Attempt ended early', 'انتهت المحاولة مبكرًا'])) + '</h2><a class="btn ghost wide" href="#/home">' + esc(L(['Done', 'تم'])) + '</a></div>';
+          return;
+        }
         host.innerHTML = '<div class="tres ok"><div class="tres-top"><span class="tres-art">' + A.art('star', 56) + '</span><span class="tres-sc"><b>' + N(r.ok) + '<i>/' + N(r.n) + '</i></b><small>' + esc(L(['right, first try', 'صحيحة من أول مرة'])) + '</small></span></div><small class="tres-k">' + esc(L(['Group challenge', 'تحدي المجموعة'])) + '</small><h2>' + esc(L(R.name)) + ' · ' + esc(L(C.yearName(ch.y))) + '</h2><p>' + esc(L(['A grown-up can share this result with your group.', 'يستطيع أحد الكبار مشاركة هذه النتيجة مع مجموعتك.'])) + '</p><button class="btn pri wide" id="ch-share">' + esc(L(['Share the result', 'شارك النتيجة'])) + '</button><button class="btn ghost wide" id="ch-done">' + esc(L(['Done', 'تم'])) + '</button></div>';
         $('#ch-done', host).onclick = function () { A.go('home'); };
         $('#ch-share', host).onclick = function () { A.askGrown(function () { fontsReady().then(function () { preview(G.resultCanvas(ch, p.id, r, !!A.S.cardNames), L(['Result card', 'بطاقة النتيجة']), L(['Our result in the group challenge.', 'نتيجتنا في تحدي المجموعة.']), 'Miftah-challenge.png'); }); }); };
+      }
+      if (Object.prototype.hasOwnProperty.call(results, p.id)) { showResult(results[p.id]); return; }
+      var steps = G.questions(ch, p.id); if (!steps.length) { A.go('home'); return; }
+      results[p.id] = { incomplete: true, t: A.now().getTime() }; A.saveNow();
+      window.Player.start(host, { steps: steps, hue: R.hue, rng: A.rng(ch.seed + 1), mode: 'review', exam: true, label: ['Group challenge', 'تحدي المجموعة'], onExit: function () { A.go('home'); }, onDone: function (res) {
+        var r = results[p.id] = { ok: res.soloOk, n: res.solo, t: A.now().getTime() };
+        A.saveNow(); showResult(r);
       } });
     } };
   };
@@ -172,9 +183,9 @@
   /* ---------- the parent's group sheet ---------- */
   G.open = function () {
     var list = (A.S.challenges || []).slice().reverse();
-    var rows = list.slice(0, 6).map(function (ch) {
-      var done = A.S.profiles.filter(function (p) { return ch.res && ch.res[p.id]; }).map(function (p) { return esc(p.name) + ' ' + N(ch.res[p.id].ok) + '/' + N(ch.res[p.id].n); }).join(' · ');
-      return '<button class="li" data-seed="' + ch.seed + '"><span class="grow"><b>' + esc(L(C.rooms[ch.room].name)) + ' · ' + esc(L(C.yearName(ch.y))) + '</b><small>' + (done || esc(L(['Not taken yet', 'لم يُؤخذ بعد']))) + '</small></span>' + A.icon('next', 16) + '</button>';
+    var rows = list.filter(function (ch) { return Object.prototype.hasOwnProperty.call(C.rooms, ch.room); }).slice(0, 6).map(function (ch) {
+      var done = A.S.profiles.filter(function (p) { return ch.res && Object.prototype.hasOwnProperty.call(ch.res, p.id); }).map(function (p) { var r = ch.res[p.id]; return esc(p.name) + ' ' + (r.incomplete ? esc(L(['Attempt ended early', 'انتهت المحاولة مبكرًا'])) : N(r.ok) + '/' + N(r.n)); }).join(' · ');
+      return '<button class="li" data-seed="' + esc(ch.seed) + '"><span class="grow"><b>' + esc(L(C.rooms[ch.room].name)) + ' · ' + esc(L(C.yearName(ch.y))) + '</b><small>' + (done || esc(L(['Not taken yet', 'لم يُؤخذ بعد']))) + '</small></span>' + A.icon('next', 16) + '</button>';
     }).join('');
     A.sheet(L(['Your homeschool group', 'مجموعتك المنزلية']), '<div class="grp"><p>' + esc(L(['Share with a WhatsApp or Telegram group you already belong to. No account, and nothing leaves this phone unless you send it.', 'شارك مع مجموعة واتساب أو تيليجرام تنتمي إليها. بلا حساب، ولا يخرج شيء من هذا الهاتف إلا ما ترسله أنت.'])) + '</p><div class="grp-b"><button class="tl-b" id="grp-week">' + A.icon('star', 24) + '<span>' + esc(L(['Weekly card', 'بطاقة الأسبوع'])) + '</span></button><button class="tl-b" id="grp-ch">' + A.icon('target', 24) + '<span>' + esc(L(['Send a challenge', 'أرسل تحديًا'])) + '</span></button></div>' + (rows ? '<h4>' + esc(L(['Challenges', 'التحديات'])) + '</h4><div class="lst">' + rows + '</div>' : '<small class="grp-hint">' + esc(L(['When someone sends a challenge, tap the file in the chat and open it with Miftāḥ.', 'حين يرسل أحدهم تحديًا، انقر الملف في المحادثة وافتحه بتطبيق مفتاح.'])) + '</small>') + '</div>', function (sh) {
       $('#grp-week', sh).onclick = function () { A.closeSheet(); setTimeout(G.weekly, 220); };
