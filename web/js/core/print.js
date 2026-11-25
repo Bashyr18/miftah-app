@@ -21,7 +21,7 @@
     o = o || {};
     var who = '<div class="pp-who"><span>' + esc(L(['Name', 'الاسم'])) + '<u>' + esc(ctx.p.name) + '</u></span><span>' + esc(L(['Date', 'التاريخ'])) + '<u></u></span>' + (o.score ? '<span class="pp-sc">' + esc(L(['Score', 'النتيجة'])) + '<u>/ ' + A.num(o.score) + '</u></span>' : '') + '</div>';
     var head = o.bare ? '' : '<header class="pp-h"><div class="pp-ti">' + (ctx.kick ? '<small>' + esc(ctx.kick) + '</small>' : '') + '<b>' + esc(title) + '</b></div>' + who + '</header>';
-    return '<section class="pp">' + head + (note ? '<div class="pp-n">' + esc(note) + '</div>' : '') + '<div class="pp-b' + (o.cls ? ' ' + o.cls : '') + '">' + body + '</div>' + (o.nofoot ? '' : foot(ctx)) + '</section>';
+    return '<section class="pp" dir="' + (A.ar() ? 'rtl' : 'ltr') + '">' + head + (note ? '<div class="pp-n">' + esc(note) + '</div>' : '') + '<div class="pp-b' + (o.cls ? ' ' + o.cls : '') + '">' + body + '</div>' + (o.nofoot ? '' : foot(ctx)) + '</section>';
   }
   /* blank cards that finish a page, so a short set still cuts into whole, even cards */
   function padCells(cells, per) { var out = cells.slice(); while (out.length % per) out.push('<div class="cell own"><small>' + esc(L(['Make your own', 'اصنع بطاقتك'])) + '</small></div>'); return out; }
@@ -341,6 +341,52 @@
     var n = res.html.split(PG).length - 1, i = 0;
     res.html = res.html.split(PG).reduce(function (a, b) { return a + (n > 1 ? A.num(++i) + ' / ' + A.num(n) : '') + b; });
     res.pages = Math.max(1, n); res.seed = sd; res.code = code; res.kind = id; res.title = L(k.title); res.use = k.use || 'keep'; return res;
+  };
+  var SAFE_Q_TAGS = { B: 1, I: 1, SPAN: 1, DIV: 1, SUP: 1, SUB: 1, BR: 1, SMALL: 1, EM: 1, STRONG: 1, SVG: 1, PATH: 1, CIRCLE: 1, RECT: 1, LINE: 1, POLYGON: 1, POLYLINE: 1, G: 1, TEXT: 1 };
+  var SAFE_Q_ATTRS = { class: 1, dir: 1, lang: 1, style: 1, viewbox: 1, width: 1, height: 1, d: 1, fill: 1, stroke: 1, 'stroke-width': 1, 'stroke-linecap': 1, 'stroke-linejoin': 1, 'stroke-dasharray': 1, cx: 1, cy: 1, r: 1, x: 1, y: 1, x1: 1, y1: 1, x2: 1, y2: 1, points: 1, 'text-anchor': 1, 'font-size': 1, 'font-weight': 1, 'aria-hidden': 1 };
+  function sanitizeQHtml(html) {
+    var root = document.createElement('div');
+    root.innerHTML = String(html || '');
+    (function walk(node) {
+      Array.prototype.slice.call(node.childNodes).forEach(function (ch) {
+        if (ch.nodeType === 3) return;
+        if (ch.nodeType !== 1 || !SAFE_Q_TAGS[ch.tagName.toUpperCase()]) { node.removeChild(ch); return; }
+        Array.prototype.slice.call(ch.attributes).forEach(function (at) {
+          var nm = at.name.toLowerCase(), val = String(at.value || '');
+          if (!SAFE_Q_ATTRS[nm] || /^on/i.test(nm) || /javascript:|data:/i.test(val) || (nm === 'style' && /url\s*\(|expression\s*\(|@import/i.test(val))) ch.removeAttribute(at.name);
+        });
+        walk(ch);
+      });
+    })(root);
+    return root.innerHTML;
+  }
+  /* rebuild a saved sheet faithfully: pins language & creation date, and replays stored sh.q through a DOM allowlist */
+  Print.renderSheet = function (sh, pid) {
+    if (!sh) return null;
+    var k = K[sh.kind], p = A.profile(pid); if (!k || !p) return null;
+    var prevLang = A.S.lang, prevNow = A.now;
+    if (sh.lang && (sh.lang === 'en' || sh.lang === 'ar')) A.S.lang = sh.lang;
+    var stamp = sh.madeAt || sh.t;
+    if (stamp) A.now = function () { return new Date(stamp); };
+    try {
+      if (sh.q && sh.q.length) {
+        var g = GROUPS.filter(function (x) { return x[0] === k.group; })[0];
+        var ctx = { pid: pid, p: p, rng: A.rng(sh.seed || 1), seed: sh.seed || 1, code: sh.id, kind: sh.kind, kick: g ? T(g[1]) : '', opts: sh.opts || {} };
+        var qs = sh.q.map(function (x) { return { s: x.s, a: x.a, h: sanitizeQHtml(x.h) }; });
+        var work = function (q) { var m = (C.skill(q.s) || {}).room === 'math'; return m ? 'sq' : /class="blank"/.test(q.h) ? 'ln' : ''; };
+        var nq = qs.length, two = nq > 8 || (nq > 6 && qs.some(work));
+        var note = T('No rush, and no help yet. A grown-up marks it afterwards.') + ' ' + L(['The small box is for the tick.', 'المربع الصغير لعلامة التصحيح.']);
+        var title = L(k.title);
+        var html = fitQs(ctx, title, note, qs, work, two);
+        var n = html.split(PG).length - 1, i = 0;
+        html = html.split(PG).reduce(function (a, b) { return a + (n > 1 ? A.num(++i) + ' / ' + A.num(n) : '') + b; });
+        return { html: html, pages: Math.max(1, n), seed: sh.seed, code: sh.id, kind: sh.kind, title: title, use: k.use || 'mark', q: sh.q };
+      }
+      return Print.make(sh.kind, pid, sh.seed, sh.opts || {});
+    } finally {
+      A.S.lang = prevLang;
+      A.now = prevNow;
+    }
   };
   /* every printed sheet is kept in a log: practice waits to be marked (then it is evidence), worksheets wait to be ticked done,
      and the rest are simply remembered, so a grown-up can see what went on paper and print the same version again */

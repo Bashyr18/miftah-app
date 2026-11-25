@@ -569,7 +569,7 @@
       '<div class="dk-zoom"><span class="grow"><b>' + esc(L(['Size of everything', 'حجم كل شيء'])) + '</b><small>' + kbd('Ctrl') + kbd('+') + ' / ' + kbd('−') + '</small></span><input type="range" min="70" max="200" step="10" value="' + z + '" id="pc-z" aria-label="' + esc(L(['Size', 'الحجم'])) + '"><output id="pc-zo">' + A.num(z) + '%</output></div>' +
       '<div class="dk-row2"><button class="btn ghost" id="pc-full">' + ic('full', 18) + '<span>' + esc(L(['Full screen', 'ملء الشاشة'])) + '</span></button><button class="btn ghost" id="pc-keys">' + ic('kbd', 18) + '<span>' + esc(L(['Keyboard shortcuts', 'اختصارات لوحة المفاتيح'])) + '</span></button></div></section>';
     body += '<section class="card"><h3>' + esc(L(['Your family’s data', 'بيانات عائلتك'])) + '</h3><p class="dk-note">' + esc(L(['Everything stays on this computer, in one folder you can see.', 'يبقى كل شيء على هذا الحاسوب في مجلد واحد تراه.'])) + '</p><button class="btn ghost dk-open" id="pc-data">' + ic('folder', 18) + '<span>' + esc(L(['Show the folder', 'أظهر المجلد'])) + '</span></button>' +
-      '<div class="li"><span class="grow"><b>' + esc(L(['Recitations kept', 'التلاوات المحفوظة'])) + '</b><small>' + (au.files ? bytes(au.bytes || 0) : esc(L(['None yet', 'لا شيء بعد']))) + '</small></span></div>' +
+      '<div class="li"><span class="grow"><b>' + esc(L(['Recitations kept', 'التلاوات المحفوظة'])) + '</b><small>' + (au.files ? bytes(au.bytes || 0) : esc(L(['None yet', 'لا شيء بعد']))) + '</small></span>' + (au.files ? '<button class="btn ghost sm" id="pc-au-clr">' + esc(L(['Clear', 'مسح'])) + '</button>' : '') + '</div>' +
       '<div class="li"><span class="grow"><b>' + esc(L(['Printables', 'المطبوعات'])) + '</b><small>' + esc(L(['Documents › Miftah › Printables', 'المستندات › Miftah › Printables'])) + '</small></span><button class="btn ghost sm" id="pc-prints">' + esc(L(['Open', 'افتح'])) + '</button></div></section></div>';
     if (window.Upd && Upd.can()) body += Upd.card('pc');
     var bk = i.backups || [];
@@ -587,6 +587,7 @@
         $('#pc-keys', v).onclick = Desk.keys;
         $('#pc-data', v).onclick = function () { B.openFolder('data'); };
         $('#pc-prints', v).onclick = function () { B.openFolder('printables'); };
+        var acl = $('#pc-au-clr', v); if (acl) acl.onclick = function () { if (acl.dataset.arm !== '1') { acl.dataset.arm = '1'; acl.textContent = L(['Tap again', 'انقر مجددًا']); return; } if (window.Voice && Voice.clearAudio) Voice.clearAudio(); else B.audioClear(); A.toast(L(['Cleared', 'تم المسح'])); A.rerender(); };
         $('#pc-bkdir', v).onclick = function () { B.openFolder('backups'); };
         $$('[data-bk]', v).forEach(function (b) { b.onclick = function () { restore(b.dataset.bk); }; });
       }

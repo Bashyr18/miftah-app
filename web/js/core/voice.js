@@ -19,16 +19,83 @@
     return A.N.has() ? 'audio/' + dir + '/' + file : V.web[dir] + file;
   };
   /* before a sūrah is needed, keep its recordings on the device */
-  V.keep = function (surah) {
-    if (!A.N.has() || !window.QURAN.q[surah]) return;
-    var d3 = function (n) { return ('00' + n).slice(-3); }, list = [], r = A.S.reciter || 'h', su = window.QURAN.q[surah];
+  V.isBundled = function (surah, r) { r = r || A.S.reciter || 'h'; return r === 'h' && (surah === 1 || surah >= 78); };
+  function surahFiles(surah, r) {
+    var su = window.QURAN && window.QURAN.q[surah]; if (!su) return [];
+    var d3 = function (n) { return ('00' + n).slice(-3); }, list = [];
+    r = r || A.S.reciter || 'h';
     su.v.forEach(function (v) {
-      if (!(r === 'h' && (surah === 1 || surah >= 78))) list.push(r + '/' + d3(surah) + d3(v[0]) + '.mp3');
+      if (!V.isBundled(surah, r)) list.push(r + '/' + d3(surah) + d3(v[0]) + '.mp3');
       V.words(v[1]).forEach(function (w, i) { list.push('w/' + d3(surah) + '_' + d3(v[0]) + '_' + d3(i + 1) + '.mp3'); });
     });
+    return list;
+  }
+  V._autoKept = Object.create(null);
+  V._manualBatch = null;
+  V.keep = function (surah, explicit) {
+    if (!A.N.has() || !window.QURAN.q[surah]) return 0;
+    var r = A.S.reciter || 'h', key = r + ':' + surah;
+    if (!explicit) {
+      if (V.skipAutoKeep || V._autoKept[key]) return 0;
+      var curSt = V.surahState(surah, V.stats(), r);
+      if (curSt === 'bundled' || curSt === 'saved') { V._autoKept[key] = 1; return 0; }
+      V._autoKept[key] = 1;
+    } else {
+      V.skipAutoKeep = false;
+      V._autoKept[key] = 1;
+    }
+    var list = surahFiles(surah);
+    if (!list.length) return 0;
+    if (explicit) V._manualBatch = { tag: 's:' + surah, total: list.length };
     A.N.call('audioKeep', JSON.stringify(list));
+    return list.length;
+  };
+  V.keepMany = function (surahs) {
+    if (!A.N.has() || !Array.isArray(surahs)) return 0;
+    V.skipAutoKeep = false;
+    var list = [];
+    surahs.forEach(function (s) { list = list.concat(surahFiles(s)); });
+    if (!list.length) return 0;
+    V._manualBatch = { tag: 'many', total: list.length };
+    A.N.call('audioKeep', JSON.stringify(list));
+    return list.length;
   };
   V.stats = function () { try { return JSON.parse(A.N.call('audioStats') || '{}'); } catch (e) { return {}; } };
+  V.surahCoverage = function (surah, stats, r) {
+    r = r || A.S.reciter || 'h';
+    var su = window.QURAN && window.QURAN.q[surah];
+    if (!su) return { verses: 0, totalVerses: 0, words: 0, totalWords: 0, versesReady: false, wordsReady: false, state: 'online' };
+    var totalVerses = su.v.length, totalWords = 0;
+    su.v.forEach(function (v) { totalWords += V.words(v[1]).length; });
+    var bundled = V.isBundled(surah, r);
+    var verses = bundled ? totalVerses : ((stats && stats.counts && stats.counts[r] && stats.counts[r][String(surah)]) || 0);
+    var words = (stats && stats.counts && stats.counts.w && stats.counts.w[String(surah)]) || 0;
+    var versesReady = verses >= totalVerses, wordsReady = totalWords === 0 || words >= totalWords;
+    var state = (versesReady && wordsReady) ? (bundled ? 'bundled' : 'saved') : versesReady ? 'verses' : (verses > 0 || words > 0) ? 'partial' : 'online';
+    return { verses: Math.min(verses, totalVerses), totalVerses: totalVerses, words: Math.min(words, totalWords), totalWords: totalWords, versesReady: versesReady, wordsReady: wordsReady, bundled: bundled, state: state };
+  };
+  V.surahState = function (surah, stats, r) { return V.surahCoverage(surah, stats, r).state; };
+  V.clearAudio = function () {
+    V.skipAutoKeep = true;
+    V._autoKept = Object.create(null);
+    V._manualBatch = null;
+    if (A.N.has()) A.N.call('audioClear');
+  };
+  V._keepListeners = [];
+  V.onKeep = function (fn) { V._keepListeners.push(fn); return function () { V._keepListeners = V._keepListeners.filter(function (x) { return x !== fn; }); }; };
+  window.__native.onAudioKeep = function (done, total, bad) {
+    var batch = V._manualBatch;
+    var match = batch && batch.total === total ? batch : null;
+    var el = A.$ && A.$('#qa-prog');
+    if (el && match) {
+      el.hidden = false;
+      el.textContent = done >= total
+        ? (bad ? A.L(['Downloaded with ' + bad + ' missing. Try again when online.', 'تم التنزيل مع تعذّر ' + A.num(bad) + '. أعد المحاولة عند توفر الإنترنت.']) : A.L(['Downloaded for offline use', 'تم التنزيل للاستماع دون إنترنت']))
+        : A.L(['Downloading… ', 'جارٍ التنزيل… ']) + A.num(done) + ' / ' + A.num(total);
+    }
+    V._keepListeners.slice().forEach(function (fn) { try { fn(done, total, bad, match ? match.tag : null); } catch (e) { } });
+    if (match && done >= total) V._manualBatch = null;
+  };
   V.available = function () { return window.MIFTAH_NO_AUDIO !== true; };
 
   V.refreshVoices = function () {

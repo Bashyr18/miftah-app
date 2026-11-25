@@ -19,7 +19,7 @@
   Print.toScreen = function (res, pid) {
     Print.keep(res, pid);
     var sh = (A.D(pid).sheets || []).filter(function (x) { return x.id === res.code; })[0]; if (!sh) return null;
-    sh.scr = A.now().getTime(); delete sh.sub; A.saveNow(); return sh;
+    sh.scr = A.now().getTime(); sh.madeAt = sh.madeAt || sh.scr; sh.lang = A.S.lang; delete sh.sub; A.saveNow(); return sh;
   };
   Print.forChild = function (x) { return !!(x && x.scr && !x.sub); };
   /* an on-screen sheet waits for the parent only once the child has finished it */
@@ -54,11 +54,78 @@
   }
   function hit(st, x, y, r) { var p = st.p; for (var i = 0; i < p.length; i += 2) { var dx = p[i] - x, dy = p[i + 1] - y; if (dx * dx + dy * dy < r * r) return true; } return false; }
 
+  /* vector SVG overlay for printing/PDF: DOM-built (never interpolated from untrusted strokes), matching full 210x297mm A4 bounds */
+  var SVG_NS = 'http://www.w3.org/2000/svg';
+  function makeStrokeEl(st) {
+    if (!st || !Array.isArray(st.p) || st.p.length < 2 || st.p.length % 2 !== 0) return null;
+    var p = st.p;
+    for (var j = 0; j < p.length; j++) if (typeof p[j] !== 'number' || !isFinite(p[j])) return null;
+    var col = Object.prototype.hasOwnProperty.call(COLORS, st.c) ? COLORS[st.c] : COLORS.k;
+    var w = typeof st.w === 'number' && isFinite(st.w) ? Math.max(.5, Math.min(20, st.w)) : 2.4;
+    var d = 'M' + p[0] + ' ' + p[1];
+    if (p.length === 2) d += 'L' + (p[0] + .1) + ' ' + (p[1] + .1);
+    for (var i = 2; i < p.length - 2; i += 2) {
+      var mx = ((p[i] + p[i + 2]) / 2).toFixed(1), my = ((p[i + 1] + p[i + 3]) / 2).toFixed(1);
+      d += 'Q' + p[i] + ' ' + p[i + 1] + ' ' + mx + ' ' + my;
+    }
+    if (p.length >= 4) d += 'L' + p[p.length - 2] + ' ' + p[p.length - 1];
+    var el = document.createElementNS(SVG_NS, 'path');
+    el.setAttribute('d', d);
+    el.setAttribute('fill', 'none');
+    el.setAttribute('stroke', col);
+    el.setAttribute('stroke-width', w.toFixed(2));
+    el.setAttribute('stroke-linecap', 'round');
+    el.setAttribute('stroke-linejoin', 'round');
+    if (st.c === 'r') el.setAttribute('opacity', '.92');
+    return el;
+  }
+  function buildInkSvg(inkList, mkList) {
+    var all = (Array.isArray(inkList) ? inkList : []).concat(Array.isArray(mkList) ? mkList : []);
+    var svg = document.createElementNS(SVG_NS, 'svg');
+    var added = 0;
+    all.forEach(function (st) { var el = makeStrokeEl(st); if (el) { svg.appendChild(el); added++; } });
+    if (!added) return null;
+    svg.setAttribute('class', 'ink-over');
+    svg.setAttribute('viewBox', '0 0 1000 1414.3');
+    svg.setAttribute('preserveAspectRatio', 'xMinYMin meet');
+    svg.setAttribute('aria-hidden', 'true');
+    return svg;
+  }
+  Ink.renderHtml = function (sh, pid) {
+    if (!sh) return null;
+    var res = Print.renderSheet ? Print.renderSheet(sh, pid) : Print.make(sh.kind, pid, sh.seed, sh.opts || {});
+    if (!res) return null;
+    var tmp = document.createElement('div'); tmp.innerHTML = res.html;
+    var pages = $$('.pp', tmp);
+    if (!pages.length) return res.html;
+    pages.forEach(function (pg, i) {
+      if (i === 0) {
+        if (sh.marked && sh.q) {
+          var sc = $('.pp-sc u', pg);
+          if (sc) { sc.textContent = A.num(sh.right) + ' / ' + A.num(sh.q.length); sc.style.color = COLORS.r; }
+        }
+        var who = $$('.pp-who u', pg);
+        if (who[1] && !who[1].textContent.trim() && (sh.sub || sh.t)) {
+          who[1].textContent = new Date(sh.sub || sh.t).toLocaleDateString(A.ar() ? 'ar-u-nu-arab' : 'en', { day: 'numeric', month: 'short', year: 'numeric' });
+        }
+      }
+      var svg = buildInkSvg((sh.ink || {})[i], (sh.mk || {})[i]);
+      if (svg) pg.appendChild(svg);
+    });
+    return '<style>.pp .ink-over{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:2}</style>' + tmp.innerHTML;
+  };
+  Ink.print = function (sh, pid) {
+    var html = Ink.renderHtml(sh, pid);
+    if (!html) { A.toast(L(['This sheet can no longer be made.', 'لم يعد بالإمكان صنع هذه الورقة.'])); return false; }
+    Print.send(html, 'Miftah-' + (sh.id || 'sheet'));
+    return true;
+  };
+
   /* the viewer: one page at a time, fitted to the space, with a layer to write on.
      mode 'child' writes in pencil colours, 'parent' marks in red, 'view' only looks. */
   Ink.mount = function (host, sh, pid, mode, hooks) {
     hooks = hooks || {};
-    var res = Print.make(sh.kind, pid, sh.seed, sh.opts || {}); if (!res) { host.innerHTML = '<p class="ref">' + esc(L(['This sheet can no longer be made.', 'لم يعد بالإمكان صنع هذه الورقة.'])) + '</p>'; return function () { }; }
+    var res = Print.renderSheet ? Print.renderSheet(sh, pid) : Print.make(sh.kind, pid, sh.seed, sh.opts || {}); if (!res) { host.innerHTML = '<p class="ref">' + esc(L(['This sheet can no longer be made.', 'لم يعد بالإمكان صنع هذه الورقة.'])) + '</p>'; return function () { }; }
     var tmp = document.createElement('div'); tmp.innerHTML = res.html;
     var pages = $$('.pp', tmp).map(function (e) { return e.outerHTML; }); if (!pages.length) pages = [res.html];
     var mine = mode === 'parent' ? 'mk' : 'ink', edit = mode === 'child' || mode === 'parent';
@@ -192,9 +259,10 @@
     var state = open ? '' : sh.marked ? L(['Marked', 'صُحّحت']) + ' · ' + A.num(sh.right) + ' / ' + A.num(sh.q.length) : sh.done ? L(['Checked', 'تمت المراجعة']) : L(['Sent to your grown-up', 'أُرسلت إلى الكبير']);
     return {
       bare: true,
-      html: '<div class="ink-v"><header class="ink-h"><a class="ink-back" href="' + backHref + '" aria-label="' + esc(L(['Back', 'رجوع'])) + '">' + A.icon('back', 20) + '</a><div class="grow"><b>' + esc(Print.titleOf(sh)) + '</b><small>' + esc(open ? L(['Write on the page. It saves as you go.', 'اكتب على الصفحة. تُحفظ أولًا بأول.']) : state) + '</small></div>' + (open ? '<button class="btn pri sm" id="ink-fin">' + esc(L(['Finished', 'انتهيت'])) + '</button>' : '<span class="ink-st">' + esc(state) + '</span>') + '</header><div id="ink-host" class="ink-host"></div></div>',
+      html: '<div class="ink-v"><header class="ink-h"><a class="ink-back" href="' + backHref + '" aria-label="' + esc(L(['Back', 'رجوع'])) + '">' + A.icon('back', 20) + '</a><div class="grow"><b>' + esc(Print.titleOf(sh)) + '</b><small>' + esc(open ? L(['Write on the page. It saves as you go.', 'اكتب على الصفحة. تُحفظ أولًا بأول.']) : state) + '</small></div>' + (open ? '<button class="btn pri sm" id="ink-fin">' + esc(L(['Finished', 'انتهيت'])) + '</button>' : '<div class="ink-h-acts"><span class="ink-st">' + esc(state) + '</span><button class="btn sec sm" id="ink-print" aria-label="' + esc(L(['Print or PDF', 'طباعة أو PDF'])) + '">' + A.icon('print', 16) + '<span>' + esc(L(['PDF', 'PDF'])) + '</span></button></div>') + '</header><div id="ink-host" class="ink-host"></div></div>',
       mount: function (v) {
         stop = Ink.mount($('#ink-host', v), sh, p.id, open ? 'child' : 'view');
+        var pr = $('#ink-print', v); if (pr) pr.onclick = function () { Ink.print(sh, p.id); };
         var f = $('#ink-fin', v);
         if (f) f.onclick = function () {
           var any = Object.keys(sh.ink || {}).some(function (k) { return (sh.ink[k] || []).length; });

@@ -66,7 +66,7 @@ public class MainActivity extends Activity {
     private static final String HOST = "appassets.androidplatform.net";
     private static final String URL = "https://" + HOST + "/index.html";
     private static final int REQ_MIC = 13, REQ_NOTIF = 12, REQ_EXPORT = 21, REQ_IMPORT = 22, REQ_FAMILY = 23;
-    private static final int REQ_MEDIA = 77;
+    private static final int REQ_MEDIA = 77, REQ_FILE = 78;
 
     private WebView web;
     private FrameLayout root;
@@ -74,6 +74,8 @@ public class MainActivity extends Activity {
     private volatile boolean ready;
     private String pendingRoute, pendingExport, pendingFamily;
     private Uri pendingImport;
+    private android.webkit.ValueCallback<Uri[]> pendingFileCb;
+    private final java.util.concurrent.atomic.AtomicLong audioGen = new java.util.concurrent.atomic.AtomicLong(0);
     private final Handler ui = new Handler(Looper.getMainLooper());
     private TextToSpeech tts;
     private volatile boolean ttsReady;
@@ -168,6 +170,19 @@ public class MainActivity extends Activity {
         });
         web.setWebChromeClient(new WebChromeClient() {
             @Override public void onPermissionRequest(PermissionRequest r) { r.deny(); }
+            @Override public boolean onShowFileChooser(WebView v, android.webkit.ValueCallback<Uri[]> cb, FileChooserParams params) {
+                if (pendingFileCb != null) { pendingFileCb.onReceiveValue(null); pendingFileCb = null; }
+                pendingFileCb = cb;
+                Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE).setType("*/*")
+                    .putExtra(Intent.EXTRA_MIME_TYPES, new String[]{"text/plain", "text/csv", "text/tab-separated-values", "text/markdown", "application/json", "application/octet-stream"});
+                try {
+                    startActivityForResult(i, REQ_FILE);
+                    return true;
+                } catch (Exception e) {
+                    pendingFileCb = null;
+                    return false;
+                }
+            }
         });
         root.setOnApplyWindowInsetsListener((v, ins) -> { lastInsets = ins; pushInsets(); return ins; });
         root.addOnLayoutChangeListener((v, l, t, r, b, ol, ot, or, ob) -> { if (r - l != or - ol || b - t != ob - ot) pushScreen(); });
@@ -347,8 +362,10 @@ public class MainActivity extends Activity {
             default: return "https://verses.quran.com/wbw/" + f;
         }
     }
-    private File cachedAudio(String rel) {
+    private File cachedAudio(String rel) { return cachedAudio(rel, null); }
+    private File cachedAudio(String rel, Long expectGen) {
         String src = audioSource(rel); if (src == null) return null;
+        if (expectGen != null && audioGen.get() != expectGen) return null;
         File f = new File(audioDir(), rel.replace('/', '_'));
         if (f.isFile() && f.length() > 0) return f;
         File tmp = new File(audioDir(), rel.replace('/', '_') + "." + Thread.currentThread().getId() + ".part");
@@ -356,11 +373,13 @@ public class MainActivity extends Activity {
         String[] from = rel.charAt(0) == 'w' ? new String[]{src, "https://audio.qurancdn.com/wbw/" + rel.substring(2)} : new String[]{src};
         for (String u : from) {
             try {
+                if (expectGen != null && audioGen.get() != expectGen) return null;
                 java.net.HttpURLConnection c = (java.net.HttpURLConnection) new java.net.URL(u).openConnection();
                 c.setConnectTimeout(7000); c.setReadTimeout(30000); c.setRequestProperty("User-Agent", "Miftah");
                 if (c.getResponseCode() != 200) { c.disconnect(); continue; }
                 try (InputStream in = c.getInputStream(); FileOutputStream out = new FileOutputStream(tmp)) { byte[] b = new byte[32768]; int n; while ((n = in.read(b)) > 0) out.write(b, 0, n); }
                 c.disconnect();
+                if (expectGen != null && audioGen.get() != expectGen) { tmp.delete(); return null; }
                 if (tmp.length() > 0 && tmp.renameTo(f)) return f;
                 tmp.delete(); if (f.isFile()) return f;
             } catch (Exception e) { tmp.delete(); }
@@ -451,7 +470,7 @@ public class MainActivity extends Activity {
     @Override protected void onResume() { super.onResume(); if (loaded) js("__native.onResume&&__native.onResume()"); }
     @Override protected void onPause() { stopRecording(); if (web != null) js("window.Voice&&Voice.stop()"); super.onPause(); }
     @Override protected void onSaveInstanceState(Bundle out) { super.onSaveInstanceState(out); if (web != null) web.saveState(out); }
-    @Override protected void onDestroy() { unwatchFold(); stopRecording(); audioPool.shutdownNow(); updPool.shutdownNow(); if (tts != null) { tts.shutdown(); tts = null; } if (web != null) { web.destroy(); web = null; } super.onDestroy(); }
+    @Override protected void onDestroy() { if (pendingFileCb != null) { pendingFileCb.onReceiveValue(null); pendingFileCb = null; } unwatchFold(); stopRecording(); audioPool.shutdownNow(); updPool.shutdownNow(); if (tts != null) { tts.shutdown(); tts = null; } if (web != null) { web.destroy(); web = null; } super.onDestroy(); }
 
     @Override
     @SuppressWarnings("deprecation")
@@ -686,6 +705,14 @@ public class MainActivity extends Activity {
     protected void onActivityResult(int req, int code, Intent data) {
         super.onActivityResult(req, code, data);
         if (req == REQ_MEDIA) { if (code == RESULT_OK && data != null && data.getData() != null) mediaImport(data.getData()); return; }
+        if (req == REQ_FILE) {
+            android.webkit.ValueCallback<Uri[]> cb = pendingFileCb; pendingFileCb = null;
+            if (cb != null) {
+                Uri fu = code == RESULT_OK && data != null ? data.getData() : null;
+                cb.onReceiveValue(fu != null ? new Uri[]{fu} : null);
+            }
+            return;
+        }
         Uri u = data == null ? null : data.getData();
         if (req == REQ_EXPORT) {
             boolean ok = false;
@@ -940,23 +967,54 @@ public class MainActivity extends Activity {
         void recStop() { stopRecording(); }
         void audioKeep(final String json) {
             try {
-                JSONArray a = new JSONArray(json); final int total = a.length(); final java.util.concurrent.atomic.AtomicInteger done = new java.util.concurrent.atomic.AtomicInteger(), bad = new java.util.concurrent.atomic.AtomicInteger();
+                final long gen = audioGen.get();
+                JSONArray a = new JSONArray(json); final int total = a.length(); if (total == 0) return;
+                final java.util.concurrent.atomic.AtomicInteger done = new java.util.concurrent.atomic.AtomicInteger(), bad = new java.util.concurrent.atomic.AtomicInteger();
                 for (int i = 0; i < total; i++) {
                     final String rel = a.getString(i);
                     audioPool.execute(() -> {
-                        if (cachedAudio(rel) == null) bad.incrementAndGet();
+                        if (audioGen.get() != gen) return;
+                        File got = cachedAudio(rel, gen);
+                        if (audioGen.get() != gen) return;
+                        if (got == null) bad.incrementAndGet();
                         int d = done.incrementAndGet();
-                        if (d == total || d % 20 == 0) ui.post(() -> js("window.__native.onAudioKeep&&__native.onAudioKeep(" + d + "," + total + "," + bad.get() + ")"));
+                        if (d == total || d % 20 == 0) ui.post(() -> { if (audioGen.get() == gen) js("window.__native.onAudioKeep&&__native.onAudioKeep(" + d + "," + total + "," + bad.get() + ")"); });
                     });
                 }
             } catch (Exception ignored) { }
         }
         String audioStats() {
             long bytes = 0; int n = 0; File[] fs = audioDir().listFiles();
-            if (fs != null) for (File f : fs) { bytes += f.length(); n++; }
-            return "{\"bytes\":" + bytes + ",\"files\":" + n + "}";
+            java.util.Map<Character, java.util.Map<Integer, Integer>> counts = new java.util.HashMap<>();
+            if (fs != null) for (File f : fs) {
+                if (!f.isFile()) continue;
+                String nm = f.getName();
+                long len = f.length(); if (len <= 0) continue;
+                boolean okVerse = nm.matches("^[ha]_\\d{6}\\.mp3$");
+                boolean okWord = !okVerse && nm.matches("^w_\\d{3}_\\d{3}_\\d{3}\\.mp3$");
+                if (!okVerse && !okWord) continue;
+                bytes += len; n++;
+                char pfx = nm.charAt(0);
+                int s = Integer.parseInt(nm.substring(2, 5));
+                if (s >= 1 && s <= 114) {
+                    java.util.Map<Integer, Integer> m = counts.get(pfx);
+                    if (m == null) { m = new java.util.HashMap<>(); counts.put(pfx, m); }
+                    Integer cur = m.get(s); m.put(s, cur == null ? 1 : cur + 1);
+                }
+            }
+            try {
+                JSONObject cObj = new JSONObject();
+                for (java.util.Map.Entry<Character, java.util.Map<Integer, Integer>> e : counts.entrySet()) {
+                    JSONObject sub = new JSONObject();
+                    for (java.util.Map.Entry<Integer, Integer> se : e.getValue().entrySet()) sub.put(String.valueOf(se.getKey()), se.getValue());
+                    cObj.put(String.valueOf(e.getKey()), sub);
+                }
+                return new JSONObject().put("bytes", bytes).put("files", n).put("counts", cObj).toString();
+            } catch (Exception e) {
+                return "{\"bytes\":" + bytes + ",\"files\":" + n + "}";
+            }
         }
-        void audioClear() { File[] fs = audioDir().listFiles(); if (fs != null) for (File f : fs) f.delete(); }
+        void audioClear() { audioGen.incrementAndGet(); File[] fs = audioDir().listFiles(); if (fs != null) for (File f : fs) f.delete(); }
         String voiceList() {
             JSONArray a = new JSONArray(); File[] fs = voiceDir().listFiles();
             if (fs != null) for (File f : fs) if (f.getName().endsWith(".m4a")) a.put(f.getName().substring(0, f.getName().length() - 4));
@@ -977,8 +1035,9 @@ public class MainActivity extends Activity {
         }
         void exportFile(String name, String text) {
             pendingExport = text;
-            boolean html = name != null && name.endsWith(".html");
-            Intent i = new Intent(Intent.ACTION_CREATE_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE).setType(html ? "text/html" : "application/json").putExtra(Intent.EXTRA_TITLE, name);
+            String low = name == null ? "" : name.toLowerCase(Locale.US);
+            String mime = low.endsWith(".html") ? "text/html" : (low.endsWith(".txt") || low.endsWith(".md")) ? "text/plain" : low.endsWith(".csv") ? "text/csv" : "application/json";
+            Intent i = new Intent(Intent.ACTION_CREATE_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE).setType(mime).putExtra(Intent.EXTRA_TITLE, name);
             ui.post(() -> { try { startActivityForResult(i, REQ_EXPORT); } catch (Exception e) { toast("No file manager available"); } });
         }
         void shareFamily(final String json) {

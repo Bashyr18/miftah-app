@@ -191,17 +191,4 @@
       });
     } };
   };
-  /* recordings: what is kept on this device, and keeping more */
-  function bytesText(n) { return A.num(Math.round(n / 1e6)) + ' MB'; }
-  var parent2 = A.V.parent;
-  A.V.parent = function (a, r) {
-    var v = parent2(a, r); if (!v || !v.html || (A.grownOpen && !A.grownOpen()) || !a || a[0] !== 'settings' || !A.N.has()) return v;
-    var st = window.Voice.stats();
-    v.html = v.html.replace(/<div class="wrap"[^>]*>/, function (w0) { return w0 + '<div class="card" style="margin-bottom:12px"><h3>' + esc(L(['Recordings on this device', 'التسجيلات على هذا الجهاز'])) + '</h3><p style="color:var(--t2);line-height:1.45;font-size:14px;margin:6px 0 10px">' + esc(L(['Al-Ḥuṣarī’s Juzʾ ʿAmma and all adhkār come with the app. Other recordings download once when first played, then stay here.', 'يأتي جزء عمّ بصوت الحصري وكل الأذكار مع التطبيق، وتُنزَّل التسجيلات الأخرى مرة واحدة ثم تبقى.'])) + '</p><p style="font-size:14px;margin-bottom:10px"><b>' + bytesText(st.bytes || 0) + '</b> · <span id="au-prog"></span></p><button class="btn sec wide" data-a="au-keep">' + esc(L(['Download Juzʾ ʿAmma extras now', 'نزّل إضافات جزء عمّ الآن'])) + '</button><button class="btn ghost wide" data-a="au-clear">' + esc(L(['Remove downloaded recordings', 'احذف التسجيلات المنزلة'])) + '</button></div>'; });
-    return v;
-  };
-  A.acts['au-keep'] = function () { if (A.grownOpen && !A.grownOpen()) return; window.QURAN.order.slice(0, 38).forEach(function (n) { window.Voice.keep(n); }); A.toast(L(['Downloading…', 'جارٍ التنزيل…'])); };
-  A.acts['au-clear'] = function () { if (A.grownOpen && !A.grownOpen()) return; A.N.call('audioClear'); A.rerender(); };
-  window.__native = window.__native || {};
-  window.__native.onAudioKeep = function (d, t, bad) { var e = $('#au-prog'); if (e) e.textContent = A.num(d) + ' / ' + A.num(t) + (bad ? ' · ' + L(['some failed', 'تعذر بعضها']) : ''); };
 })();

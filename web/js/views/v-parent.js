@@ -368,31 +368,45 @@
       }
     };
   }
-  /* marking a sheet: one tap per question, with the answers in front of you */
+  /* marking a sheet: one tap per question, with the answers in front of you; completed on-screen sheets stay open for PDF export */
   function markView(pid, code) {
     var d = A.D(pid), sh = (d.sheets || []).filter(function (x) { return x.id === code; })[0]; if (!sh) return { redirect: 'parent/' + pid };
-    var onScreen = !!(sh.scr && sh.sub && window.Ink), stop = null;
-    var inkH = onScreen ? '<div class="card mk-ink"><h3>' + esc(L(['Their page', 'صفحته'])) + '<small>' + esc(L(['Write on it in red if you like: they will see your marks.', 'اكتب عليها بالأحمر إن شئت، وسيرى تصحيحك.'])) + '</small></h3><div id="mk-ink" class="ink-host in-card"></div></div>' : '';
+    var onScreen = !!(sh.scr && (sh.sub || sh.marked || sh.done) && window.Ink), readOnly = !!(sh.marked || sh.done), stop = null;
+    var inkH = onScreen ? '<div class="card mk-ink"><h3>' + esc(L(['Their page', 'صفحته'])) + '<small>' + esc(readOnly ? L(['Saved with your marks. Print or save as PDF any time.', 'محفوظة مع تصحيحك. اطبعها أو احفظها PDF في أي وقت.']) : L(['Write on it in red if you like: they will see your marks.', 'اكتب عليها بالأحمر إن شئت، وسيرى تصحيحك.'])) + '</small></h3><div id="mk-ink" class="ink-host in-card"></div></div>' : '';
     /* a worksheet done on screen: done well, or another go with their writing kept */
     if (!sh.q) {
       if (!onScreen) return { redirect: 'parent/' + pid + '/today' };
       return {
-        html: '<div class="ph h-gold"><a class="backp" href="#/parent/' + pid + '/today">' + A.icon('back', 18) + '<span>' + esc(T('Today')) + '</span></a><h1>' + esc(Print.titleOf(sh)) + '</h1><p>' + esc(L(['Done on screen. Look it over together.', 'أُنجزت على الشاشة. راجعاها معًا.'])) + ' · ' + esc(code) + '</p></div><div class="wrap mk-wrap">' + inkH + '<div class="mk-acts"><button class="btn pri big" id="mk-done">' + esc(L(['Done well', 'أُنجزت جيدًا'])) + '</button><button class="btn sec big" id="mk-again">' + esc(L(['Another go', 'محاولة أخرى'])) + '</button></div></div>',
+        html: '<div class="ph h-gold"><a class="backp" href="#/parent/' + pid + '/' + (readOnly ? 'record' : 'today') + '">' + A.icon('back', 18) + '<span>' + esc(readOnly ? T('Record') : T('Today')) + '</span></a><h1>' + esc(Print.titleOf(sh)) + '</h1><p>' + esc(readOnly ? L(['Checked on screen.', 'تمت مراجعتها على الشاشة.']) : L(['Done on screen. Look it over together.', 'أُنجزت على الشاشة. راجعاها معًا.'])) + ' · ' + esc(code) + '</p></div><div class="wrap mk-wrap">' + inkH + '<div class="mk-acts">' +
+          (readOnly ? '<button class="btn pri big" id="mk-print">' + A.icon('print', 18) + '<span>' + esc(L(['Print or save as PDF', 'اطبع أو احفظ PDF'])) + '</span></button><a class="btn sec big" href="#/parent/' + pid + '/today">' + esc(L(['Back to Today', 'العودة إلى اليوم'])) + '</a>'
+            : '<button class="btn pri big" id="mk-done">' + esc(L(['Done well', 'أُنجزت جيدًا'])) + '</button><button class="btn sec big" id="mk-again">' + esc(L(['Another go', 'محاولة أخرى'])) + '</button><button class="btn ghost big" id="mk-print">' + A.icon('print', 18) + '<span>' + esc(L(['Print or PDF', 'طباعة أو PDF'])) + '</span></button>') + '</div></div>',
         mount: function (v) {
-          stop = Ink.mount($('#mk-ink', v), sh, pid, 'parent');
-          $('#mk-done', v).onclick = function () { Print.done(code, true, pid); A.toast(T('Saved')); A.go('parent/' + pid + '/today'); };
-          $('#mk-again', v).onclick = function () { Print.again(code, pid); A.toast(L(['Back on their home, with their writing kept', 'عادت إلى صفحته الرئيسية مع كتابته'])); A.go('parent/' + pid + '/today'); };
+          stop = Ink.mount($('#mk-ink', v), sh, pid, readOnly ? 'view' : 'parent');
+          var dn = $('#mk-done', v); if (dn) dn.onclick = function () { Print.done(code, true, pid); A.toast(T('Saved')); A.rerender(); };
+          var ag = $('#mk-again', v); if (ag) ag.onclick = function () { Print.again(code, pid); A.toast(L(['Back on their home, with their writing kept', 'عادت إلى صفحته الرئيسية مع كتابته'])); A.go('parent/' + pid + '/today'); };
+          var pr = $('#mk-print', v); if (pr) pr.onclick = function () { Ink.print(sh, pid); };
+        },
+        unmount: function () { if (stop) stop(); }
+      };
+    }
+    if (readOnly) {
+      return {
+        html: '<div class="ph h-gold"><a class="backp" href="#/parent/' + pid + '/record">' + A.icon('back', 18) + '<span>' + esc(T('Record')) + '</span></a><h1>' + esc(Print.titleOf(sh)) + '</h1><p>' + esc(L(['Marked', 'صُحّحت'])) + ' · ' + A.num(sh.right) + ' / ' + A.num(sh.q.length) + ' · ' + esc(code) + '</p></div><div class="wrap mk-wrap' + (onScreen ? ' has-ink' : '') + '" style="margin-top:12px">' + inkH + '<div class="mk-side"><div class="card"><h3>' + esc(L(['Saved score', 'النتيجة المحفوظة'])) + '</h3><p style="font-size:22px;font-weight:800;margin:4px 0 8px">' + A.num(sh.right) + ' / ' + A.num(sh.q.length) + '</p><p style="color:var(--t2);font-size:13.5px;line-height:1.45">' + esc(L(['This marking is already in their learning record.', 'هذا التصحيح محفوظ بالفعل في سجل تعلّمه.'])) + '</p></div>' + (onScreen ? '<button class="btn pri big wide" id="mk-print" style="margin-top:12px">' + A.icon('print', 18) + '<span>' + esc(L(['Print or save as PDF', 'اطبع أو احفظ PDF'])) + '</span></button>' : '') + '<a class="btn sec wide" href="#/parent/' + pid + '/today" style="margin-top:8px">' + esc(L(['Back to Today', 'العودة إلى اليوم'])) + '</a></div></div>',
+        mount: function (v) {
+          if (onScreen) stop = Ink.mount($('#mk-ink', v), sh, pid, 'view');
+          var pr = $('#mk-print', v); if (pr) pr.onclick = function () { Ink.print(sh, pid); };
         },
         unmount: function () { if (stop) stop(); }
       };
     }
     var right = sh.q.map(function () { return true; });
     return {
-      html: '<div class="ph h-gold"><a class="backp" href="#/parent/' + pid + '/today">' + A.icon('back', 18) + '<span>' + esc(T('Today')) + '</span></a><h1>' + esc(Print.titleOf(sh)) + '</h1><p>' + esc(T('Tap any they did not get. Be honest: it decides what comes back.')) + ' · ' + esc(code) + '</p></div><div class="wrap mk-wrap' + (onScreen ? ' has-ink' : '') + '" style="margin-top:12px">' + inkH + '<div class="mk-side"><div class="card"><div class="lst">' + sh.q.map(function (q, i) { return '<button class="li mk" data-i="' + i + '"><span class="mk-c on">' + A.icon('check', 18) + '</span><span class="grow"><small class="mk-q">' + A.num(i + 1) + '. ' + esc(A.powText(String(q.h)).replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/\s+/g, ' ').trim().slice(0, 70)) + '</small><b>' + esc(q.a) + '</b></span></button>'; }).join('') + '</div></div><button class="btn pri big wide" id="mk-go" style="margin-top:12px">' + esc(T('Save the marking')) + '</button>' + (onScreen ? '<button class="btn ghost wide" id="mk-again" style="margin-top:6px">' + esc(L(['Not ready to mark: give it back', 'ليست جاهزة للتصحيح: أعِدها'])) + '</button>' : '') + '</div></div>',
+      html: '<div class="ph h-gold"><a class="backp" href="#/parent/' + pid + '/today">' + A.icon('back', 18) + '<span>' + esc(T('Today')) + '</span></a><h1>' + esc(Print.titleOf(sh)) + '</h1><p>' + esc(T('Tap any they did not get. Be honest: it decides what comes back.')) + ' · ' + esc(code) + '</p></div><div class="wrap mk-wrap' + (onScreen ? ' has-ink' : '') + '" style="margin-top:12px">' + inkH + '<div class="mk-side"><div class="card"><div class="lst">' + sh.q.map(function (q, i) { return '<button class="li mk" data-i="' + i + '"><span class="mk-c on">' + A.icon('check', 18) + '</span><span class="grow"><small class="mk-q">' + A.num(i + 1) + '. ' + esc(A.powText(String(q.h)).replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/\s+/g, ' ').trim().slice(0, 70)) + '</small><b>' + esc(q.a) + '</b></span></button>'; }).join('') + '</div></div><button class="btn pri big wide" id="mk-go" style="margin-top:12px">' + esc(T('Save the marking')) + '</button>' + (onScreen ? '<button class="btn sec wide" id="mk-print" style="margin-top:8px">' + A.icon('print', 18) + '<span>' + esc(L(['Print or save as PDF', 'اطبع أو احفظ PDF'])) + '</span></button><button class="btn ghost wide" id="mk-again" style="margin-top:6px">' + esc(L(['Not ready to mark: give it back', 'ليست جاهزة للتصحيح: أعِدها'])) + '</button>' : '') + '</div></div>',
       mount: function (v) {
         if (onScreen) stop = Ink.mount($('#mk-ink', v), sh, pid, 'parent');
         $$('.mk', v).forEach(function (b) { b.onclick = function () { var i = +b.dataset.i; right[i] = !right[i]; var c = $('.mk-c', b); c.classList.toggle('on', right[i]); c.innerHTML = A.icon(right[i] ? 'check' : 'close', 18); Fx.tap(); }; });
-        $('#mk-go', v).onclick = function () { Print.mark(code, right, pid); A.toast(T('Saved')); A.go('parent/' + pid + '/today'); };
+        $('#mk-go', v).onclick = function () { Print.mark(code, right, pid); A.toast(T('Saved')); if (onScreen) A.rerender(); else A.go('parent/' + pid + '/today'); };
+        var pr = $('#mk-print', v); if (pr) pr.onclick = function () { Ink.print(sh, pid); };
         var ag = $('#mk-again', v); if (ag) ag.onclick = function () { Print.again(code, pid); A.toast(L(['Back on their home, with their writing kept', 'عادت إلى صفحته الرئيسية مع كتابته'])); A.go('parent/' + pid + '/today'); };
       },
       unmount: function () { if (stop) stop(); }
@@ -499,8 +513,12 @@
     Voice.refreshVoices();
     var d = A.D(p.id), all0 = Object.assign({}, d.time, d.screen || {}), days = Object.keys(all0).filter(function (k) { return dayMs(d, k) > 0; }), tot = days.reduce(function (a, k) { return a + dayMs(d, k); }, 0), ob = d.obs.slice(-40).reverse();
     var recs = d.recs ? Object.keys(d.recs).sort(function (x, y) { return d.recs[y] - d.recs[x]; }) : [];
+    var doneSheets = (d.sheets || []).filter(function (x) { return x.scr && (x.marked || x.done); }).slice().reverse();
+    var sheetRow = function (sh) { var dt = new Date(sh.marked || sh.done || sh.t).toLocaleDateString(A.ar() ? 'ar-u-nu-arab' : 'en', { day: 'numeric', month: 'short' }); return '<a class="li" href="#/parent/' + esc(p.id) + '/mark/' + esc(sh.id) + '">' + A.icon('print', 20) + '<span class="grow"><b>' + esc(Print.titleOf(sh)) + '</b><small>' + esc(sh.marked && sh.q ? L(['Marked', 'صُحّحت']) + ' · ' + A.num(sh.right) + ' / ' + A.num(sh.q.length) : L(['Checked', 'تمت المراجعة'])) + ' · ' + esc(dt) + '</small></span>' + A.icon('next', 16) + '</a>'; };
+    var doneCard = doneSheets.length ? '<div class="card"><h3>' + esc(L(['Completed sheets', 'الأوراق المُنجَزة'])) + '</h3><div class="lst">' + doneSheets.slice(0, 10).map(sheetRow).join('') + '</div>' + (doneSheets.length > 10 ? '<details class="logu" style="margin-top:8px"><summary><span class="grow">' + esc(L(['Older completed sheets', 'أوراق منجزة أقدم'])) + '</span><b>' + A.num(doneSheets.length - 10) + '</b></summary><div class="lst">' + doneSheets.slice(10).map(sheetRow).join('') + '</div></details>' : '') + '</div>' : '';
     return {
       html: '<div class="card"><h3>' + esc(T('Attendance')) + '</h3><p style="color:var(--t2);line-height:1.5">' + esc(T('Days')) + ': ' + A.num(days.length) + ' · ' + esc(T('Total')) + ': ' + hrs(tot) + '</p>' + calendar(d) + '<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap"><button class="btn sec sm" data-a="print-rep" data-p="' + p.id + '">' + A.icon('print', 18) + '<span>' + esc(T('Print a report')) + '</span></button></div></div>' +
+        doneCard +
         (recs.length ? '<div class="card"><h3>' + esc(T('Recitations to hear')) + '</h3><div class="lst">' + recs.map(function (k) { var pa = k.split(':'), has = Voice.hasRec(p.id, pa[0], pa[1]), rk = Voice.recKey(p.id, pa[0], pa[1]), dt = new Date(d.recs[k]).toLocaleDateString(A.ar() ? 'ar-u-nu-arab' : 'en'); return has ? '<button class="li" data-a="play-rec" data-k="' + esc(rk) + '">' + A.icon('play', 20) + '<span class="grow"><b>' + esc(A.surahName(pa[0])) + ' ' + A.num(pa[1]) + '</b><small>' + esc(dt) + '</small></span></button>' : '<div class="li"><span class="grow"><b>' + esc(A.surahName(pa[0])) + ' ' + A.num(pa[1]) + '</b><small>' + esc(dt) + ' · ' + esc(L(['Recording unavailable on this device', 'التسجيل غير متاح على هذا الجهاز'])) + '</small></span></div>'; }).join('') + '</div></div>' : '') +
         '<div class="card"><h3>' + esc(T('Observations and deeds')) + '</h3>' + (ob.length ? '<div class="lst">' + ob.map(function (o) { return '<div class="li"><span class="grow"><b>' + esc(o.title) + '</b><small>' + esc(new Date(o.t).toLocaleDateString(A.ar() ? 'ar-u-nu-arab' : 'en')) + (o.value ? ' · ' + esc(o.value) : '') + '</small></span></div>'; }).join('') + '</div>' : '<p style="color:var(--t2)">' + esc(T('Nothing yet.')) + '</p>') + '</div>'
     };
@@ -594,11 +612,14 @@
   /* ===== settings ===== */
   function settings() {
     var S = A.S, seg = function (k, opts) { return '<div class="segs">' + opts.map(function (o) { return '<button class="seg ' + (S[k] === o[0] ? 'on' : '') + '" data-k="' + k + '" data-v="' + o[0] + '">' + esc(o[1]) + '</button>'; }).join('') + '</div>'; };
+    var au = A.N.has() && window.Voice && Voice.stats ? Voice.stats() : {};
+    var auSize = au.bytes > 1048576 ? A.num(Math.round(au.bytes / 104857.6) / 10) + ' MB' : au.files ? A.num(Math.max(1, Math.round((au.bytes || 0) / 1024))) + ' KB' : '';
     return {
       html: head(T('Settings'), '', 'parent', T('Parents')) + '<div class="wrap" style="margin-top:14px"><div class="card"><div class="lst"><a class="li" href="#/parent/me">' + A.grownAvatar(36) + '<span class="grow"><b>' + esc(A.grown() ? A.grown().name : L(['Your profile', 'ملفّك'])) + '</b><small>' + esc(A.grown() ? L(A.ROLES[A.grown().role] || A.ROLES.parent) : L(['Your name and role, parent or teacher', 'اسمك ودورك: وليّ أمر أو معلّم'])) + '</small></span>' + A.icon('next', 18) + '</a></div></div><div class="card"><h3>' + esc(T('Language')) + '</h3>' + seg('lang', [['en', 'English'], ['ar', 'العربية']]) + '</div><div class="card"><h3>' + esc(T('Look')) + '</h3>' + seg('theme', [['auto', T('Follows the sun')], ['light', T('Day')], ['dark', T('Night')]]) + '</div><div class="card"><h3>' + esc(T('Reciter for memorising')) + '</h3>' + seg('reciter', [['h', T('Al-Ḥuṣarī, teaching pace')], ['a', T('Al-ʿAfāsī, flowing')]]) + '</div>' +
         '<div class="card"><div class="lst"><button class="li" id="s-sound"><span class="grow"><b>' + esc(T('Touch sounds')) + '</b><small>' + esc(T('Soft clicks only. Never music.')) + '</small></span><span class="switch ' + (S.sound ? 'on' : '') + '"></span></button><div class="li" style="display:none"><input type="range" id="s-rate"></div>' +
         (A.N.has() ? '<button class="li" id="s-rem"><span class="grow"><b>' + esc(T('School-time reminder')) + '</b><small>' + esc(T(S.remind.on ? 'Quiet, once a day' : 'Off')) + '</small></span><span class="switch ' + (S.remind.on ? 'on' : '') + '"></span></button>' + (S.remind.on ? '<div class="li"><span class="grow"><b>' + esc(T('At')) + '</b></span><input type="time" id="s-time" class="input" style="width:130px;height:46px;font-size:16px" value="' + ('0' + S.remind.h).slice(-2) + ':' + ('0' + S.remind.m).slice(-2) + '"></div>' : '') + '<button class="li" id="s-wid"><span class="grow"><b>' + esc(T('Add to the home screen')) + '</b><small>' + esc(T('Today’s path as a widget')) + '</small></span></button>' : '') + '</div></div>' +
         (window.Upd && Upd.can() ? Upd.card('settings') : '') +
+        (A.N.has() ? '<div class="card"><h3>' + esc(L(['Downloaded Qurʾān audio', 'صوت القرآن المحمّل'])) + '</h3><p style="color:var(--t2);font-size:13.5px;line-height:1.45;margin-bottom:8px">' + esc(au.files ? L(['Saved on this device: ', 'محفوظ على هذا الجهاز: ']) + auSize + ' (' + A.num(au.files) + ' ' + L(['files', 'ملف']) + '). ' + L(['Bundled sūrahs and family recordings are never removed.', 'لا تُحذف السور المدمجة ولا تسجيلات الأسرة أبدًا.']) : L(['Only built-in recordings are stored right now.', 'لا توجد تحميلات إضافية الآن.'])) + '</p>' + (au.files ? '<button class="btn ghost sm" id="s-au-clr">' + esc(L(['Clear downloaded audio', 'مسح الصوت المحمّل'])) + '</button>' : '') + '</div>' : '') +
         '<div class="card"><h3>' + esc(T('Your family’s data')) + '</h3><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn sec sm" id="s-exp">' + esc(T('Back up')) + '</button><button class="btn sec sm" id="s-imp">' + esc(T('Restore')) + '</button></div></div></div>',
       mount: function (v) {
         /* a choice changes in place; only a new language redraws the page, since every word on it changes */
@@ -615,6 +636,7 @@
         var rem = $('#s-rem', v); if (rem) rem.onclick = function () { S.remind.on = !S.remind.on; if (S.remind.on) A.N.call('requestNotifications'); A.saveNow(); A.rerender(); };
         var tm = $('#s-time', v); if (tm) tm.onchange = function () { var q = this.value.split(':'); S.remind.h = +q[0]; S.remind.m = +q[1]; A.saveNow(); A.toast(T('Saved')); };
         var wd = $('#s-wid', v); if (wd) wd.onclick = function () { if (!A.N.call('pinWidget')) A.toast(T('Add it from your home screen’s widget list')); };
+        var ac = $('#s-au-clr', v); if (ac) ac.onclick = function () { if (ac.dataset.arm !== '1') { ac.dataset.arm = '1'; ac.textContent = L(['Tap again to clear', 'انقر مجددًا للمسح']); return; } Voice.clearAudio(); A.toast(L(['Cleared', 'تم المسح'])); A.rerender(); };
         $('#s-exp', v).onclick = function () {
           A.S.lastBackup = A.now().getTime(); A.saveNow(); var json = JSON.stringify(A.Sync.recordOut()), name = 'miftah-backup-' + A.day() + '.json';
           if (A.N.has()) A.N.call('exportFile', name, json);

@@ -78,7 +78,7 @@ var CH = [
           { b: 'The week, the Qurʾān and every subject', x: 'On the computer: reviews due, their goal, the āyah they are memorising and each subject’s progress, beside the plan.', m: { d: 2 } },
           { b: 'Sections', x: 'Today, subjects, study and their record.', m: { p: 3 } } ] },
       { shots: { p: 'p-study' }, flip: true, h: 'Study', p: 'Cards that come back at the right time, past papers, and a place to write. What they revise is evidence a parent can see.',
-        steps: [ { b: 'Revision tools', x: 'Cards, papers and writing, each kept with their record.', m: { p: 1 } } ] },
+        steps: [ { b: 'Revision tools', x: 'Cards (with bulk CSV/text import and deck export), papers and writing, each kept with their record.', m: { p: 1 } } ] },
       { shots: { d: 'd-adv', p: 'p-adv' }, h: 'All the way to university', p: 'The same rooms go on through GCSE and A level into first-year university: calculus, complex numbers, matrices and differential equations in maths; mechanics, fields, waves, circuits and quantum ideas in physics, with chemistry and biology beside them. Every lesson is taught step by step, every line of its working is checked for correctness before it ships, and nothing is a video to sit through.',
         steps: [
           { b: 'Taught, not just tested', x: 'Each idea is built in steps: why it works, a worked example, then one to do together before one alone.', m: { p: 0, d: 0 } },
@@ -101,7 +101,7 @@ var CH = [
       { shots: { p: 'p-book' }, flip: true, h: 'Your own course, in any subject', p: 'Parent area › Courses: the Madinah books or al-ʿArabiyyah Bayna Yadayk for Arabic, or a textbook, revision guide or teacher’s notes in any other subject. Each lesson has its square, so gaps show until they are filled. Enter its terms, facts and questions from your own copy, or paste a whole course a teacher shared.',
         steps: [
           { b: 'Every lesson in its place', x: 'A filled square is a lesson ready to learn: the terms met one by one, the facts, practice both ways, the course’s own questions as a quiz, and review that comes back before it fades.', m: { p: 0 } },
-          { b: 'Who follows it', x: 'Switch a child on and that subject’s path comes from this course, lesson by lesson. Courses travel between phone and computer and are ready to open straight away.', m: { p: 1 } } ] } ] },
+          { b: 'Who follows it', x: 'Switch a child on and that subject’s path comes from this course, lesson by lesson. Courses travel between phone and computer, and can be exported or imported as standalone files to share with teachers and families.', m: { p: 1 } } ] } ] },
 
   { id: 'paper', kicker: 'Printed, or done on screen', title: 'Paper and pen', dek: 'Sheets made fresh from what the child knows today, on A4 or on the screen, and marked by a grown-up.', thumb: 'p-ink',
     spreads: [
@@ -119,7 +119,7 @@ var CH = [
           { b: 'Finished', x: 'Locks it and sends it to the grown-up. Until then it is theirs to change, and My sheets on Home lets them reopen any assigned, sent or reviewed sheet later.', m: { p: 2, d: 2 } } ] },
       { shots: { d: 'd-ink-mark', p: 'p-ink-mark' }, h: 'Marking what they wrote', p: 'A finished sheet waits in your Today. Their page is there, with a red pen for your marks; then tap any question they missed and save. That is the evidence, exactly as on paper.',
         steps: [
-          { b: 'Their page, your red pen', x: 'Tick, circle or write a note. Your marks stay apart from their writing, and they see them when they open it again.', m: { p: 0, d: 0 } },
+          { b: 'Their page, your red pen', x: 'Tick, circle or write a note. Your marks stay apart from their writing, they see them when they open it again, and you can print or save the marked page as an A4 PDF from the marking screen or the child’s Record.', m: { p: 0, d: 0 } },
           { b: 'Question by question', x: 'Each question with its answer, beside the page. Only this marking counts, never a machine.', m: { d: 1 } },
           { b: 'One colour', x: 'Red only, so your marks are never mistaken for theirs.', m: { p: 1 } } ] } ] },
 

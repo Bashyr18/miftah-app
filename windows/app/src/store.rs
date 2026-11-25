@@ -321,10 +321,14 @@ pub fn valid_audio_rel(rel: &str) -> bool {
     let f = &rel[2..];
     !f.is_empty() && !f.contains("..") && f.chars().all(|c| c.is_ascii_digit() || c == '_' || c == '.' || c == '-' || c.is_ascii_lowercase())
 }
-pub fn cached_audio(rel: &str) -> Option<PathBuf> {
+static AUDIO_GEN: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+pub fn audio_gen() -> u64 { AUDIO_GEN.load(std::sync::atomic::Ordering::SeqCst) }
+
+pub fn cached_audio_gen(rel: &str, expect_gen: Option<u64>) -> Option<PathBuf> {
     if !valid_audio_rel(rel) { return None; }
     let in_app = app_dir().join("audio").join(rel.replace('/', "\\"));
     if in_app.is_file() { return Some(in_app); }
+    if let Some(g) = expect_gen { if audio_gen() != g { return None; } }
     let b = rel.as_bytes();
     let f = &rel[2..];
     let from: Vec<String> = match b[0] {
@@ -334,11 +338,13 @@ pub fn cached_audio(rel: &str) -> Option<PathBuf> {
         _ => return None,
     };
     let dst = dirs().audio.join(rel.replace('/', "_"));
-    if fs::metadata(&dst).map(|m| m.len() > 0).unwrap_or(false) { return Some(dst); }
+    if fs::metadata(&dst).map(|m| m.is_file() && m.len() > 0).unwrap_or(false) { return Some(dst); }
     static N: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
     for u in from {
+        if let Some(g) = expect_gen { if audio_gen() != g { return None; } }
         let tmp = dirs().audio.join(format!("{}.{}.part", rel.replace('/', "_"), N.fetch_add(1, std::sync::atomic::Ordering::Relaxed)));
-        if crate::net::download(&u, &tmp, &|_| {}).is_ok() && fs::metadata(&tmp).map(|m| m.len() > 0).unwrap_or(false) {
+        if crate::net::download(&u, &tmp, &|_| {}).is_ok() && fs::metadata(&tmp).map(|m| m.is_file() && m.len() > 0).unwrap_or(false) {
+            if let Some(g) = expect_gen { if audio_gen() != g { let _ = fs::remove_file(&tmp); return None; } }
             if dst.exists() { let _ = fs::remove_file(&tmp); } else { let _ = fs::rename(&tmp, &dst); }
             return Some(dst);
         }
@@ -346,12 +352,51 @@ pub fn cached_audio(rel: &str) -> Option<PathBuf> {
     }
     None
 }
-pub fn audio_stats() -> String {
-    let (mut total, mut count) = (0u64, 0u64);
-    if let Ok(r) = fs::read_dir(&dirs().audio) { for e in r.flatten() { if let Ok(m) = e.metadata() { total += m.len(); count += 1; } } }
-    format!("{{\"bytes\":{},\"files\":{}}}", total, count)
+pub fn cached_audio(rel: &str) -> Option<PathBuf> { cached_audio_gen(rel, None) }
+
+fn parse_cached_audio_name(name: &str) -> Option<(char, u16)> {
+    if !name.is_ascii() { return None; }
+    let b = name.as_bytes();
+    if b.len() == 12 && matches!(b[0], b'h' | b'a') && b[1] == b'_' && &b[8..] == b".mp3" && b[2..8].iter().all(|c| c.is_ascii_digit()) {
+        let s: u16 = name[2..5].parse().ok()?;
+        let a: u16 = name[5..8].parse().ok()?;
+        if (1..=114).contains(&s) && (1..=286).contains(&a) { return Some((b[0] as char, s)); }
+    }
+    if b.len() == 17 && b[0] == b'w' && b[1] == b'_' && b[5] == b'_' && b[9] == b'_' && &b[13..] == b".mp3"
+        && b[2..5].iter().all(|c| c.is_ascii_digit()) && b[6..9].iter().all(|c| c.is_ascii_digit()) && b[10..13].iter().all(|c| c.is_ascii_digit()) {
+        let s: u16 = name[2..5].parse().ok()?;
+        if (1..=114).contains(&s) { return Some(('w', s)); }
+    }
+    None
 }
-pub fn audio_clear() { if let Ok(r) = fs::read_dir(&dirs().audio) { for e in r.flatten() { let _ = fs::remove_file(e.path()); } } }
+
+pub fn audio_stats_in(dir: &Path) -> String {
+    let (mut total, mut count) = (0u64, 0u64);
+    let mut counts: std::collections::BTreeMap<char, std::collections::BTreeMap<u16, u32>> = std::collections::BTreeMap::new();
+    if let Ok(r) = fs::read_dir(dir) {
+        for e in r.flatten() {
+            let Ok(m) = e.metadata() else { continue };
+            if !m.is_file() || m.len() == 0 { continue; }
+            let name = e.file_name().to_string_lossy().into_owned();
+            let Some((pfx, s)) = parse_cached_audio_name(&name) else { continue };
+            total += m.len();
+            count += 1;
+            *counts.entry(pfx).or_default().entry(s).or_insert(0) += 1;
+        }
+    }
+    let mut c_map = serde_json::Map::new();
+    for (pfx, inner) in counts {
+        let mut s_map = serde_json::Map::new();
+        for (s, n) in inner { s_map.insert(s.to_string(), serde_json::json!(n)); }
+        c_map.insert(pfx.to_string(), serde_json::Value::Object(s_map));
+    }
+    serde_json::json!({ "bytes": total, "files": count, "counts": c_map }).to_string()
+}
+pub fn audio_stats() -> String { audio_stats_in(&dirs().audio) }
+pub fn audio_clear() {
+    AUDIO_GEN.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+    if let Ok(r) = fs::read_dir(&dirs().audio) { for e in r.flatten() { let _ = fs::remove_file(e.path()); } }
+}
 
 pub fn mime(path: &Path) -> &'static str {
     match ext(path).as_str() {
@@ -453,6 +498,28 @@ mod tests {
         let ok = dir.join("ok.m4a");
         assert_eq!(extract_zip_entry_capped(&b"012345"[..], 6, &ok, 10), Some(6));
         assert_eq!(fs::read(&ok).unwrap(), b"012345");
+        let _ = fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn audio_stats_counts_cached_surahs_and_ignores_parts() {
+        let dir = std::env::temp_dir().join(format!("miftah-audiostats-{}-{}", std::process::id(), now_ms()));
+        fs::create_dir_all(&dir).unwrap();
+        fs::write(dir.join("h_002001.mp3"), b"abc").unwrap();
+        fs::write(dir.join("h_002002.mp3"), b"defg").unwrap();
+        fs::write(dir.join("a_112001.mp3"), b"12").unwrap();
+        fs::write(dir.join("w_112_001_001.mp3"), b"12345").unwrap();
+        fs::write(dir.join("h_002003.mp3.1.part"), b"partial").unwrap();
+        fs::write(dir.join("h_002004.mp3"), b"").unwrap();
+        fs::write(dir.join("h_سورة.mp3"), b"utf8").unwrap();
+        fs::write(dir.join("h_002_bad.mp3"), b"loose").unwrap();
+        fs::create_dir_all(dir.join("h_002005.mp3")).unwrap();
+        let v: Value = serde_json::from_str(&audio_stats_in(&dir)).unwrap();
+        assert_eq!(v["files"].as_u64(), Some(4));
+        assert_eq!(v["bytes"].as_u64(), Some(14));
+        assert_eq!(v["counts"]["h"]["2"].as_u64(), Some(2));
+        assert_eq!(v["counts"]["a"]["112"].as_u64(), Some(1));
+        assert_eq!(v["counts"]["w"]["112"].as_u64(), Some(1));
         let _ = fs::remove_dir_all(&dir);
     }
 }

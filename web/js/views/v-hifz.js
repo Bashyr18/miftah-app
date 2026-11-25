@@ -40,7 +40,7 @@
     return {
       bare: true, hue: 'emerald',
       html: '<div class="pl h-emerald quiet" id="hf"><div class="pl-top"><a class="pl-x" href="#/home" aria-label="' + esc(T('Leave')) + '">' + A.icon('close', 24) + '</a><div class="pl-bar"><div class="hf-tier" id="hf-tier"></div><div class="ayahs" id="hf-dots" style="margin-top:6px"></div></div><div style="width:48px"></div></div><div class="pl-body" id="hf-body"></div><div class="pl-foot" id="hf-foot"></div></div>',
-      mount: function () { alive = true; var h0 = Hifz.state(), s0 = Q.order[h0.i]; if (s0 && window.Voice && Voice.keep) Voice.keep(s0); startSession(stopI); },
+      mount: function () { alive = true; var h0 = Hifz.state(), s0 = Q.order[h0.i]; if (s0 && window.Voice && Voice.keep && !Voice.skipAutoKeep) Voice.keep(s0); startSession(stopI); },
       unmount: function () { alive = false; clearTimers(); Voice.stop(); stopRec(); }
     };
   };
@@ -140,37 +140,100 @@
   }
 
   /* ===== the Qurʾān room: the shelf of sūrahs ===== */
+  function fmtBytes(n) { return n > 1048576 ? A.num(Math.round(n / 104857.6) / 10) + ' MB' : A.num(Math.max(1, Math.round((n || 0) / 1024))) + ' KB'; }
+  function coverageLabel(cov) {
+    if (cov.state === 'bundled' || cov.state === 'saved') return L(['Verses & words offline', 'الآيات والكلمات دون إنترنت']);
+    if (cov.state === 'verses') return L(['Verses offline · words need internet', 'الآيات دون إنترنت · الكلمات تحتاج إنترنت']);
+    if (cov.state === 'partial') return L(['Partly downloaded', 'تنزيل جزئي']);
+    return L(['Needs internet to download', 'تحتاج إنترنت للتنزيل']);
+  }
+  function shelfTag(s, st) {
+    var ast = Voice.surahState ? Voice.surahState(s, st) : 'online';
+    if (ast === 'bundled' || ast === 'saved') return '<span class="qa-tag">' + esc(L(['Offline', 'دون إنترنت'])) + '</span>';
+    if (ast === 'verses') return '<span class="qa-tag part">' + esc(L(['Verses', 'الآيات'])) + '</span>';
+    if (ast === 'partial') return '<span class="qa-tag part">' + esc(L(['Partly saved', 'جزئي'])) + '</span>';
+    return '';
+  }
   A.V.quran = function () {
     if (!A.P()) return { redirect: 'home' };
-    var order = Q.order;
-    var h = Hifz.state(), curS = order[h.i];
+    var order = Q.order, unsubKeep = null;
+    var h = Hifz.state(), curS = order[h.i], st = A.N.has() && Voice.stats ? Voice.stats() : {};
     var list = order.map(function (s) {
       var k = Hifz.known(s), su = Q.q[s], isCur = s === curS, full = k.n >= k.of && k.of;
-      return '<a class="kitem h-emerald' + (isCur ? ' now' : '') + '" href="#/surah/' + s + '"><span class="kbox" style="font-family:var(--f-ar);font-size:16px;color:var(--h)" lang="ar">' + AN(s) + '</span><span class="grow"><b>' + esc(SN(s)) + '</b><small>' + (isCur ? esc(T('Learning now')) + ' · ' : '') + A.num(k.n) + ' / ' + A.num(k.of) + '</small></span>' + (A.ar() ? '' : '<span lang="ar" style="font-family:var(--f-ar);font-size:20px;color:var(--t2)">' + su.ar.replace(/^سُورَةُ\s*/, '') + '</span>') + (full ? A.icon('check', 20) : '') + '</a>';
+      return '<a class="kitem h-emerald' + (isCur ? ' now' : '') + '" href="#/surah/' + s + '" data-qs="' + s + '"><span class="kbox" style="font-family:var(--f-ar);font-size:16px;color:var(--h)" lang="ar">' + AN(s) + '</span><span class="grow"><b>' + esc(SN(s)) + '</b><small>' + (isCur ? esc(T('Learning now')) + ' · ' : '') + A.num(k.n) + ' / ' + A.num(k.of) + '</small></span><span class="qa-slot">' + shelfTag(s, st) + '</span>' + (A.ar() ? '' : '<span lang="ar" style="font-family:var(--f-ar);font-size:20px;color:var(--t2)">' + su.ar.replace(/^سُورَةُ\s*/, '') + '</span>') + (full ? A.icon('check', 20) : '') + '</a>';
     }).join('');
     return {
       hue: 'emerald',
-      html: '<div class="ph h-emerald">' + (A.hasImg('portal-quran') ? '<span class="ph-portal">' + A.portalImg('quran', true) + '</span>' : '<svg class="girih" viewBox="0 0 100 100">' + A.girih(null, .55) + '</svg>') + '<a class="backp" href="#/rooms">' + A.icon('back', 18) + '<span>' + esc(A.stage() >= 3 ? L(['Subjects', 'المواد']) : T('Rooms')) + '</span></a><h1>' + esc(T('Qurʾān')) + '</h1><p>' + esc(T('Listen, repeat, and keep it in your heart')) + '</p></div><div class="wrap"><button class="btn pri big wide" data-a="hf-now" style="margin:16px 0 4px">' + esc(T('Today’s portion')) + '</button>' + (A.N.has() && curS ? '<button class="btn ghost wide" data-a="hf-keep" data-s="' + curS + '" style="margin:6px 0 4px">' + A.icon('download', 18) + '<span>' + esc(L(['Keep ' + SN(curS) + ' offline', 'احفظ ' + SN(curS) + ' دون إنترنت'])) + '</span></button>' : '') + '<div class="unit"><div class="kl">' + list + '</div></div></div>',
-      mount: function () { if (curS && window.Voice && Voice.keep) Voice.keep(curS); }
+      html: '<div class="ph h-emerald">' + (A.hasImg('portal-quran') ? '<span class="ph-portal">' + A.portalImg('quran', true) + '</span>' : '<svg class="girih" viewBox="0 0 100 100">' + A.girih(null, .55) + '</svg>') + '<a class="backp" href="#/rooms">' + A.icon('back', 18) + '<span>' + esc(A.stage() >= 3 ? L(['Subjects', 'المواد']) : T('Rooms')) + '</span></a><h1>' + esc(T('Qurʾān')) + '</h1><p>' + esc(T('Listen, repeat, and keep it in your heart')) + '</p></div><div class="wrap"><button class="btn pri big wide" data-a="hf-now" style="margin:16px 0 4px">' + esc(T('Today’s portion')) + '</button>' + (A.N.has() ? '<div class="qa-row">' + (curS ? '<button class="btn ghost" data-a="hf-keep" data-s="' + curS + '">' + A.icon('download', 18) + '<span>' + esc(L(['Download ' + SN(curS), 'تنزيل تلاوة ' + SN(curS)])) + '</span></button>' : '') + '<button class="btn ghost" data-a="hf-offline">' + A.icon('speak', 18) + '<span>' + esc(L(['Offline audio', 'التلاوة دون إنترنت'])) + '</span></button></div>' : '') + '<div class="unit"><div class="kl">' + list + '</div></div></div>',
+      mount: function (v) {
+        if (curS && window.Voice && Voice.keep) Voice.keep(curS);
+        if (A.N.has() && Voice.onKeep) {
+          unsubKeep = Voice.onKeep(function (done, total) {
+            if (!v.isConnected || done < total) return;
+            var fresh = Voice.stats();
+            $$('[data-qs]', v).forEach(function (a) { var slot = $('.qa-slot', a); if (slot) slot.innerHTML = shelfTag(+a.dataset.qs, fresh); });
+          });
+        }
+      },
+      unmount: function () { if (unsubKeep) { unsubKeep(); unsubKeep = null; } }
     };
   };
   A.acts['hf-now'] = function () { if (Plan.over()) { A.go('rest'); return; } Fx.door('emerald', 'hifz'); };
-  A.acts['hf-keep'] = function (t) { var sv = +t.dataset.s; if (!sv || !window.Voice || !Voice.keep) return; Voice.keep(sv); A.toast(L(['Saving this sūrah on this device', 'جارٍ حفظ هذه السورة على هذا الجهاز'])); };
+  A.acts['hf-keep'] = function (t) { var sv = +t.dataset.s; if (!sv || !window.Voice || !Voice.keep) return; Voice.keep(sv, true); A.toast(L(['Downloading verses and words for this sūrah', 'جارٍ تنزيل آيات وكلمات هذه السورة'])); };
+  A.acts['hf-offline'] = function () {
+    if (!A.N.has()) return;
+    var h = Hifz.state(), curS = Q.order[h.i], r = A.S.reciter || 'h';
+    var juzAmma = Q.order.filter(function (s) { return s >= 78; });
+    var recLabel = r === 'h' ? T('Al-Ḥuṣarī, teaching pace') : T('Al-ʿAfāsī, flowing');
+    function metaHtml() {
+      var st = Voice.stats();
+      var fullN = Q.order.filter(function (s) { var k = Voice.surahState(s, st, r); return k === 'bundled' || k === 'saved'; }).length;
+      var verseN = Q.order.filter(function (s) { return Voice.surahCoverage(s, st, r).versesReady; }).length;
+      return '<b>' + esc(recLabel) + '</b><small>' + A.num(verseN) + ' / ' + A.num(Q.order.length) + ' ' + esc(L(['sūrahs (verses)', 'سورة (الآيات)'])) + ' · ' + A.num(fullN) + ' ' + esc(L(['with tap-to-hear words', 'مع نطق الكلمات'])) + (st.files ? ' · ' + fmtBytes(st.bytes) : '') + '</small>';
+    }
+    var st0 = Voice.stats();
+    A.sheet(L(['Offline Qurʾān audio', 'تنزيل تلاوة القرآن']), '<div class="qa-box">' +
+      '<p class="qa-meta" id="qa-meta">' + metaHtml() + '</p>' +
+      '<p id="qa-prog" class="qa-prog" role="status" aria-live="polite" hidden></p>' +
+      (curS ? '<button class="btn pri wide" id="qa-cur">' + A.icon('download', 18) + '<span>' + esc(L(['Download ' + SN(curS) + ' (verses & words)', 'تنزيل تلاوة ' + SN(curS) + ' (الآيات والكلمات)'])) + '</span></button>' : '') +
+      '<button class="btn sec wide" id="qa-juz">' + A.icon('download', 18) + '<span>' + esc(L(['Download Juzʾ ʿAmma (78–114)', 'تنزيل جزء عمّ (٧٨–١١٤)'])) + '</span></button>' +
+      '<button class="btn ghost wide" id="qa-clr"' + (st0.files ? '' : ' hidden') + '>' + esc(L(['Clear downloaded audio', 'مسح التلاوات المنزّلة'])) + '</button>' +
+      '<small class="qa-note">' + esc(L(['Bundled recordings and your family’s own voice recordings are never deleted.', 'لا تُحذف التسجيلات المدمجة ولا تسجيلات أسرتك أبدًا.'])) + '</small></div>', function (sh) {
+      var unsub = Voice.onKeep ? Voice.onKeep(function (done, total) {
+        if (!sh.isConnected) { unsub(); return; }
+        var m = $('#qa-meta', sh); if (m) m.innerHTML = metaHtml();
+        var cl = $('#qa-clr', sh); if (cl) cl.hidden = !(Voice.stats().files > 0);
+        if (done >= total) { var curB2 = $('#qa-cur', sh); if (curB2) curB2.disabled = false; var juzB2 = $('#qa-juz', sh); if (juzB2) juzB2.disabled = false; }
+      }) : function () { };
+      var curB = $('#qa-cur', sh); if (curB) curB.onclick = function () { Voice.keep(curS, true); var p0 = $('#qa-prog', sh); if (p0) { p0.hidden = false; p0.textContent = L(['Downloading…', 'جارٍ التنزيل…']); } };
+      var juzB = $('#qa-juz', sh); if (juzB) juzB.onclick = function () { var n = Voice.keepMany(juzAmma); var p0 = $('#qa-prog', sh); if (p0) { p0.hidden = false; p0.textContent = n ? L(['Downloading…', 'جارٍ التنزيل…']) : L(['Already ready offline', 'جاهز بالفعل دون إنترنت']); } };
+      var clrB = $('#qa-clr', sh); if (clrB) clrB.onclick = function () { if (clrB.dataset.arm !== '1') { clrB.dataset.arm = '1'; clrB.textContent = L(['Tap again to clear', 'انقر مجددًا للمسح']); return; } unsub(); Voice.clearAudio(); A.closeSheet(); A.toast(L(['Cleared', 'تم المسح'])); A.rerender(); };
+    });
+  };
 
   /* reading and listening to a whole sūrah; tap any word to hear it */
   A.V.surah = function (args) {
     if (!A.P()) return { redirect: 'home' };
     var s = +args[0], su = Q.q[s]; if (!su) return { redirect: 'room/quran' };
-    var cur = 0, playing = false;
+    var cur = 0, playing = false, unsubKeep = null;
     var rows = su.v.map(function (v, i) {
       return '<div class="tx-v" data-a2="' + v[0] + '" style="padding:10px 0;border-bottom:1px solid var(--line)"><div class="quran" lang="ar" dir="rtl" style="font-size:clamp(25px,7vw,34px)">' + ayahWords(s, v[0]) + '</div>' + trans(s, v[0]) + '</div>';
     }).join('');
+    function stText() { return A.N.has() && Voice.surahCoverage ? coverageLabel(Voice.surahCoverage(s, Voice.stats())) : ''; }
     return {
       hue: 'emerald',
-      html: '<div class="ph h-emerald"><a class="backp" href="#/room/quran">' + A.icon('back', 18) + '<span>' + esc(T('Qurʾān')) + '</span></a><h1>' + esc(SN(s)) + '</h1>' + (A.ar() ? '' : '<p lang="ar" style="font-family:var(--f-ar);font-size:24px">' + su.ar + '</p>') + '</div><div class="wrap">' + (s !== 1 && s !== 9 ? '<div class="bsm" style="margin:12px 0">' + Q.bsm + '</div>' : '') + rows + '<div style="height:90px"></div></div><div class="nav"><button class="btn sm sec" id="s-rec">' + esc(A.S.reciter === 'h' ? T('Teaching pace') : T('Flowing')) + '</button>' + (A.N.has() ? '<button class="btn sm ghost" data-a="hf-keep" data-s="' + s + '">' + A.icon('download', 16) + '<span>' + esc(L(['Keep offline', 'دون إنترنت'])) + '</span></button>' : '') + '<button class="round" id="s-play" style="width:50px;height:50px" aria-label="' + esc(T('Listen')) + '">' + A.icon('play', 24) + '</button></div>',
+      html: '<div class="ph h-emerald"><a class="backp" href="#/room/quran">' + A.icon('back', 18) + '<span>' + esc(T('Qurʾān')) + '</span></a><h1>' + esc(SN(s)) + '</h1>' + (A.ar() ? '' : '<p lang="ar" style="font-family:var(--f-ar);font-size:24px">' + su.ar + '</p>') + (A.N.has() ? '<p class="qa-surah-st" id="qa-surah-st" role="status" aria-live="polite">' + esc(stText()) + '</p>' : '') + '</div><div class="wrap">' + (s !== 1 && s !== 9 ? '<div class="bsm" style="margin:12px 0">' + Q.bsm + '</div>' : '') + rows + '<div style="height:90px"></div></div><div class="nav"><button class="btn sm sec" id="s-rec">' + esc(A.S.reciter === 'h' ? T('Teaching pace') : T('Flowing')) + '</button>' + (A.N.has() ? '<button class="btn sm ghost" data-a="hf-keep" data-s="' + s + '">' + A.icon('download', 16) + '<span>' + esc(L(['Download', 'تنزيل التلاوة'])) + '</span></button>' : '') + '<button class="round" id="s-play" style="width:50px;height:50px" aria-label="' + esc(T('Listen')) + '">' + A.icon('play', 24) + '</button></div>',
       mount: function (v) {
         $$('.tx-v', v).forEach(function (row) { bindWords(row, s, +row.dataset.a2); });
-        var pb = $('#s-play', v);
+        var pb = $('#s-play', v), stEl = $('#qa-surah-st', v);
+        function refreshSt(msg) { if (stEl) stEl.textContent = msg || stText(); }
+        if (A.N.has() && Voice.onKeep) {
+          unsubKeep = Voice.onKeep(function (done, total, bad, tag) {
+            if (!v.isConnected) return;
+            if (tag === 's:' + s) refreshSt(done >= total ? (bad ? L(['Downloaded with ' + bad + ' missing', 'تعذّر تنزيل ' + A.num(bad)]) : stText()) : L(['Downloading… ', 'جارٍ التنزيل… ']) + A.num(done) + ' / ' + A.num(total));
+            else if (done >= total) refreshSt();
+          });
+        }
         function mark(i) { $$('.tx-v .quran .w', v).forEach(function (w) { w.classList.remove('on'); }); var r = $$('.tx-v', v)[i]; if (r) { $$('.w', r).forEach(function (w) { w.classList.add('on'); }); r.scrollIntoView({ behavior: 'smooth', block: 'center' }); } }
         function go() {
           if (cur >= su.v.length) { playing = false; cur = 0; pb.innerHTML = A.icon('play', 24); mark(-1); return; }
@@ -178,9 +241,9 @@
           Voice.ayah(s, su.v[cur][0]).then(function (ok) { if (!playing) return; if (ok) { cur++; go(); } else { playing = false; pb.innerHTML = A.icon('play', 24); } });
         }
         pb.onclick = function () { playing = !playing; pb.innerHTML = A.icon(playing ? 'pause' : 'play', 24); if (playing) go(); else Voice.stop(); };
-        $('#s-rec', v).onclick = function () { A.S.reciter = A.S.reciter === 'h' ? 'a' : 'h'; A.save(); this.textContent = A.S.reciter === 'h' ? T('Teaching pace') : T('Flowing'); if (playing) { Voice.stop(); playing = true; go(); } };
+        $('#s-rec', v).onclick = function () { A.S.reciter = A.S.reciter === 'h' ? 'a' : 'h'; A.save(); this.textContent = A.S.reciter === 'h' ? T('Teaching pace') : T('Flowing'); refreshSt(); if (playing) { Voice.stop(); playing = true; go(); } };
       },
-      unmount: function () { playing = false; Voice.stop(); }
+      unmount: function () { playing = false; Voice.stop(); if (unsubKeep) { unsubKeep(); unsubKeep = null; } }
     };
   };
 })();

@@ -57,7 +57,8 @@ pub fn call(name: &str, body: &[u8]) -> Option<Value> {
         "voiceList" => Some(json!(serde_json::to_string(&store::names(&store::dirs().voice).into_iter().filter_map(|n| n.strip_suffix(".m4a").map(String::from)).collect::<Vec<_>>()).unwrap_or_default())),
         "audioKeep" => {
             let l: Vec<String> = serde_json::from_str(&s(0)).unwrap_or_default();
-            std::thread::spawn(move || audio_keep(l));
+            let gen = store::audio_gen();
+            std::thread::spawn(move || audio_keep(l, gen));
             None
         }
         "audioStats" => Some(json!(store::audio_stats())),
@@ -69,9 +70,12 @@ pub fn call(name: &str, body: &[u8]) -> Option<Value> {
         "exportFile" => {
             let (n, text) = (s(0), s(1));
             mc::later(move || {
-                let html = n.ends_with(".html");
+                let low = n.to_ascii_lowercase();
                 let name = if n.is_empty() { "Miftah.json".to_string() } else { n };
-                let f: &[(&str, &str)] = if html { &[("Web page", "*.html")] } else { &[("Miftāḥ record", "*.json")] };
+                let f: &[(&str, &str)] = if low.ends_with(".html") { &[("Web page", "*.html")] }
+                    else if low.ends_with(".txt") || low.ends_with(".md") { &[("Text document", "*.txt")] }
+                    else if low.ends_with(".csv") { &[("CSV file", "*.csv")] }
+                    else { &[("Miftāḥ file", "*.json")] };
                 let ok = dialogs::save(hwnd, &name, f, &dialogs::documents()).map(|p| std::fs::write(p, text.as_bytes()).is_ok()).unwrap_or(false);
                 exported(ok);
             });
@@ -206,17 +210,23 @@ fn start_link(a: &crate::App) -> bool {
     false
 }
 
-fn audio_keep(l: Vec<String>) {
+fn audio_keep(l: Vec<String>, gen: u64) {
     use std::sync::atomic::{AtomicUsize, Ordering};
     use std::sync::Arc;
     let total = l.len();
+    if total == 0 || store::audio_gen() != gen { return; }
     let (done, bad) = (Arc::new(AtomicUsize::new(0)), Arc::new(AtomicUsize::new(0)));
     let q = Arc::new(std::sync::Mutex::new(l));
     let workers: Vec<_> = (0..4).map(|_| {
         let (q, done, bad) = (q.clone(), done.clone(), bad.clone());
         std::thread::spawn(move || loop {
+            if store::audio_gen() != gen { break; }
             let Some(rel) = q.lock().unwrap().pop() else { break };
-            if store::cached_audio(&rel).is_none() { bad.fetch_add(1, Ordering::SeqCst); }
+            if store::cached_audio_gen(&rel, Some(gen)).is_none() {
+                if store::audio_gen() != gen { break; }
+                bad.fetch_add(1, Ordering::SeqCst);
+            }
+            if store::audio_gen() != gen { break; }
             let d = done.fetch_add(1, Ordering::SeqCst) + 1;
             if d == total || d % 20 == 0 { post(format!("window.__native.onAudioKeep&&__native.onAudioKeep({},{},{})", d, total, bad.load(Ordering::SeqCst))); }
         })

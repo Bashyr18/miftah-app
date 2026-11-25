@@ -664,6 +664,84 @@ const unlock = (TT) => { TT.go('parent'); const qq = TT.A.$('.gate p').textConte
   ok(!!A.$('a[href="#/sheet/' + sh1.id + '/list"]'), 'My sheets reopens a reviewed sheet even after seenMark cleared Home');
   await navigate('sheet/' + sh1.id + '/list');
   ok(A.$('.ink-back')?.getAttribute('href') === '#/sheets' && !A.$('.ink.edit'), 'opening a reviewed sheet from My sheets is read-only and returns to My sheets');
+  ok(!!A.$('#ink-print'), 'read-only finished sheet offers Print / PDF export');
+
+  /* Ink.renderHtml overlays child ink, parent red marks, and marked score for A4 portfolio PDF, safely DOM-built */
+  sh1.ink = { 0: [{ c: 'k', w: 2.4, p: [100, 200, 140, 220, 180, 210] }, { c: 'k', w: 2, p: ['0" onload="alert(1)', 10] }] };
+  sh1.mk = { 0: [{ c: 'r', w: 3, p: [200, 200, 240, 240] }] };
+  const portfolioHtml = w.Ink.renderHtml(sh1, 's2');
+  ok(!!portfolioHtml && portfolioHtml.includes('ink-over') && portfolioHtml.includes('viewBox="0 0 1000 1414.3"') && !portfolioHtml.includes('inset:11mm') && !portfolioHtml.includes('onload') && portfolioHtml.includes('#d0342c') && portfolioHtml.includes('#1d1a16') && portfolioHtml.includes(sh1.right + ' / ' + sh1.q.length), 'Ink.renderHtml safely bakes full-page ink, red marks and score without markup injection');
+
+  /* Print.renderSheet preserves original stored questions, sanitizes sh.q[].h, pins date & dir */
+  const origQ0 = sh1.q[0].h;
+  sh1.q[0].h = origQ0 + '<img src=x onerror="alert(1)"><script>bad()</script>';
+  w.C.rooms.math.units.slice(0, 3).forEach(u => u.skills.forEach(sk => w.M.forge(sk.id, 's2')));
+  A.S.lang = 'ar';
+  const replayed = w.Print.renderSheet(sh1, 's2');
+  A.S.lang = 'en';
+  ok(!!replayed && replayed.html.includes('dir="ltr"') && !replayed.html.includes('onerror') && !replayed.html.includes('<script'), 'Print.renderSheet sanitizes stored sh.q[].h and preserves original ltr/rtl dir');
+  const pcRes = w.Print.make('week', 's2', 555);
+  const pcSh = w.Print.toScreen(pcRes, 's2');
+  const day1Html = w.Print.renderSheet(pcSh, 's2').html;
+  w.__t += 2 * 864e5;
+  const day3Html = w.Print.renderSheet(pcSh, 's2').html;
+  ok(day1Html === day3Html, 'Print.renderSheet pins creation date so worksheets keep original dates under ink');
+
+  /* Parent Record exposes completed on-screen sheets and read-only PDF export */
+  async function openGate() { await navigate('parent'); const gp = A.$('.gate p'); if (gp) { const q = gp.textContent.split('+').map(x => parseInt(x)); A.$$('.numopt').find(b => +b.dataset.v === q[0] + q[1]).click(); await new Promise(r => w.setTimeout(r, 0)); } }
+  await openGate();
+  await navigate('parent/s2/record');
+  ok(!!A.$('a[href="#/parent/s2/mark/' + sh1.id + '"]'), 'parent Record links completed on-screen sheets for PDF export');
+  await navigate('parent/s2/mark/' + sh1.id);
+  ok(!!A.$('#mk-print') && !A.$('#mk-go'), 'reopening a marked sheet in parent view offers read-only Print / PDF');
+
+  /* Offline Quran audio verse+word coverage, unified progress dispatcher, and clear without auto-refill */
+  let keptAudio = [], clearedAudio = 0;
+  w.AndroidBridge = {
+    voiceList: () => '[]', speakLangs: () => 'ar',
+    audioStats: () => JSON.stringify({ bytes: 204800, files: 19, counts: { h: { '2': 286 }, a: { '112': 4 }, w: { '112': 15 } } }),
+    audioKeep: (j) => { keptAudio.push(JSON.parse(j)); },
+    audioClear: () => { clearedAudio++; }
+  };
+  const aSt = w.Voice.stats();
+  ok(w.Voice.surahState(112, aSt, 'h') === 'bundled', 'Juz Amma with al-Husari and cached words reports bundled offline');
+  ok(w.Voice.surahState(113, aSt, 'h') === 'verses', 'bundled surah without cached words honestly reports verses-only');
+  ok(w.Voice.surahState(112, aSt, 'a') === 'saved', 'cached al-Afasi surah with words reports saved offline');
+  ok(w.Voice.surahState(113, aSt, 'a') === 'online', 'uncached al-Afasi surah reports online');
+  A.S.reciter = 'a';
+  const qCount = w.Voice.keepMany([112, 113]);
+  ok(qCount > 0 && keptAudio[0].some(x => x.startsWith('a/112')) && keptAudio[0].some(x => x.startsWith('w/113_')), 'Voice.keepMany queues verses and word audio for multiple surahs');
+  A.S.reciter = 'h';
+  w.Voice.clearAudio();
+  const keptBeforeQuran = keptAudio.length;
+  await navigate('room/quran');
+  w.__native.onAudioKeep(10, 10, 0);
+  w.__native.onAudioKeep(10, 10, 0);
+  ok(clearedAudio === 1 && keptAudio.length === keptBeforeQuran, 'Voice.clearAudio avoids auto-refill and onAudioKeep never loops on Quran shelf');
+
+  /* Standalone course export/import lossless round-trip, legacy @header stripping, and unique lesson numbering */
+  const exportedCourse = A.Books.exportText({ name: 'Co-op Physics', room: 'science', y: 5, kind: 'course', lessons: [
+    { n: 1, title: 'Work', words: [['force', 'قُوَّة']], grammar: ['W = Fd'], sents: [['Work is measured in joules.', '']], qs: [['Formula for work?', 'W = Fd', 'F / d']] },
+    { n: 3, title: 'Power', words: [['power', 'P = W / t']], grammar: [], sents: [], qs: [] }
+  ] });
+  const importedBk = A.Books.importCourse(exportedCourse);
+  ok(!!importedBk && importedBk.name === 'Co-op Physics' && importedBk.lessons[0].qs[0][1] === 'W = Fd' && importedBk.lessons[0].words[0][0] === 'force' && !!w.C.units['bk-' + importedBk.id], 'Books.exportText/importCourse preserves equations, direction and registers immediately');
+  const legacyParsed = A.Books.parseCourse('@course: Legacy\n@room: science\n\n# 9007199254740992 Huge\n! Only a grammar rule');
+  ok(legacyParsed.name === 'Legacy' && legacyParsed.lessons.length === 1 && legacyParsed.lessons[0].grammar.length === 1 && legacyParsed.lessons[0].n <= 9999, 'Books.parseCourse keeps grammar-only lessons and clamps overflowing lesson numbers');
+  await openGate();
+  await navigate('parent/books/' + importedBk.id);
+  A.$('#bk-add').click();
+  ok(importedBk.lessons[importedBk.lessons.length - 1].n === 4, 'Add a lesson assigns max(n)+1 rather than colliding with lesson 3');
+
+  /* Teen flashcard quote-aware import/export with composite dedupe, Arabic comma, multiline & lossless round-trip */
+  A.S.cur = 'g'; A.D('g').cards = [];
+  const imp1 = A.Cards.importText('\nfront,back,subject\nOhm law,V = IR,Physics\n"Power formula","P = IV",Physics\nCell = Basic unit of life\nCell\tBattery source\tPhysics\nCell\tBattery source\tPhysics\nالشمس، نجم قريب', 'Biology');
+  ok(imp1.added === 5 && imp1.skipped === 1 && A.D('g').cards[0].f === 'Ohm law' && A.D('g').cards[0].b === 'V = IR' && A.D('g').cards[1].b === 'P = IV' && A.D('g').cards[2].deck === 'Biology' && A.D('g').cards[3].deck === 'Physics' && A.D('g').cards[4].f === 'الشمس', 'Cards.importText handles CSV with =, same front across subjects, Arabic comma and header after blank line');
+  A.D('g').cards.unshift({ f: '#1\nLine 2', b: 'First\nanswer', deck: 'Notes', next: 0, gap: 0 }, { f: 'Term', b: 'Definition', deck: 'Vocab', next: 0, gap: 0 });
+  const exportedCards = A.Cards.text(A.D('g').cards);
+  A.D('g').cards = [];
+  const imp2 = A.Cards.importText(exportedCards);
+  ok(imp2.added === 7 && A.D('g').cards[0].f === '#1\nLine 2' && A.D('g').cards[0].b === 'First\nanswer' && A.D('g').cards[1].f === 'Term' && A.D('g').cards[2].b === 'V = IR', 'Cards.text round-trips multiline cards, #1, Term/Definition and equations losslessly');
 })().then(() => {
   console.log(pass + ' passed, ' + fail + ' failed');
   process.exit(fail ? 1 : 0);

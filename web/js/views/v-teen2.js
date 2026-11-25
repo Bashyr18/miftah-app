@@ -71,6 +71,107 @@
     });
   };
   /* ---------- flashcards ---------- */
+  var MAX_CARD_BYTES = 2 * 1024 * 1024;
+  function csvCell(s) {
+    var v = String(s || '').replace(/\r\n/g, '\n');
+    return /[",\r\n\u060C]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v;
+  }
+  function splitDelim(line, delim, allowArComma) {
+    var out = [], cur = '', inQ = false;
+    for (var i = 0; i < line.length; i++) {
+      var ch = line.charAt(i);
+      if (inQ) { if (ch === '"' && line.charAt(i + 1) === '"') { cur += '"'; i++; } else if (ch === '"') inQ = false; else cur += ch; }
+      else if (ch === '"') inQ = true;
+      else if (ch === delim || (allowArComma && ch === '،')) { out.push(cur.trim()); cur = ''; }
+      else cur += ch;
+    }
+    out.push(cur.trim());
+    return out;
+  }
+  function parseCsvRecords(raw) {
+    var rows = [], row = [], cur = '', inQ = false;
+    for (var i = 0; i < raw.length; i++) {
+      var ch = raw.charAt(i);
+      if (inQ) {
+        if (ch === '"' && raw.charAt(i + 1) === '"') { cur += '"'; i++; }
+        else if (ch === '"') inQ = false;
+        else cur += ch;
+      } else if (ch === '"') { inQ = true; }
+      else if (ch === ',') { row.push(cur.trim()); cur = ''; }
+      else if (ch === '\r' || ch === '\n') {
+        if (ch === '\r' && raw.charAt(i + 1) === '\n') i++;
+        row.push(cur.trim()); cur = '';
+        if (row.some(Boolean)) rows.push(row);
+        row = [];
+      } else { cur += ch; }
+    }
+    row.push(cur.trim());
+    if (row.some(Boolean)) rows.push(row);
+    return rows;
+  }
+  function findUnquoted(line, ch) {
+    var inQ = false;
+    for (var i = 0; i < line.length; i++) {
+      var c = line.charAt(i);
+      if (inQ) { if (c === '"' && line.charAt(i + 1) === '"') i++; else if (c === '"') inQ = false; }
+      else if (c === '"') inQ = true;
+      else if (c === ch) return i;
+    }
+    return -1;
+  }
+  function cardKey(c) {
+    return String(c.f || '').trim().toLowerCase() + '\u0000' + String(c.b || '').trim().toLowerCase() + '\u0000' + String(c.deck || '').trim().toLowerCase();
+  }
+  A.Cards = {
+    parse: function (text, defaultDeck) {
+      var raw = String(text || '').replace(/^\uFEFF/, '');
+      if (raw.length > MAX_CARD_BYTES) return { tooLarge: true, items: [] };
+      var out = [], def = String(defaultDeck || '').trim();
+      var lead = raw.match(/^\s*#\s*miftah-cards-v1\s*(?:\r?\n|$)/i);
+      if (lead) {
+        parseCsvRecords(raw.slice(lead[0].length)).forEach(function (cols) {
+          if (cols.length >= 2 && cols[0] && cols[1]) out.push({ f: cols[0], b: cols[1], deck: (cols[2] || def || '').trim() });
+        });
+        return out;
+      }
+      var lines = raw.split(/\r?\n/), firstData = true;
+      lines.forEach(function (line0) {
+        var line = line0.trim(); if (!line || line.charAt(0) === '#') return;
+        var cols, tabAt = findUnquoted(line, '\t'), eqAt = findUnquoted(line, '='), cAt = findUnquoted(line, ','), acAt = findUnquoted(line, '،');
+        var commaAt = cAt >= 0 && acAt >= 0 ? Math.min(cAt, acAt) : Math.max(cAt, acAt);
+        if (tabAt >= 0) cols = splitDelim(line, '\t', false);
+        else if (line.charAt(0) === '"' || (commaAt >= 0 && (eqAt < 0 || commaAt < eqAt))) cols = splitDelim(line, ',', true);
+        else if (eqAt >= 0) cols = [line.slice(0, eqAt).trim(), line.slice(eqAt + 1).trim()];
+        else if (commaAt >= 0) cols = splitDelim(line, ',', true);
+        else return;
+        if (cols.length < 2 || !cols[0] || !cols[1]) return;
+        if (firstData) {
+          firstData = false;
+          if (/^(front|question|term|السؤال|المصطلح)$/i.test(cols[0]) && /^(back|answer|meaning|definition|الجواب|المعنى)$/i.test(cols[1])) return;
+        }
+        out.push({ f: cols[0], b: cols[1], deck: (cols[2] || def || '').trim() });
+      });
+      return out;
+    },
+    text: function (cards) {
+      var rows = (cards || []).map(function (c) { return csvCell(c.f) + ',' + csvCell(c.b) + ',' + csvCell(c.deck || ''); });
+      return '# miftah-cards-v1\n' + rows.join('\n') + (rows.length ? '\n' : '');
+    },
+    importText: function (text, defaultDeck) {
+      var parsed = A.Cards.parse(text, defaultDeck);
+      if (parsed && parsed.tooLarge) return { added: 0, skipped: 0, tooLarge: true };
+      var items = parsed || [], d = A.D(), existing = d.cards || [], seen = Object.create(null), added = 0, skipped = 0;
+      existing.forEach(function (c) { seen[cardKey(c)] = 1; });
+      items.forEach(function (c) {
+        var k = cardKey(c);
+        if (seen[k]) { skipped++; return; }
+        seen[k] = 1; existing.push({ f: c.f, b: c.b, deck: c.deck, next: 0, gap: 0 }); added++;
+      });
+      d.cards = existing;
+      if (added) A.saveNow();
+      return { added: added, skipped: skipped };
+    }
+  };
   function gaps(c) { return [.01, Math.max(1, (c.gap || 1) * 1.2), Math.min(180, Math.max(1, (c.gap || .5) * 2.4))]; }
   function gapTxt(g) { return g < 1 ? N(15) + L([' min', ' د']) : N(Math.round(g)) + L(['d', 'ي']); }
   A.V.flash = function () {
@@ -79,6 +180,7 @@
     var list = cards.map(function (x, i) { var left = Math.ceil(((x.next || 0) - A.now().getTime()) / DAY); return '<div class="row2"><span class="grow"><b>' + esc(x.f) + '</b><small>' + esc(x.deck || '') + '</small></span><span class="cnt' + (left <= 0 ? ' hot' : '') + '">' + (left <= 0 ? esc(L(['due', 'الآن'])) : N(left) + L(['d', 'ي'])) + '</span><button class="ibtn" data-del="' + i + '" aria-label="' + esc(L(['Delete', 'حذف'])) + '">' + A.icon('close', 16) + '</button></div>'; }).join('');
     return {
       html: head(L(['Cards', 'البطاقات']), '', ['study', ['Study', 'الدراسة']]) + '<div class="tw sw"><div class="fl-k"><span><b>' + N(due.length) + '</b>' + esc(L(['due', 'مستحقة'])) + '</span><span><b>' + N(cards.length) + '</b>' + esc(L(['in all', 'الكل'])) + '</span><button class="ibtn on" data-a="c-add" aria-label="' + esc(L(['New card', 'بطاقة جديدة'])) + '">' + PLUS + '</button></div>' +
+        '<div class="fl-acts"><button class="btn ghost sm" data-a="c-imp">' + A.icon('download', 16) + '<span>' + esc(L(['Import deck', 'استيراد بطاقات'])) + '</span></button>' + (cards.length ? '<button class="btn ghost sm" data-a="c-exp">' + esc(L(['Export deck', 'تصدير البطاقات'])) + '</button>' : '') + '</div>' +
         (c ? '<button class="tflash" data-a="t-flip" id="t-card"><small>' + esc(c.deck || '') + '</small><span>' + esc(c.f) + '</span></button><div class="grades" id="t-grade" hidden><button data-a="t-grade" data-g="0"><b>' + esc(L(['Again', 'أعد'])) + '</b><small>' + gapTxt(gp[0]) + '</small></button><button data-a="t-grade" data-g="1"><b>' + esc(L(['Hard', 'صعبة'])) + '</b><small>' + gapTxt(gp[1]) + '</small></button><button class="on" data-a="t-grade" data-g="2"><b>' + esc(L(['Knew it', 'عرفتها'])) + '</b><small>' + gapTxt(gp[2]) + '</small></button></div>' : (cards.length ? '<div class="tflash idle"><span>' + A.icon('check', 28) + '</span></div>' : '<button class="mempty" data-a="c-add"><span>' + PLUS + '</span><b>' + esc(L(['New card', 'بطاقة جديدة'])) + '</b></button>')) +
         (list ? '<div class="card" style="margin-top:12px">' + list + '</div>' : '') + '</div>',
       mount: function (v) { $$('[data-del]', v).forEach(function (b) { twoTap(b, function () { A.D().cards.splice(+b.dataset.del, 1); A.saveNow(); A.rerender(); }); }); }
@@ -89,6 +191,29 @@
       var f = $('#t-f', sh), b = $('#t-b', sh); setTimeout(function () { f.focus(); }, 220);
       $('#c-go', sh).onclick = function () { if (!f.value.trim()) { Fx.shake(f); return; } if (!b.value.trim()) { Fx.shake(b); return; } var d = A.D(); d.cards = (d.cards || []).concat([{ f: f.value.trim(), b: b.value.trim(), deck: $('#t-dk', sh).value.trim(), next: 0, gap: 0 }]); A.saveNow(); f.value = ''; b.value = ''; f.focus(); A.__cardsDirty = true; A.toast(L(['Added', 'أُضيفت'])); };
     });
+  };
+  A.acts['c-imp'] = function () {
+    A.sheet(L(['Import cards', 'استيراد بطاقات']), '<div class="ed"><p class="bk-help">' + esc(L(['One card per line: question = answer, tab-separated, or CSV (front,back,subject).', 'بطاقة في كل سطر: سؤال = جواب، أو مفصولة بمسافة جدولة أو فاصلة.'])) + '</p><button class="btn sec wide" id="ci-fb">' + A.icon('download', 18) + '<span>' + esc(L(['Choose a .txt or .csv file', 'اختر ملف txt أو csv'])) + '</span></button><input type="file" id="ci-f" accept=".txt,.csv,.tsv,text/plain,text/csv" hidden><label for="ci-dk" class="bk-help">' + esc(L(['Default subject (optional)', 'المادة الافتراضية (اختياري)'])) + '</label><input class="tin" id="ci-dk" placeholder="' + esc(L(['e.g. Biology', 'مثلًا: الأحياء'])) + '"><label for="ci-t" class="bk-help">' + esc(L(['Cards to import', 'البطاقات المراد استيرادها'])) + '</label><textarea class="tin" id="ci-t" rows="6" dir="auto" placeholder="' + esc(A.ar() ? 'البناء الضوئي = تحويل الضوء إلى غذاء في النبات\nالانقسام المتساوي = انقسام الخلية إلى خليتين متطابقتين' : 'Photosynthesis = Plants turning light into glucose\nMitosis = Cell division producing two identical cells') + '"></textarea><button class="btn pri wide" id="ci-go">' + esc(L(['Import cards', 'استيراد البطاقات'])) + '</button></div>', function (sh) {
+      var fi = $('#ci-f', sh), ta = $('#ci-t', sh);
+      $('#ci-fb', sh).onclick = function () { fi.click(); };
+      fi.onchange = function () {
+        if (!fi.files || !fi.files[0]) return;
+        if (fi.files[0].size > MAX_CARD_BYTES) { A.toast(L(['That file is too large (max 2 MB)', 'هذا الملف كبير جدًا (الحد ٢ ميغابايت)'])); fi.value = ''; return; }
+        var r = new FileReader(); r.onload = function () { ta.value = String(r.result || ''); }; r.readAsText(fi.files[0]);
+      };
+      $('#ci-go', sh).onclick = function () {
+        var r = A.Cards.importText(ta.value, $('#ci-dk', sh).value);
+        if (r.tooLarge) { A.toast(L(['That text is too large (max 2 MB)', 'هذا النص كبير جدًا (الحد ٢ ميغابايت)'])); return; }
+        if (!r.added) { A.toast(L(r.skipped ? ['All those cards are already in your deck', 'كل هذه البطاقات موجودة بالفعل'] : ['No cards found. Use question = answer on each line.', 'لم يُعثر على بطاقات. استعمل سؤال = جواب في كل سطر.'])); return; }
+        A.closeSheet(); A.toast(L(['Added ', 'أُضيف ']) + N(r.added) + L([' cards', ' بطاقة']) + (r.skipped ? ' · ' + N(r.skipped) + ' ' + L(['skipped', 'تم تخطيها']) : '')); A.rerender();
+      };
+    });
+  };
+  A.acts['c-exp'] = function () {
+    var cards = A.D().cards || []; if (!cards.length) return;
+    var txt = A.Cards.text(cards), fname = 'Miftah-cards-' + A.day() + '.csv';
+    if (A.N.has()) A.N.call('exportFile', fname, txt);
+    else { var u = URL.createObjectURL(new Blob([txt], { type: 'text/csv;charset=utf-8' })), a = document.createElement('a'); a.href = u; a.download = fname; a.click(); setTimeout(function () { URL.revokeObjectURL(u); }, 60000); A.toast(L(['Deck exported', 'تم تصدير البطاقات'])); }
   };
   var close1 = A.closeSheet; A.closeSheet = function () { var r = close1(); if (A.__cardsDirty) { A.__cardsDirty = false; if (A.route() === 'flash') A.rerender(); } return r; };
   /* ---------- essays: delete, and bring back an earlier version ---------- */
@@ -101,7 +226,7 @@
     var m0 = v.mount, un0 = v.unmount; var gone = false;
     v.unmount = function () { if (!gone && un0) un0(); };
     v.mount = function (el) {
-      m0(el); var p0 = $('#t-w-p', el); if (p0) p0.oninput = function () { w.plan = p0.value; A.save(); };
+      m0(el);
       var x = $('#t-w-x', el); if (x) twoTap(x, function () { gone = true; A.D().work.splice(+id, 1); A.saveNow(); A.go('write'); });
       var vb = $('#t-w-v', el); if (vb) vb.onclick = function () { A.picker(L(['Versions', 'النسخ']), w.versions.map(function (q, i) { return { v: String(i), t: new Date(q.t).toLocaleDateString(A.ar() ? 'ar-u-nu-arab' : 'en', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' }) + ' · ' + N(words(q.text)) + ' ' + L(['words', 'كلمة']) }; }).reverse(), '', function (i) { var q = w.versions[+i]; w.versions.push({ t: A.now().getTime(), text: w.text }); w.text = q.text; A.saveNow(); gone = true; A.rerender(); }); };
     };

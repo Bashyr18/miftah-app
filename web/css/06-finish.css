@@ -380,3 +380,13 @@ body[data-view=parent] .linkb.kn{min-height:36px}
 .ink-all>svg:first-child{color:var(--gold2);flex:none}
 .ink-sheets{margin-top:14px;display:grid;gap:12px}
 .ink-sec .li.done>svg:first-child{color:var(--ok,#2e9d6e)}
+.ink-h-acts{display:flex;align-items:center;gap:8px;flex:none}
+.qa-row{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0 4px}
+.qa-row .btn{flex:1 1 160px}
+.qa-tag{flex:none;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:700;color:var(--ok,#2e9d6e);background:color-mix(in srgb,var(--ok,#2e9d6e) 12%,transparent)}
+.qa-tag.part{color:var(--gold2);background:color-mix(in srgb,var(--gold2) 14%,transparent)}
+.qa-box{display:grid;gap:10px}.qa-meta b{display:block;font-size:15px}.qa-meta small{display:block;font-size:13px;color:var(--t2);margin-top:2px}
+.qa-prog{font-size:13.5px;font-weight:600;color:var(--gold2);margin:0}
+.qa-note{color:var(--t3);font-size:12.5px;line-height:1.45}
+.qa-surah-st{font-size:13px;opacity:.85;margin-top:4px}
+.fl-acts{display:flex;flex-wrap:wrap;gap:8px;margin:-4px 0 10px}

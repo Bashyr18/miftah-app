@@ -1,7 +1,7 @@
 [
- ["Transferred courses are immediately ready to open on both Android and Windows after sync or restore", "المقررات المنقولة تصبح جاهزة فورًا للفتح على أندرويد وويندوز بعد المزامنة أو الاستعادة"],
- ["Parents can play a child’s saved Qurʾān recordings right beside the reference reciter in the Qurʾān tab", "يستطيع الوالدان سماع تسجيلات الطفل المحفوظة للقرآن إلى جانب القارئ المرجعي في تبويب القرآن"],
- ["Family cards now show direct parent actions (Mark sheet, Listen to recitation, Confirm deed, Review shared work)", "بطاقات الأسرة تعرض الآن إجراءات مباشرة للوالدين (تصحيح الورقة، سماع التلاوة، تأكيد العمل، مراجعة العمل المُشارَك)"],
- ["Learners get a My sheets page to reopen assigned, submitted and marked on-screen sheets any time", "أضيفت صفحة «أوراقي» للمتعلم لإعادة فتح الأوراق المكلّف بها والمُرسلة والمصحّحة في أي وقت"],
- ["Reliability & upgrade fixes: safer Windows restore backups, legacy installer handoff, essay draft flush, ḥifẓ sync and PIN safety", "إصلاحات الموثوقية والترقية: نسخ احتياطي آمن قبل الاستعادة على ويندوز، حفظ مسودة المقال عند المزامنة، دمج الحفظ وحماية الرمز"]
+ ["Print or save completed on-screen sheets as A4 PDFs with the child’s writing, parent red marks and saved score intact", "اطبع أو احفظ الأوراق المنجزة على الشاشة بصيغة PDF مع خط الطفل وتصحيح الوالدين والنتيجة المحفوظة"],
+ ["Completed on-screen sheets stay accessible in the child’s Record for portfolio printing any time", "تبقى الأوراق المنجزة على الشاشة متاحة في سجل الطفل لطباعتها في ملف الأعمال في أي وقت"],
+ ["Offline Qurʾān audio manager showing verse and word readiness per sūrah, Juzʾ ʿAmma download, live progress and safe cache clearing", "إدارة التلاوة دون إنترنت مع بيان جاهزية الآيات والكلمات لكل سورة، وتنزيل جزء عمّ، وشريط التقدم، ومسح التنزيلات بأمان"],
+ ["Export and import standalone Courses as lossless files to share curricula across families, teachers and co-ops", "تصدير واستيراد المقررات كملفات مستقلة كاملة لمشاركتها بين الأسر والمعلمين والمجموعات"],
+ ["Teen flashcards now support bulk CSV/TSV/text import and lossless deck export on Android and Windows", "بطاقات المراجعة للطلاب تدعم الآن الاستيراد الجماعي وتصدير المجموعات كاملة على أندرويد وويندوز"]
 ]
