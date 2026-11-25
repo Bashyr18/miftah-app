@@ -83,7 +83,7 @@
       if (b.recs && +b.recs[verse] === +o.recs[verse]) ids = ids.concat(Voice.recSources(b, verse, remoteId));
       ids = Array.from(new Set(ids));
       // The file keeps the source profile ID, even if the two learner records were joined under a different ID.
-      if (ids.length > 1 || (ids.length === 1 && ids[0] !== localId)) sources[verse] = ids;
+      if (ids.length > 1 || (ids.length === 1 && ids[0] !== localId)) sources[verse] = { t: +o.recs[verse], ids: ids };
     });
     if (Object.keys(sources).length) o.recSources = sources;
     else delete o.recSources;

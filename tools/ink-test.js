@@ -15,7 +15,9 @@ module.exports = async (p) => {
       const right = Math.min(innerWidth, r.right), bottom = Math.min(innerHeight, r.bottom);
       const x = left + (right - left) * ${column}, y = top + (bottom - top) * ${row};
       const hit = document.elementFromPoint(x, y);
-      return {x,y,hit: hit === canvas, blocker: hit && hit.outerHTML.split('>')[0],
+      const fits = right > left && bottom > top && x + 30 < right && y + 18 < bottom;
+      return {x,y,hit: fits && hit === canvas && document.elementFromPoint(x + 30, y + 18) === canvas,
+        blocker: hit && hit.outerHTML.split('>')[0],
         rect: r.toJSON(), viewport: [innerWidth, innerHeight]};
     })()`;
     let start;
@@ -39,7 +41,7 @@ module.exports = async (p) => {
   await p.eval(`(function(){var y=2026;A.now=function(){return new Date(2026,10,12,10,0,0)};A.S.profiles=[{id:'u9',name:'Yusuf',by:y-9,bm:1,g:'m',hue:'teal',since:'2026-09-01'}];A.S.data={};A.S.cur='u9';A.S.pin='';A.S.schoolBreak=null;A.S.motion='off';A.S.lang='en';A.S.theme='light';
     var n=0;C.rooms.math.units.forEach(function(u){if(u.y<=4)u.skills.forEach(function(s){if(n++<40)M.forge(s.id,'u9')})});A.saveNow();return 1})()`);
   /* the parent sends a practice sheet on screen */
-  const code = await p.eval(`(function(){var r=Print.make('practice-math','u9',4242);var sh=Print.toScreen(r,'u9');return sh.id})()`);
+  const code = await p.eval(`(function(){var r=Print.make('practice-math','u9',4242);var sh=Print.toScreen(r,'u9');A.rerender();return sh.id})()`);
   check('a practice sheet can go on screen', !!code && await p.eval(`Print.canScreen('practice-math') && !Print.canScreen('bingo')`));
   check('it is not yet waiting for the parent', !(await p.eval(`(A.D('u9').sheets||[]).some(Print.waiting)`)));
   await p.go('home', 1400);
@@ -49,7 +51,7 @@ module.exports = async (p) => {
   check('the sheet opens with a page to write on', await p.eval(`!!document.querySelector('.ink-cv') && document.querySelector('.ink-cv').width > 100`));
   for (let k = 0; k < 3; k++) await stroke('.ink-cv', .3 + k * .1, .3 + k * .05);
   await p.wait(300);
-  check('three strokes are saved on page 1', await p.eval(`(A.D('u9').sheets.filter(x=>x.id==='${code}')[0].ink[0]||[]).length`) === 3);
+  check('three multi-point strokes are saved on page 1', await p.eval(`(() => { const strokes = A.D('u9').sheets.find(x=>x.id==='${code}').ink[0] || []; return strokes.length === 3 && strokes.every(s=>s.p.length>=6); })()`));
   await p.eval(`document.querySelector('[data-t=undo]').click();1`);
   check('undo takes the last one away', await p.eval(`A.D('u9').sheets.filter(x=>x.id==='${code}')[0].ink[0].length`) === 2);
   await p.shot('2-writing');
@@ -65,7 +67,7 @@ module.exports = async (p) => {
   check('the marking page shows their writing', await p.eval(`!!document.querySelector('#mk-ink .ink-cv')`));
   await stroke('#mk-ink .ink-cv', .2, .2);
   await p.wait(200);
-  check('the parent\'s red mark is kept apart from the child\'s writing', await p.eval(`(function(){var s=A.D('u9').sheets.filter(x=>x.id==='${code}')[0];return s.mk[0].length===1&&s.mk[0][0].c==='r'&&s.ink[0].length===2})()`));
+  check('the parent\'s red mark is kept apart from the child\'s writing', await p.eval(`(function(){var s=A.D('u9').sheets.filter(x=>x.id==='${code}')[0];return s.mk[0].length===1&&s.mk[0][0].c==='r'&&s.mk[0][0].p.length>=6&&s.ink[0].length===2})()`));
   await p.shot('3-marking');
   const before = await p.eval(`A.D('u9').led.length`);
   await p.eval(`document.querySelector('.mk').click();document.querySelector('#mk-go').click();1`); await p.wait(600);

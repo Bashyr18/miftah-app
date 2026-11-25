@@ -114,7 +114,8 @@
   V.hasVoice = function (k) { return !!have[k]; };
   V.recKey = function (pid, s, a) { return 'rec_' + pid + '_' + s + '_' + a; };
   V.recSources = function (data, verse, pid) {
-    var ids = data && data.recSources && data.recSources[verse];
+    var entry = data && data.recSources && data.recSources[verse];
+    var ids = entry && +entry.t === +(data.recs && data.recs[verse]) ? entry.ids : null;
     var valid = function (id) { return typeof id === 'string' && /^[a-z0-9_-]{1,96}$/i.test(id); };
     return Array.isArray(ids) && ids.some(valid) ? ids.filter(valid) : [pid].filter(valid);
   };

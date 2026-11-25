@@ -673,7 +673,14 @@ const unlock = (TT) => { TT.go('parent'); const qq = TT.A.$('.gate p').textConte
   A.S.profiles.push(kid(9, 's2'));
   voiceKeys.push('rec_phone_112_1', 'rec_s2_112_1');
   const androidLearner = {...A.profile('g'), id: 'phone'};
-  const clip = {profiles: [androidLearner], data: {phone: {recs: {'112:1': w.__t + 500}}}};
+  const clip = {profiles: [androidLearner], data: {phone: {recs: {'112:1': w.__t - 1}}}};
+  let result = A.Sync.merge(A.S, clip, true).S.data.g;
+  ok(result.recs['112:1'] === w.__t && !result.recSources?.['112:1'], 'an older transfer cannot displace the local recording');
+  clip.data.phone.recs['112:1'] = w.__t;
+  result = A.Sync.merge(A.S, clip, true).S.data.g;
+  ok(result.recSources['112:1'].ids.join() === 'g,phone', 'ties keep both usable sources for the same recording time');
+  clip.data.phone.recs['112:1'] = w.__t + 500;
+  clip.data.phone.recSources = {'112:1': {t:w.__t, ids:['s2']}};
   w.__native.onLanSynced(true, JSON.stringify(clip), 'HomePC', 1, 0, true);
   await navigate('parent/g/hear');
   const transferred = A.$('[data-a="play-rec"][data-k="rec_phone_112_1"]');
@@ -685,12 +692,19 @@ const unlock = (TT) => { TT.go('parent'); const qq = TT.A.$('.gate p').textConte
   w.Voice.play = play;
   ok(played.join() === 'voice/rec_phone_112_1.m4a,voice/rec_phone_112_1.m4a' &&
     JSON.stringify(w.Hifz.state('g')) === revision, 'playing the transferred clip twice does not grade it');
+  await navigate('parent/g/record');
+  ok(!!A.$('[data-a="play-rec"][data-k="rec_phone_112_1"]'), 'the learner Record also resolves the transferred clip');
+  A.__syncIn = true;
+  w.__native.onImport(JSON.stringify(clip), true, true);
+  A.closeSheet();
+  ok(A.D('g').recSources['112:1'].ids.join() === 'phone', 'family-file import keeps the current source and rejects stale provenance');
   voiceKeys.splice(voiceKeys.indexOf('rec_phone_112_1'), 1);
   await navigate('parent/g/hear');
   ok(!A.$('[data-a="play-rec"]') && !!A.$('.hear-na'), 'missing newer clip does not play the older local clip');
   const roundTrip = A.Sync.merge({profiles: [{...A.profile('g'), id: 'third'}], data: {}}, A.S, true);
-  ok(roundTrip.S.data.third.recSources['112:1'].join() === 'phone', 'a second transfer retains the recording source');
-  A.D('g').recSources['112:1'] = ['s2'];
+  ok(roundTrip.S.data.third.recSources['112:1'].ids.join() === 'phone' &&
+    roundTrip.S.data.third.recSources['112:1'].t === w.__t + 500, 'a second transfer retains the source and recording time');
+  A.D('g').recSources['112:1'] = {t:w.__t + 500, ids:['s2']};
   ok(!w.Voice.savedRecKey('g',112,1), 'a stored source cannot resolve to another active learner’s clip');
   const rSh = w.Print.make('practice-math', 's2', 1234);
   const sh1 = w.Print.toScreen(rSh, 's2'); sh1.sub = w.__t;
@@ -703,12 +717,14 @@ const unlock = (TT) => { TT.go('parent'); const qq = TT.A.$('.gate p').textConte
   ok(!A.$('.fc-act[href="#/marking/g"]'), 'private teen work does not trigger a parent action');
   A.D('g').work[0].shared = true;
   A.S.profiles.push({...kid(15, 's3'), name: 'Second teen'});
-  A.D('s3').work = [{title: 'Other teen work', text: 'Shared work', shared: true}];
+  A.D('s3').work = [{title: 'Other teen work', text: 'Shared work', shared: true},
+    {title: 'Private work', text: 'Unshared draft', shared: false}];
   await navigate('parent');
   ok(!!A.$('.fc-act[href="#/marking/g"]') && !!A.$('.fc-act[href="#/marking/s3"]'), 'each teen has their own Review shared work link');
   ok(A.$$('.fc-go[data-a="fam-go"]').length === 3, 'Next button stays separate for handing the device to each child');
   await navigate('marking/s3');
-  ok(!!A.$('[data-mark="s3:0"]') && !A.$('[data-mark="g:0"]'), 'a scoped review shows only the selected teen');
+  ok(!!A.$('[data-mark="s3:0"]') && !A.$('[data-mark="g:0"]') && !A.$('[data-mark="s3:1"]'),
+    'a scoped review shows only the selected teen’s shared work');
   const feedback = A.$('[data-mark="s3:0"]');
   feedback.value = 'Checked';
   feedback.dispatchEvent(new w.Event('change'));
@@ -717,8 +733,14 @@ const unlock = (TT) => { TT.go('parent'); const qq = TT.A.$('.gate p').textConte
   A.S.pin = '9999';
   await navigate('home'); await navigate('marking/s3');
   ok(!!A.$('#gp-pin') && !A.$('[data-mark]'), 'parent PIN gate also blocks a direct review link');
+  await submit('9999');
+  ok(A.route() === 'marking/s3' && !!A.$('[data-mark="s3:0"]'), 'PIN unlock stays on the requested learner review');
+  await navigate('marking/s2');
+  ok(A.route() === 'parent' && !A.$('[data-mark]'), 'an under-age review link returns to Family');
   A.S.pin = '';
-  await navigate('parent'); const qSum2 = A.$('.gate p').textContent.split('+').map(x => parseInt(x)); A.$$('.numopt').find(b => +b.dataset.v === qSum2[0] + qSum2[1]).click();
+  await navigate('home'); await navigate('parent');
+  const qSum2 = A.$('.gate p').textContent.split('+').map(x => parseInt(x));
+  A.$$('.numopt').find(b => +b.dataset.v === qSum2[0] + qSum2[1]).click();
 
   /* learner My sheets reopens reviewed sheets after seenMark and finds a 4th assigned sheet */
   A.S.cur = 's2';
