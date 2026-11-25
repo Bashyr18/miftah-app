@@ -246,9 +246,11 @@
     return pick;
   };
   Plan.today = function (pid) {
-    var d = A.D(pid);
-    if (!d.path || d.path.day !== A.day()) { d.path = Plan.build(pid); A.save(); }
-    return d.path;
+    var d = A.D(pid), day = A.day();
+    /* Keep today's school stops so cancelling a break can resume the same plan. */
+    var key = window.Flow && window.Flow.inSchoolBreak() ? 'breakPath' : 'path';
+    if (!d[key] || d[key].day !== day) { d[key] = Plan.build(pid); A.save(); }
+    return d[key];
   };
   Plan.nextStop = function (pid) { var pl = Plan.today(pid); for (var i = 0; i < pl.stops.length; i++) if (!pl.stops[i].done) return i; return -1; };
   Plan.complete = function (i, pid) { var pl = Plan.today(pid); if (pl.stops[i]) pl.stops[i].done = true; A.saveNow(); };

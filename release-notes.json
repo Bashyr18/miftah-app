@@ -1,7 +1,4 @@
 [
- ["Print or save completed on-screen sheets as A4 PDFs with the child’s writing, parent red marks and saved score intact", "اطبع أو احفظ الأوراق المنجزة على الشاشة بصيغة PDF مع خط الطفل وتصحيح الوالدين والنتيجة المحفوظة"],
- ["Completed on-screen sheets stay accessible in the child’s Record for portfolio printing any time", "تبقى الأوراق المنجزة على الشاشة متاحة في سجل الطفل لطباعتها في ملف الأعمال في أي وقت"],
- ["Offline Qurʾān audio manager showing verse and word readiness per sūrah, Juzʾ ʿAmma download, live progress and safe cache clearing", "إدارة التلاوة دون إنترنت مع بيان جاهزية الآيات والكلمات لكل سورة، وتنزيل جزء عمّ، وشريط التقدم، ومسح التنزيلات بأمان"],
- ["Export and import standalone Courses as lossless files to share curricula across families, teachers and co-ops", "تصدير واستيراد المقررات كملفات مستقلة كاملة لمشاركتها بين الأسر والمعلمين والمجموعات"],
- ["Teen flashcards now support bulk CSV/TSV/text import and lossless deck export on Android and Windows", "بطاقات المراجعة للطلاب تدعم الآن الاستيراد الجماعي وتصدير المجموعات كاملة على أندرويد وويندوز"]
+ ["Schedule a school break from Family. It appears in the week ahead, applies to everyone on this device, and ends automatically.", "جدول عطلة دراسية من صفحة الأسرة. تظهر في خطة الأسبوع، وتشمل الجميع على هذا الجهاز، وتنتهي تلقائيًا."],
+ ["Change or cancel the break without losing completed activities.", "غيّر موعد العطلة أو ألغها مع حفظ الأنشطة المنجزة."]
 ]

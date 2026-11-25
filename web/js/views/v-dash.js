@@ -32,7 +32,7 @@
   }
   function nextFor(p) {
     var pl = Plan.today(p.id), i = -1; for (var k = 0; k < pl.stops.length; k++) if (!pl.stops[k].done) { i = k; break; }
-    if (Flow.isOff(p.id)) return { text: L(['Day off', 'يوم راحة']), off: true };
+    if (Flow.inSchoolBreak() || Flow.isOff(p.id)) return { text: L(['Day off', 'يوم راحة']), off: true };
     if (i < 0) return { text: L(['All done today', 'أنهى اليوم']), done: true };
     var was = A.S.cur; A.S.cur = p.id; var inf = A.stopInfo(pl.stops[i]); A.S.cur = was;
     return { text: L(inf.title) };
@@ -40,6 +40,43 @@
   function yearLine(p) { var st = A.stage(p); return (st === 0 ? L(['Early years', 'الطفولة المبكرة']) : L(C.yearName(Flow.yearOf(p)))) + ' · ' + L(['age ', 'العمر ']) + N(A.age(p)); }
   A.acts['fam-go'] = function (t) { A.S.cur = t.dataset.id; A.saveNow(); A.go('home'); };
   A.acts['fam-off'] = function () { var off = A.S.profiles.every(function (p) { return Flow.isOff(p.id); }); A.S.profiles.forEach(function (p) { Flow.setOff(p.id, !off); }); A.rerender(); };
+  function breakLabel(day) {
+    return new Date(day + 'T12:00:00').toLocaleDateString(A.ar() ? 'ar' : 'en', {
+      calendar: 'gregory', day: 'numeric', month: 'short', year: 'numeric'
+    });
+  }
+  A.acts['fam-break'] = function () {
+    if (!A.grownOpen()) return;
+    var today = A.day(), range = Flow.schoolBreak();
+    if (range && range.end < today) range = null;
+    function dateField(id, label, first, value) {
+      return '<label for="' + id + '">' + esc(L(label)) + '</label>' +
+        '<input class="tin" type="date" required id="' + id + '" min="' + esc(first) + '" value="' + esc(value) + '">';
+    }
+    A.sheet(L(['School break', 'عطلة دراسية']),
+      '<p>' + esc(L(['Pause scheduled lessons for everyone on this device. Both dates are included.',
+        'أوقف الدروس المجدولة للجميع على هذا الجهاز. يشمل التوقف يومَي البداية والنهاية.'])) + '</p>' +
+      '<form id="break-form" style="display:grid;gap:8px">' +
+      dateField('break-from', ['First day', 'اليوم الأول'], range && range.start < today ? range.start : today, range ? range.start : today) +
+      dateField('break-to', ['Last day', 'اليوم الأخير'], range ? range.start : today, range ? range.end : today) +
+      '<p id="break-error" role="alert" hidden>' + esc(L(['Choose a valid date range.', 'اختر فترة زمنية صحيحة.'])) + '</p>' +
+      '<button type="submit" class="btn pri wide">' + esc(L(['Save break', 'احفظ العطلة'])) + '</button>' +
+      (range ? '<button type="button" class="btn sec wide" id="break-remove">' + esc(L(['Cancel break', 'ألغِ العطلة'])) + '</button>' : '') +
+      '</form>', function (sh) {
+        var from = $('#break-from', sh), to = $('#break-to', sh), remove = $('#break-remove', sh);
+        from.onchange = function () { to.min = from.value; };
+        $('#break-form', sh).onsubmit = function (event) {
+          event.preventDefault();
+          if (!A.grownOpen()) return;
+          if (!Flow.setSchoolBreak(from.value, to.value)) { $('#break-error', sh).hidden = false; return; }
+          A.closeSheet(); A.rerender();
+        };
+        if (remove) remove.onclick = function () {
+          if (!A.grownOpen()) return;
+          Flow.setSchoolBreak(null); A.closeSheet(); A.rerender();
+        };
+      });
+  };
   function topActionFor(p) {
     var d = A.D(p.id), st = A.stage(p);
     var sheets = (d.sheets || []).filter(function (x) { return window.Print ? Print.waiting(x) : x.q && x.q.length && !x.marked; }).reverse();
@@ -73,8 +110,17 @@
     var stale = kids.length && A.now().getTime() - Math.max(A.S.lastBackup || 0, A.S.lastSync || 0, created) > 30 * DAY;
     var nudge = stale ? '<a class="bkp" href="#/parent/settings">' + A.icon('flag', 18) + '<span class="grow">' + esc(L(['Time to back up', 'حان وقت النسخ الاحتياطي'])) + '</span>' + A.icon('next', 16) + '</a>' : '';
     if (!A.S.pin && kids.some(function (p) { return A.age(p) >= 8; })) nudge += '<a class="bkp" href="#/parent/settings">' + A.icon('flag', 18) + '<span class="grow">' + esc(L(A.grown() && A.grown().role !== 'parent' ? ['Set a PIN for grown-ups', 'عيّن رمزًا للكبار'] : ['Set a parent PIN', 'عيّن رمز الوالدين'])) + '</span>' + A.icon('next', 16) + '</a>';
-    var ready = kids.length ? haveReady() : [], allOff = kids.length && kids.every(function (p) { return Flow.isOff(p.id); });
-    var day = '<div class="fday"><div class="fday-h"><b class="dates">' + Voice.dateLine() + '</b><button class="chip2' + (allOff ? ' on' : '') + '" data-a="fam-off">' + esc(L(['Day off', 'يوم راحة'])) + '</button></div>' + (ready.length && !allOff ? '<div class="fday-r"><small>' + esc(L(['Have ready', 'جهّز'])) + '</small>' + ready.slice(0, 5).map(function (m) { return '<span>' + esc(m) + '</span>'; }).join('') + '</div>' : '') + '</div>';
+    var paused = Flow.inSchoolBreak(), range = Flow.schoolBreak();
+    var ready = kids.length && !paused ? haveReady() : [], allOff = kids.length && kids.every(function (p) { return Flow.isOff(p.id); });
+    var breakButton = '<button class="chip2' + (paused ? ' on' : '') + '" data-a="fam-break">' +
+      esc(L(paused ? ['On school break', 'في عطلة دراسية'] : ['School break', 'عطلة دراسية'])) + '</button>';
+    var breakDates = range && range.end >= A.day() ? '<small>' +
+      esc(breakLabel(range.start) + ' – ' + breakLabel(range.end)) + '</small>' : '';
+    var day = '<div class="fday"><div class="fday-h"><b class="dates">' + Voice.dateLine() + '</b>' +
+      (paused ? '' : '<button class="chip2' + (allOff ? ' on' : '') + '" data-a="fam-off">' + esc(L(['Day off', 'يوم راحة'])) + '</button>') +
+      '</div><div class="fday-r">' + breakButton + breakDates + '</div>' +
+      (ready.length && !allOff ? '<div class="fday-r"><small>' + esc(L(['Have ready', 'جهّز'])) + '</small>' +
+        ready.slice(0, 5).map(function (m) { return '<span>' + esc(m) + '</span>'; }).join('') + '</div>' : '') + '</div>';
     var g = A.grown(), teach = g && g.role === 'teacher';
     /* the grown-up's own card: who they are, and the two things a grown-up looks for first, Settings and Updates */
     var updNew = window.Upd && (Upd.state === 'ready' || Upd.state === 'allow');

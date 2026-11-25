@@ -86,7 +86,7 @@ var CH = [
 
   { id: 'parents', kicker: 'Behind a door only a grown-up opens', title: 'For parents', dek: 'What each child did, what they remember, and where they are stuck.', thumb: 'd-family',
     spreads: [
-      { shots: { d: 'd-family', p: 'p-family' }, h: 'The whole family', drop: true, p: 'A small sum keeps young children out, or a PIN with a private recovery code if you set one. Inside, every child on one page; on the computer, the week in minutes and the paper waiting for you.',
+      { shots: { d: 'd-family', p: 'p-family' }, h: 'The whole family', drop: true, p: 'A small sum keeps young children out, or a PIN with a private recovery code if you set one. Inside, every child on one page. Choose School break to set the first and last days, both included. It applies to everyone on this device, shows in the week ahead, and ends automatically. Reopen it to change the dates or cancel. For an unplanned day, use Day off.',
         steps: [
           { b: 'You, Settings and Updates', x: 'Your own profile as parent, teacher or tutor, with Settings and Updates beside it, always at the top.', m: { p: 1 } },
           { b: 'Each child', x: 'Today’s progress, minutes this week, what is mastered and remembered, a direct link to what is waiting for you (mark a sheet, listen to a recitation, confirm a deed or review shared work), and what to do next together.', m: { p: 0, d: 0 } },

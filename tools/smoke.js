@@ -28,6 +28,43 @@ function boot(stored, iso) {
 const year = 2026;
 const kid = (age, id) => ({ id: id || 'c1', name: 'Amina', by: year - age, bm: 1, g: 'f', hue: 'emerald', since: '2026-11-05' });
 
+{ /* School breaks share the planner without replacing today's working plan. */
+  const t = boot({ profiles: [kid(8), kid(3, 'c2')], cur: 'c1' }, '2026-11-05T09:00:00');
+  const { A, w } = t, { Flow, Plan } = w;
+  const field = id => A.$$('#' + id).at(-1);
+  const school = Plan.today('c1');
+  school.stops[0].done = true;
+  t.go('parent');
+  ok(!A.$('[data-a="fam-break"]'), 'school break controls are behind the parent gate');
+  A.acts['fam-break']();
+  ok(!A.$('#break-form'), 'school break action also requires a parent session');
+  const sum = A.$('#gp-q').textContent.split('+').map(x => parseInt(x));
+  A.$$('.numopt').find(b => +b.dataset.v === sum[0] + sum[1]).click();
+  A.$('[data-a="fam-break"]').click();
+  field('break-from').value = '2026-11-06';
+  field('break-to').value = '2026-11-09';
+  field('break-form').requestSubmit();
+  ok(Plan.today('c1') === school && !Flow.inSchoolBreak(), 'scheduling a future break leaves today intact');
+  const ahead = Flow.preview('c1', 5);
+  ok(ahead.slice(0, 4).every(d => d.kind === 'rest' && !d.lessons.length) && ahead[4].kind === 'school',
+    'the forecast includes both ends of the break and resumes after the last day');
+  ok(!Flow.setSchoolBreak('2026-02-30', '2026-11-07') && !Flow.setSchoolBreak('2026-11-06', '2026-11-05'),
+    'impossible dates and reversed ranges are rejected');
+  ok(Flow.setSchoolBreak('2026-11-05', '2026-11-05'), 'a one-day break can start today');
+  ok(Plan.today('c1').stops.every(s => s.t === 'hifz' || s.t === 'mission') && !Plan.today('c2').stops.length,
+    'a break uses the rest plan for school-age learners and pauses nursery stops');
+  A.load();
+  ok(Flow.inSchoolBreak(), 'the scheduled break survives reload');
+  A.rerender();
+  A.$('[data-a="fam-break"]').click();
+  field('break-remove').click();
+  ok(!Flow.inSchoolBreak() && Plan.today('c1').stops[0].done, 'cancelling today restores the original completed stop');
+  A.S.lang = 'ar'; A.rerender();
+  A.$('[data-a="fam-break"]').click();
+  ok(field('break-form').textContent.includes('اليوم الأول'), 'the break form renders in Arabic');
+  ok(t.errors.length === 0, 'school break browser errors: ' + (t.errors[0] || '').slice(0, 260));
+}
+
 /* fresh install */
 let T = boot(null, '2026-11-05T09:00:00');
 ok(T.A.route() === 'welcome' || T.w.location.hash.includes('welcome') , 'a new install opens on the welcome');

@@ -127,6 +127,7 @@
     }
     var prom = Flow.promiseToShow(), promH = prom ? '<button class="promise" data-a="promise-seen" data-id="' + prom.id + '">' + A.art('star', 44) + '<span><small>' + esc(T('You earned what your family promised')) + '</small><b>' + esc(prom.what) + '</b></span></button>' : '';
     var waiting = Flow.inbox().filter(function (x) { return x.kind !== 'stuck'; }).length;
+    if (Flow.inSchoolBreak()) hero = '<p class="card">' + esc(L(['School break today', 'اليوم عطلة دراسية'])) + '</p>' + hero;
     var stops = pl.stops.map(function (s, i) {
       var inf = stopInfo(s), cls = s.done ? 'done' : i === nx ? 'now' : 'later';
       return '<button class="pstop ' + cls + ' h-' + inf.hue + '" style="--i:' + i + '" data-a="go-stop" data-i="' + i + '"><span class="pmed">' + A.art(inf.art, 38) + (s.done ? '<span class="pdone">' + A.icon('check', 14) + '</span>' : '') + '</span><span class="ptxt"><b>' + esc(L(inf.title)) + '</b><small>' + esc(s.done && s.later ? T('Saved for another day') : L(inf.sub)) + '</small></span>' + (s.done ? '' : '<span class="pmin">' + minutes(Plan.est(s, st)) + '</span>') + '</button>';

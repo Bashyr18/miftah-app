@@ -78,10 +78,30 @@
   /* a day off for a family: Eid, a trip, an illness */
   Flow.setOff = function (pid, on) { var p = A.profile(pid); p.offDays = p.offDays || {}; if (on) p.offDays[A.day()] = 1; else delete p.offDays[A.day()]; A.D(pid).path = null; A.saveNow(); };
   Flow.isOff = function (pid) { var p = A.profile(pid); return !!(p.offDays && p.offDays[A.day()]); };
+  function validDay(value) {
+    return typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value) &&
+      A.day(new Date(value + 'T12:00:00')) === value;
+  }
+  Flow.schoolBreak = function () {
+    var range = A.S.schoolBreak;
+    return range && validDay(range.start) && validDay(range.end) && range.start <= range.end ? range : null;
+  };
+  Flow.inSchoolBreak = function (date) {
+    var range = Flow.schoolBreak(), day = A.day(date);
+    return !!(range && range.start <= day && day <= range.end);
+  };
+  Flow.setSchoolBreak = function (start, end) {
+    var today = A.day(), current = Flow.schoolBreak();
+    if (start !== null && (!validDay(start) || !validDay(end) || start > end || end < today ||
+        (start < today && (!current || current.start !== start)))) return false;
+    A.S.schoolBreak = start === null ? null : { start: start, end: end };
+    A.saveNow();
+    return true;
+  };
   /* p.days: school days (0 = Sunday); p.light: the day that consolidates rather than opens new doors. Both are the parent's. */
   Flow.dayKind = function (p, date) {
     var when = date || A.now(), d = when.getDay(), days = p.days || Flow.WEEK, light = p.light == null ? 5 : p.light;
-    if (p.offDays && p.offDays[A.day(when)]) return 'rest';
+    if (Flow.inSchoolBreak(when) || (p.offDays && p.offDays[A.day(when)])) return 'rest';
     if (days.indexOf(d) < 0) return 'rest';
     return d === light ? 'light' : 'school';
   };
@@ -162,7 +182,7 @@
   Plan.build = function (pid) {
     var p = A.profile(pid), st = A.stage(p), stops = [], off = p.off || {}, why = [], d = A.D(pid), day = { day: A.day(), stops: stops, why: why };
     if (st === 0) {
-      C.nurseryToday(pid).forEach(function (x) { stops.push({ t: 'nursery', id: x, done: false }); });
+      if (!Flow.inSchoolBreak()) C.nurseryToday(pid).forEach(function (x) { stops.push({ t: 'nursery', id: x, done: false }); });
       return day;
     }
     var cap;

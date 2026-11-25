@@ -74,7 +74,7 @@
       v: 1, lang: 'en', theme: 'auto', sound: false, motion: 'calm', speakRate: 1, reciter: 'h',
       pin: '', doorDay: '', lastBackup: 0, lastSync: 0, sndV: 0, savedAt: 0,
       gate: { a: 0 }, media: [], profiles: [], cur: null, created: A.day(), remind: { on: false, h: 9, m: 0 }, seen: {},
-      data: {}
+      data: {}, schoolBreak: null
     };
   }
   function merge(base, st) {
