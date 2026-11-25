@@ -172,10 +172,12 @@
 (function () {
   'use strict';
   var A = window.A, $ = A.$, esc = A.esc, L = A.L, N = function (x) { return A.num(x); };
-  A.V.marking = function () {
+  A.V.marking = function (args) {
     if (!A.grownOpen()) return A.grownGate();
     if (!A.P()) return { redirect: 'home' };
-    var ch = A.S.profiles.filter(function (p) { return A.stage(p) >= 3; }), html = '';
+    var pid = args && args[0];
+    var ch = A.S.profiles.filter(function (p) { return A.stage(p) >= 3 && (!pid || p.id === pid); }), html = '';
+    if (pid && !ch.length) return { redirect: 'parent' };
     ch.forEach(function (p) {
       var d = A.D(p.id), shared = (d.work || []).map(function (w, i) { return { w: w, i: i }; }).filter(function (x) { return x.w.shared; }), papers = (d.papers || []).slice(-3).reverse(), wk = d.weekly || {};
       html += '<div class="tsec">' + esc(p.name) + '</div><div class="tl"><div class="ti"><span class="grow"><b>' + esc(L(['Goal this week', 'هدف هذا الأسبوع'])) + '</b><small>' + esc(wk.goal || L(['None set', 'لم يُحدد'])) + '</small></span></div>' + (papers.length ? '<div class="ti"><span class="grow"><b>' + esc(L(['Recent practice papers', 'آخر الاختبارات'])) + '</b><small>' + papers.map(function (x) { return esc(L(window.C.rooms[x.r].name)) + ' ' + N(x.p) + '%'; }).join(' · ') + '</small></span></div>' : '') + (p.exams || []).map(function (e) { return '<div class="ti"><span class="grow"><b>' + esc(e.title) + '</b><small>' + esc(e.date) + '</small></span></div>'; }).join('') + '</div>' +

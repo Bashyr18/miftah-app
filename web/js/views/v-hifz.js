@@ -135,7 +135,16 @@
     var key = Voice.recKey(A.S.cur, s, a);
     b.onclick = function () {
       if (!recOn) { if (A.N.call('recStart', key)) { recOn = true; b.classList.add('rec'); b.classList.remove('off'); A.toast(A.L(['Recording. Recite, then tap again.', 'جارٍ التسجيل. اقرأ ثم انقر مجددًا.'])); } else A.micHelp(); }
-      else { stopRec(); b.classList.remove('rec'); b.classList.add('off'); var d = A.D(); d.recs = d.recs || {}; d.recs[s + ':' + a] = A.now().getTime(); A.save(); A.toast(A.L(['Saved. Listen to yourself, and your parent can hear it too.', 'حُفظ. استمع إلى نفسك، ويمكن لوالديك سماعه.'])); Voice.refreshVoices(); later(function () { Voice.play('voice/' + key + '.m4a'); }, 300); }
+      else {
+        stopRec(); b.classList.remove('rec'); b.classList.add('off');
+        var d = A.D(), verse = s + ':' + a;
+        d.recs = d.recs || {}; d.recs[verse] = A.now().getTime();
+        if (d.recSources) delete d.recSources[verse];
+        A.save();
+        A.toast(A.L(['Saved. Listen to yourself, and your parent can hear it too.', 'حُفظ. استمع إلى نفسك، ويمكن لوالديك سماعه.']));
+        Voice.refreshVoices();
+        later(function () { Voice.play('voice/' + key + '.m4a'); }, 300);
+      }
     };
   }
 

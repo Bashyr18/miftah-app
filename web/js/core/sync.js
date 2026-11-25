@@ -54,7 +54,7 @@
     });
     return Object.assign({}, out);
   }
-  function mergeChild(a, b) {
+  function mergeChild(a, b, localId, remoteId) {
     a = a || {}; b = b || {};
     var led = unionBy(a.led, b.led, function (e) { return e.i + '|' + e.s + '|' + e.k; }).sort(function (x, y) { return x.t - y.t; });
     if (led.length > 20000) led = led.slice(led.length - 20000);
@@ -75,20 +75,34 @@
     });
     ['hist', 'sheets', 'exams', 'papers', 'certs', 'cards', 'books', 'work', 'obs', 'pending', 'pin'].forEach(function (k) { if (!a[k] && !b[k]) delete o[k]; });
     if (!a.pin && !b.pin) o.pin = undefined;
+    var sources = {};
+    Object.keys(o.recs).forEach(function (verse) {
+      if (!/^\d{1,3}:\d{1,3}$/.test(verse)) return;
+      var ids = [];
+      if (a.recs && +a.recs[verse] === +o.recs[verse]) ids = Voice.recSources(a, verse, localId);
+      if (b.recs && +b.recs[verse] === +o.recs[verse]) ids = ids.concat(Voice.recSources(b, verse, remoteId));
+      ids = Array.from(new Set(ids));
+      // The file keeps the source profile ID, even if the two learner records were joined under a different ID.
+      if (ids.length > 1 || (ids.length === 1 && ids[0] !== localId)) sources[verse] = ids;
+    });
+    if (Object.keys(sources).length) o.recSources = sources;
+    else delete o.recSources;
     return o;
   }
   /* pure: two states in, the joined state and what changed out */
   Sync.merge = function (mine, theirs, withFiles) {
     var S = JSON.parse(JSON.stringify(mine)), report = [], data = theirs.data || {};
     (theirs.profiles || []).forEach(function (tp) {
-      var lp = S.profiles.filter(function (p) { return sameChild(p, tp); })[0], fresh = !lp;
+      var lp = S.profiles.find(function (p) { return p.id === tp.id; }) ||
+        S.profiles.find(function (p) { return sameChild(p, tp); });
+      var fresh = !lp;
       if (fresh) { lp = JSON.parse(JSON.stringify(tp)); S.profiles.push(lp); }
       else lp.exams = unionBy(lp.exams, tp.exams, function (e) { return e.title + e.date; });
       /* the courses a child follows, by subject (the first version kept only an Arabic book, as arBook) */
       var tc = Object.assign({}, tp.arBook ? { arabic: tp.arBook } : {}, tp.courses || {});
       if (Object.keys(tc).length) { lp.courses = lp.courses || {}; if (lp.arBook && !lp.courses.arabic) lp.courses.arabic = lp.arBook; delete lp.arBook; Object.keys(tc).forEach(function (r) { if (!lp.courses[r]) lp.courses[r] = tc[r]; }); }
       var a = S.data[lp.id], b = data[tp.id], before = a ? Object.keys(a.keys || {}).filter(function (k) { return a.keys[k].forged; }).length : 0, beforeA = a && a.hifz && a.hifz.u ? Object.keys(a.hifz.u).length : 0, ledA = a && a.led ? a.led.length : 0;
-      if (b) S.data[lp.id] = mergeChild(a, b);
+      if (b) S.data[lp.id] = mergeChild(a, b, lp.id, tp.id);
       var d = S.data[lp.id] || {}, after = Object.keys(d.keys || {}).filter(function (k) { return d.keys[k].forged; }).length;
       report.push({ id: lp.id, name: lp.name, fresh: fresh, lessons: after - before, ayat: (d.hifz && d.hifz.u ? Object.keys(d.hifz.u).length : 0) - beforeA, events: (d.led || []).length - ledA });
     });

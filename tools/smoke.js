@@ -661,7 +661,8 @@ const unlock = (TT) => { TT.go('parent'); const qq = TT.A.$('.gate p').textConte
   A.D('g').recs = { '112:1': w.__t, '112:2': w.__t - 1000 };
   w.Hifz.mark(112, 1, 2, 'self', 'g');
   const prevHeard = w.Hifz.state('g').u['112:1'].heard;
-  w.AndroidBridge = { voiceList: () => JSON.stringify(['rec_g_112_1']), speakLangs: () => 'ar' };
+  const voiceKeys = ['rec_g_112_1'];
+  w.AndroidBridge = { voiceList: () => JSON.stringify(voiceKeys), speakLangs: () => 'ar' };
   await navigate('parent/g/hear');
   ok(!!A.$('[data-a="play-rec"][data-k="rec_g_112_1"]'), 'parent Qurʾān tab plays an available child recording');
   ok(!!A.$('.hear-na'), 'parent Qurʾān tab honestly flags a missing recording on this device');
@@ -670,6 +671,27 @@ const unlock = (TT) => { TT.go('parent'); const qq = TT.A.$('.gate p').textConte
 
   /* family card direct parent actions across siblings, respecting teen privacy and PIN gate */
   A.S.profiles.push(kid(9, 's2'));
+  voiceKeys.push('rec_phone_112_1', 'rec_s2_112_1');
+  const androidLearner = {...A.profile('g'), id: 'phone'};
+  const clip = {profiles: [androidLearner], data: {phone: {recs: {'112:1': w.__t + 500}}}};
+  w.__native.onLanSynced(true, JSON.stringify(clip), 'HomePC', 1, 0, true);
+  await navigate('parent/g/hear');
+  const transferred = A.$('[data-a="play-rec"][data-k="rec_phone_112_1"]');
+  ok(!!transferred && !A.$('[data-k="rec_g_112_1"]') && !A.$('[data-k="rec_s2_112_1"]'),
+    'a newer transferred clip wins over the local clip and is isolated from the sibling');
+  const revision = JSON.stringify(w.Hifz.state('g')), play = w.Voice.play, played = [];
+  w.Voice.play = url => { played.push(url); return Promise.resolve(true); };
+  if (transferred) { transferred.click(); transferred.click(); }
+  w.Voice.play = play;
+  ok(played.join() === 'voice/rec_phone_112_1.m4a,voice/rec_phone_112_1.m4a' &&
+    JSON.stringify(w.Hifz.state('g')) === revision, 'playing the transferred clip twice does not grade it');
+  voiceKeys.splice(voiceKeys.indexOf('rec_phone_112_1'), 1);
+  await navigate('parent/g/hear');
+  ok(!A.$('[data-a="play-rec"]') && !!A.$('.hear-na'), 'missing newer clip does not play the older local clip');
+  const roundTrip = A.Sync.merge({profiles: [{...A.profile('g'), id: 'third'}], data: {}}, A.S, true);
+  ok(roundTrip.S.data.third.recSources['112:1'].join() === 'phone', 'a second transfer retains the recording source');
+  A.D('g').recSources['112:1'] = ['s2'];
+  ok(!w.Voice.savedRecKey('g',112,1), 'a stored source cannot resolve to another active learner’s clip');
   const rSh = w.Print.make('practice-math', 's2', 1234);
   const sh1 = w.Print.toScreen(rSh, 's2'); sh1.sub = w.__t;
   await navigate('parent');
@@ -678,14 +700,23 @@ const unlock = (TT) => { TT.go('parent'); const qq = TT.A.$('.gate p').textConte
   A.D('g').recs = {};
   A.D('g').work = [{ title: 'Private note', text: 'Only mine', plan: '', t: w.__t, shared: false }];
   await navigate('parent');
-  ok(!A.$('.fc-act[href="#/marking"]'), 'private teen work does not trigger a parent action');
+  ok(!A.$('.fc-act[href="#/marking/g"]'), 'private teen work does not trigger a parent action');
   A.D('g').work[0].shared = true;
+  A.S.profiles.push({...kid(15, 's3'), name: 'Second teen'});
+  A.D('s3').work = [{title: 'Other teen work', text: 'Shared work', shared: true}];
   await navigate('parent');
-  ok(!!A.$('.fc-act[href="#/marking"]'), 'shared teen work surfaces a direct Review shared work action');
-  ok(A.$$('.fc-go[data-a="fam-go"]').length === 2, 'Next button stays separate for handing the device to each child');
+  ok(!!A.$('.fc-act[href="#/marking/g"]') && !!A.$('.fc-act[href="#/marking/s3"]'), 'each teen has their own Review shared work link');
+  ok(A.$$('.fc-go[data-a="fam-go"]').length === 3, 'Next button stays separate for handing the device to each child');
+  await navigate('marking/s3');
+  ok(!!A.$('[data-mark="s3:0"]') && !A.$('[data-mark="g:0"]'), 'a scoped review shows only the selected teen');
+  const feedback = A.$('[data-mark="s3:0"]');
+  feedback.value = 'Checked';
+  feedback.dispatchEvent(new w.Event('change'));
+  await navigate('parent');
+  ok(!A.$('.fc-act[href="#/marking/s3"]') && !!A.$('.fc-act[href="#/marking/g"]'), 'review clears the selected teen’s action only');
   A.S.pin = '9999';
-  await navigate('home'); await navigate('parent');
-  ok(!!A.$('#gp-pin') && !A.$('.fc-act'), 'parent PIN gate still blocks family card actions when locked');
+  await navigate('home'); await navigate('marking/s3');
+  ok(!!A.$('#gp-pin') && !A.$('[data-mark]'), 'parent PIN gate also blocks a direct review link');
   A.S.pin = '';
   await navigate('parent'); const qSum2 = A.$('.gate p').textContent.split('+').map(x => parseInt(x)); A.$$('.numopt').find(b => +b.dataset.v === qSum2[0] + qSum2[1]).click();
 

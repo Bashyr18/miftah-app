@@ -113,7 +113,20 @@
   window.__native.onSpeakLangs = function () { V.refreshLangs(); };
   V.hasVoice = function (k) { return !!have[k]; };
   V.recKey = function (pid, s, a) { return 'rec_' + pid + '_' + s + '_' + a; };
-  V.hasRec = function (pid, s, a) { return V.hasVoice(V.recKey(pid, s, a)); };
+  V.recSources = function (data, verse, pid) {
+    var ids = data && data.recSources && data.recSources[verse];
+    var valid = function (id) { return typeof id === 'string' && /^[a-z0-9_-]{1,96}$/i.test(id); };
+    return Array.isArray(ids) && ids.some(valid) ? ids.filter(valid) : [pid].filter(valid);
+  };
+  V.savedRecKey = function (pid, s, a) {
+    var ids = V.recSources(A.D(pid), s + ':' + a, pid);
+    var source = ids.find(function (id) {
+      return !A.S.profiles.some(function (p) {
+        return p.id !== pid && String(p.id).toLowerCase() === id.toLowerCase();
+      }) && V.hasVoice(V.recKey(id, s, a));
+    });
+    return source ? V.recKey(source, s, a) : '';
+  };
   V.keyOf = function (text) { var h = 0; for (var i = 0; i < text.length; i++) { h = (h * 31 + text.charCodeAt(i)) | 0; } return 'p' + (h >>> 0).toString(36); };
 
   function stopAudio() { if (audio) { try { audio.pause(); } catch (e) { } audio.onended = audio.onerror = null; audio.removeAttribute('src'); audio = null; } if (endCb) { var c = endCb; endCb = null; c(false); } }

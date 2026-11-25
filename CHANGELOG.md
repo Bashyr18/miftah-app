@@ -5,6 +5,7 @@ The version is set in `version.txt`.
 ## 2.7.0 (code 12), November 2026
 
 - Plan a school break from the Family screen. The dates apply to the learners on this device, appear in the week ahead, and end automatically. Change or cancel a break from the same screen.
+- Keep each transferred ḥifẓ recording linked to its learner when devices have different profile IDs. Open shared teen work directly from that learner’s Family card.
 
 ## 2.4.1 (code 8), November 2026
 

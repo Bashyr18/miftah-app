@@ -91,7 +91,7 @@
     if ((d.pending || []).length) return { href: '#/parent/' + p.id + '/today', ic: 'check', label: L(['Confirm deed', 'أكّد العمل']), sub: N(d.pending.length) + ' ' + L(['waiting', 'بانتظارك']) };
     if (st >= 3) {
       var shared = (d.work || []).filter(function (w) { return w.shared && !w.mark; });
-      if (shared.length) return { href: '#/marking', ic: 'note', label: L(['Review shared work', 'راجع العمل المُشارَك']), sub: shared[0].title };
+      if (shared.length) return { href: '#/marking/' + encodeURIComponent(p.id), ic: 'note', label: L(['Review shared work', 'راجع العمل المُشارَك']), sub: shared[0].title };
     }
     return null;
   }
@@ -156,8 +156,9 @@
     var stuck = st > 0 ? M.stuck(pid).map(function (x) { var sk = C.skill(x), rc = Flow.rootCause && Flow.rootCause(x, pid); return '<a class="act" href="#/parent/' + pid + '/log">' + A.icon('flag', 18) + '<span class="grow"><b>' + esc(L(sk.title)) + '</b><small>' + esc(rc ? '← ' + L(rc.skill.title) : L(C.rooms[sk.room].name)) + '</small></span>' + A.icon('next', 16) + '</a>'; }).join('') : '';
     var recs = 0; if (st > 0) { var hh = Hifz.state(pid); Object.keys(d.recs || {}).forEach(function (k) { var u = hh.u[k]; if (!u || !u.heard || u.heard < d.recs[k]) recs++; }); }
     var recA = recs ? '<a class="act" href="#/parent/' + pid + '/hear">' + A.icon('mic', 18) + '<span class="grow"><b>' + N(recs) + ' ' + esc(L(['to hear', 'للاستماع'])) + '</b></span>' + A.icon('next', 16) + '</a>' : '';
-    var sh = (st >= 3 && (d.work || []).some(function (w) { return w.shared && !w.mark; })) ? '<a class="act" href="#/marking">' + A.icon('pen', 18) + '<span class="grow"><b>' + esc(L(['Work to mark', 'أعمال للتصحيح'])) + '</b></span>' + A.icon('next', 16) + '</a>' : '';
-    var teen = st >= 3 ? '<a class="card tln" href="#/marking">' + A.icon('note', 20) + '<b class="grow">' + esc(L(['Summary and shared work', 'الملخص والأعمال المشتركة'])) + '</b>' + A.icon('next', 16) + '</a>' : '';
+    var marking = '#/marking/' + esc(encodeURIComponent(pid));
+    var sh = (st >= 3 && (d.work || []).some(function (w) { return w.shared && !w.mark; })) ? '<a class="act" href="' + marking + '">' + A.icon('pen', 18) + '<span class="grow"><b>' + esc(L(['Work to mark', 'أعمال للتصحيح'])) + '</b></span>' + A.icon('next', 16) + '</a>' : '';
+    var teen = st >= 3 ? '<a class="card tln" href="' + marking + '">' + A.icon('note', 20) + '<b class="grow">' + esc(L(['Summary and shared work', 'الملخص والأعمال المشتركة'])) + '</b>' + A.icon('next', 16) + '</a>' : '';
     var actions = stuck + recA + sh;
     var hz = st > 0 ? Hifz.state(pid) : null, cur = hz && window.QURAN.order[hz.i];
     var qc = hz ? '<a class="card dq" href="#/parent/' + pid + '/hear"><h3>' + esc(L(C.rooms.quran.name)) + '</h3><div class="dq-r"><div><b>' + esc(cur ? A.surahName(cur) : '–') + '</b><small>' + esc(L(['learning', 'الحفظ الآن'])) + '</small></div><div><b>' + N((hz.finished || []).length) + '</b><small>' + esc(L(['sūrahs', 'سور'])) + '</small></div><div><b>' + N(Object.keys(hz.u).length) + '</b><small>' + esc(L(['āyāt', 'آيات'])) + '</small></div></div></a>' : '';

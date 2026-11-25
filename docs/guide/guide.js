@@ -89,13 +89,13 @@ var CH = [
       { shots: { d: 'd-family', p: 'p-family' }, h: 'The whole family', drop: true, p: 'A small sum keeps young children out, or a PIN with a private recovery code if you set one. Inside, every child on one page. Choose School break to set the first and last days, both included. It applies to everyone on this device, shows in the week ahead, and ends automatically. Reopen it to change the dates or cancel. For an unplanned day, use Day off.',
         steps: [
           { b: 'You, Settings and Updates', x: 'Your own profile as parent, teacher or tutor, with Settings and Updates beside it, always at the top.', m: { p: 1 } },
-          { b: 'Each child', x: 'Today’s progress, minutes this week, what is mastered and remembered, a direct link to what is waiting for you (mark a sheet, listen to a recitation, confirm a deed or review shared work), and what to do next together.', m: { p: 0, d: 0 } },
+          { b: 'Each child', x: 'Today’s progress, minutes this week, and what is mastered and remembered. The card links straight to that learner’s sheet, recitation, deed or shared work. Use Next to hand the device back to the learner.', m: { p: 0, d: 0 } },
           { b: 'The week, in minutes', x: 'On the computer: real learning time for every child, day by day.', m: { d: 1 } },
           { b: 'Paper waiting', x: 'On the computer: every sheet still to be marked or ticked, linked straight to the marking page.', m: { d: 2 } },
           { b: 'Day or night', x: 'The sun and moon switch, top right of every screen.', m: { p: 2 } } ] },
       { shots: { d: 'd-dash', p: 'p-dash' }, flip: true, h: 'One child, in depth', p: 'Today, lessons, print, Qurʾān and more, in tabs. On a wide screen the cards spread into three columns, so nothing hides below the fold.',
         steps: [
-          { b: 'Tabs', x: 'Today, Lessons, Print, Qurʾān (with your child’s saved recordings beside the reference reciter), and More: plan, rooms, record and settings for this child.', m: { p: 0, d: 0 } },
+          { b: 'Tabs', x: 'Today, Lessons, Print, Qurʾān and More. In Qurʾān, play your child’s saved recording or the reference reciter. If the record arrives before the audio file, you’ll see that the recording is unavailable on this device.', m: { p: 0, d: 0 } },
           { b: 'At a glance', x: 'Today’s stops, minutes, what is remembered and everything mastered.', m: { p: 1, d: 1 } },
           { b: 'Sheets waiting for you', x: 'Practice to mark, which is the evidence, and worksheets to tick.', m: { p: 2, d: 2 } } ] },
       { shots: { p: 'p-book' }, flip: true, h: 'Your own course, in any subject', p: 'Parent area › Courses: the Madinah books or al-ʿArabiyyah Bayna Yadayk for Arabic, or a textbook, revision guide or teacher’s notes in any other subject. Each lesson has its square, so gaps show until they are filled. Enter its terms, facts and questions from your own copy, or paste a whole course a teacher shared.',

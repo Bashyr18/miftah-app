@@ -429,8 +429,8 @@
     var self = 0, heard = 0; (h.log || []).forEach(function (x) { if (x.by === 'parent') heard++; else self++; });
     function recCtl(sn, an) {
       var k = sn + ':' + an; if (!recsMap[k]) return '';
-      var rk = Voice.recKey(p.id, sn, an);
-      if (Voice.hasRec(p.id, sn, an)) return '<button class="btn pri sm" data-a="play-rec" data-k="' + esc(rk) + '">' + A.icon('play', 16) + '<span>' + esc(L(['Play child’s recording', 'استمع إلى تسجيل الطفل'])) + '</span></button>';
+      var rk = Voice.savedRecKey(p.id, sn, an);
+      if (rk) return '<button class="btn pri sm" data-a="play-rec" data-k="' + esc(rk) + '">' + A.icon('play', 16) + '<span>' + esc(L(['Play child’s recording', 'استمع إلى تسجيل الطفل'])) + '</span></button>';
       return '<span class="hear-na">' + esc(L(['Recording unavailable on this device', 'التسجيل غير متاح على هذا الجهاز'])) + '</span>';
     }
     var allRecs = Object.keys(recsMap).filter(function (k) { var q = k.split(':'); return Q.q[+q[0]] && Q.q[+q[0]].v[+q[1] - 1]; }).sort(function (x, y) { return recsMap[y] - recsMap[x]; });
@@ -519,11 +519,11 @@
     return {
       html: '<div class="card"><h3>' + esc(T('Attendance')) + '</h3><p style="color:var(--t2);line-height:1.5">' + esc(T('Days')) + ': ' + A.num(days.length) + ' · ' + esc(T('Total')) + ': ' + hrs(tot) + '</p>' + calendar(d) + '<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap"><button class="btn sec sm" data-a="print-rep" data-p="' + p.id + '">' + A.icon('print', 18) + '<span>' + esc(T('Print a report')) + '</span></button></div></div>' +
         doneCard +
-        (recs.length ? '<div class="card"><h3>' + esc(T('Recitations to hear')) + '</h3><div class="lst">' + recs.map(function (k) { var pa = k.split(':'), has = Voice.hasRec(p.id, pa[0], pa[1]), rk = Voice.recKey(p.id, pa[0], pa[1]), dt = new Date(d.recs[k]).toLocaleDateString(A.ar() ? 'ar-u-nu-arab' : 'en'); return has ? '<button class="li" data-a="play-rec" data-k="' + esc(rk) + '">' + A.icon('play', 20) + '<span class="grow"><b>' + esc(A.surahName(pa[0])) + ' ' + A.num(pa[1]) + '</b><small>' + esc(dt) + '</small></span></button>' : '<div class="li"><span class="grow"><b>' + esc(A.surahName(pa[0])) + ' ' + A.num(pa[1]) + '</b><small>' + esc(dt) + ' · ' + esc(L(['Recording unavailable on this device', 'التسجيل غير متاح على هذا الجهاز'])) + '</small></span></div>'; }).join('') + '</div></div>' : '') +
+        (recs.length ? '<div class="card"><h3>' + esc(T('Recitations to hear')) + '</h3><div class="lst">' + recs.map(function (k) { var pa = k.split(':'), rk = Voice.savedRecKey(p.id, pa[0], pa[1]), dt = new Date(d.recs[k]).toLocaleDateString(A.ar() ? 'ar-u-nu-arab' : 'en'); return rk ? '<button class="li" data-a="play-rec" data-k="' + esc(rk) + '">' + A.icon('play', 20) + '<span class="grow"><b>' + esc(A.surahName(pa[0])) + ' ' + A.num(pa[1]) + '</b><small>' + esc(dt) + '</small></span></button>' : '<div class="li"><span class="grow"><b>' + esc(A.surahName(pa[0])) + ' ' + A.num(pa[1]) + '</b><small>' + esc(dt) + ' · ' + esc(L(['Recording unavailable on this device', 'التسجيل غير متاح على هذا الجهاز'])) + '</small></span></div>'; }).join('') + '</div></div>' : '') +
         '<div class="card"><h3>' + esc(T('Observations and deeds')) + '</h3>' + (ob.length ? '<div class="lst">' + ob.map(function (o) { return '<div class="li"><span class="grow"><b>' + esc(o.title) + '</b><small>' + esc(new Date(o.t).toLocaleDateString(A.ar() ? 'ar-u-nu-arab' : 'en')) + (o.value ? ' · ' + esc(o.value) : '') + '</small></span></div>'; }).join('') + '</div>' : '<p style="color:var(--t2)">' + esc(T('Nothing yet.')) + '</p>') + '</div>'
     };
   }
-  A.acts['play-rec'] = function (t) { Voice.play('voice/' + t.dataset.k + '.m4a'); };
+  A.acts['play-rec'] = function (t) { if (A.grownOpen()) Voice.play('voice/' + t.dataset.k + '.m4a'); };
   A.acts['print-rep'] = function (t) { var p = A.profile(t.dataset.p); reportWindow(p); };
   function reportWindow(p) {
     var d = A.D(p.id), rows = '';
