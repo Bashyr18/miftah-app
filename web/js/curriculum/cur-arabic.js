@@ -90,7 +90,7 @@
     title: ['Fatḥah: the open sound', 'الفتحة'], art: 'star', needs: ['a.l15'],
     meet: [{ k: 'say', p: ['Letters need a small mark to speak. This one above says a.', 'تحتاج الحروف إلى علامة صغيرة لتنطق. هذه فوق الحرف تقول: فتحة.'], big: 'بَ', bigAr: true }, { k: 'blend', letters: ['ب', 'م', 'ن', 'ل'], marks: [['َ', 'fatḥah', 'a']], p: ['Touch a letter. Hear it speak.', 'المس حرفًا واسمعه ينطق.'] }],
     solo: function (r) { var t = r.pick(EASY), ds = r.shuffle(EASY.filter(function (x) { return x !== t; })).slice(0, 2); return { k: 'choice', p: ['Which do you hear?', 'أيها تسمع؟'], cols: 3, large: true, err: 'letter-sound', listen: function () { Voice.say(t + 'َ', { lang: 'ar', key: 'ar_' + t + 'َ' }); }, o: [t].concat(ds).map(function (x) { return { t: x + 'َ', ar: true, ok: x === t }; }) }; },
-    review: function (r) { var t = r.pick(EASY); return { k: 'choice', p: ['Which do you hear?', 'أيها تسمع؟'], cols: 2, large: true, err: 'letter-sound', listen: function () { Voice.say(t + 'َ', { lang: 'ar' }); }, o: [{ t: t + 'َ', ar: true, ok: true }, { t: r.pick(EASY.filter(function (x) { return x !== t; })) + 'َ', ar: true }] }; }
+    review: function (r) { var t = r.pick(EASY); return { k: 'choice', p: ['Which do you hear?', 'أيها تسمع؟'], cols: 2, large: true, err: 'letter-sound', listen: function () { Voice.say(t + 'َ', { lang: 'ar', key: 'ar_' + t + 'َ' }); }, o: [{ t: t + 'َ', ar: true, ok: true }, { t: r.pick(EASY.filter(function (x) { return x !== t; })) + 'َ', ar: true }] }; }
   });
   C.add('a.harakat', {
     title: ['Three short vowels', 'الحركات الثلاث'], art: 'star',
@@ -103,7 +103,7 @@
     title: ['Long vowels', 'حروف المد'], art: 'star',
     meet: [{ k: 'say', p: ['Alif, wāw and yāʾ stretch a vowel to two beats.', 'الألف والواو والياء تمدّ الحركة حركتين.'], big: 'بَا  بُو  بِي', bigAr: true }],
     solo: function (r) { var l = r.pick(EASY), set = [l + 'َا', l + 'ُو', l + 'ِي'], t = r.pick(set); return { k: 'choice', p: ['Which long sound do you hear?', 'أي مد تسمع؟'], cols: 3, large: true, err: 'haraka', listen: function () { Voice.say(t, { lang: 'ar', key: 'ar_' + t }); }, hint: ['Hear the a, i or u, stretched.', 'اسمع الحركة ممدودة.'], o: set.map(function (x) { return { t: x, ar: true, ok: x === t }; }) }; },
-    review: function (r) { var l = r.pick(EASY), set = [l + 'َا', l + 'ُو', l + 'ِي'], t = r.pick(set); return { k: 'choice', p: ['Which do you hear?', 'أيها تسمع؟'], cols: 3, large: true, err: 'haraka', listen: function () { Voice.say(t, { lang: 'ar' }); }, o: set.map(function (x) { return { t: x, ar: true, ok: x === t }; }) }; }
+    review: function (r) { var l = r.pick(EASY), set = [l + 'َا', l + 'ُو', l + 'ِي'], t = r.pick(set); return { k: 'choice', p: ['Which do you hear?', 'أيها تسمع؟'], cols: 3, large: true, err: 'haraka', listen: function () { Voice.say(t, { lang: 'ar', key: 'ar_' + t }); }, o: set.map(function (x) { return { t: x, ar: true, ok: x === t }; }) }; }
   });
   C.add('a.sukun', {
     title: ['Sukūn and shaddah', 'السكون والشدة'], art: 'moon',

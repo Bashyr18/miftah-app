@@ -327,6 +327,9 @@
     'set total to #; multiply by #; add #': 'اجعل المجموع {0}، ثم اضرب في {1}، ثم أضف {2}',
     'sides #, #; angle #°': 'الضلعان {0}، {1}، والزاوية {2}°',
     'signal up to # kHz': 'إشارة حتى {0} كيلوهرتز',
+    'original #, catalyst lowers by #': 'الأصلية {0}، ويخفضها الحفّاز بمقدار {1}',
+    's.d. of #, #, #, #': 'الانحراف المعياري لـ {0}، {1}، {2}، {3}',
+    's.d. of -#, -#, #, #': 'الانحراف المعياري لـ ⟦-{0}⟧، ⟦-{1}⟧، {2}، {3}',
     'sin θ = sin #°:  second solution in # to #°': '⟦sin θ = sin {0}°⟧: الحل الثاني بين {1} و{2}°',
     'speed × #': 'السرعة × {0}',
     'spot # cm; solvent # cm': 'البقعة {0} سم، والمذيب {1} سم',
@@ -371,7 +374,7 @@
     var r = { eq: e, code: code, needsRow: word, given: !code && !hasBox && (word || /=/.test(e) || /^[\d.]+\s?[^\s\d+×÷−\-]+$/.test(e)), text: e, rtl: false };
     if (word && A.ar()) {
       var row = EQ[keyOf(e)];
-      if (row) { var slots = e.match(SLOT) || []; r.text = row.replace(/\{(\d)\}/g, function (_, i) { return slots[+i]; }).replace(/⟦/g, '⁦').replace(/⟧/g, '⁩'); r.rtl = true; }
+      if (row) { var slots = e.match(SLOT) || []; r.text = row.replace(/"\{(\d+)\}"|\{(\d+)\}/g, function (_, qi, ni) { var v = slots[+(qi != null ? qi : ni)] || ''; return qi != null ? '"' + v.replace(/^"|"$/g, '') + '"' : v; }).replace(/⟦/g, '⁦').replace(/⟧/g, '⁩'); r.rtl = true; }
     }
     return r;
   };

@@ -478,7 +478,7 @@ var GUIDE = {};
         go: ['Press Train 100 until the accuracy is 95% or more.', 'اضغط درّب ١٠٠ حتى تبلغ الدقة ٩٥٪ أو أكثر.'], ok: function (s) { return s.o('accuracy') >= 95; },
         why: ['The weights settled so the coloured boundary runs between the groups. Each mistake moved them a little: that is learning.', 'استقرت الأوزان فصار الحد الملوّن بين المجموعتين، وكل خطأ حرّكها قليلًا: هذا هو التعلم.'] },
       { q: ['Put a red point in the middle of the green ones. Can one neuron still get every point right?', 'ضع نقطة حمراء وسط الخضراء. هل يصيب عصبون واحد كل النقاط؟'], o: [['No: one neuron draws only one straight line', 'لا: العصبون الواحد يرسم خطًا مستقيمًا واحدًا'], ['Yes, with more training', 'نعم بتدريب أكثر'], ['Yes, at once', 'نعم فورًا']],
-        go: ['Choose Add red, tap among the green points, then Train 100 twice.', 'اختر أضف أحمر، انقر بين الخضراء، ثم درّب ١٠٠ مرتين.'], ok: function (s) { return s.sel === 'Add red' && s.b('Train 100') >= 3; },
+        go: ['Choose Add red, tap among the green points, then Train 100 twice.', 'اختر أضف أحمر، انقر بين الخضراء، ثم درّب ١٠٠ مرتين.'], ok: function (s) { return s.sel === 'Add red' && s.b('Train 100') >= 2; },
         why: ['No straight line can cut out one point in the middle. Stacking neurons in layers lets a network bend its boundary: deep learning.', 'لا خط مستقيم يعزل نقطة في الوسط. رصّ العصبونات طبقات يسمح للشبكة بثني حدها: التعلم العميق.'] }
     ]
   };
@@ -504,7 +504,7 @@ var GUIDE = {};
         go: ['Set driver 12, driven 36, input 60 rpm.', 'اجعل الدافع ١٢ والمدفوع ٣٦ والسرعة ٦٠.'], ok: function (s) { return s.v('driver teeth') === 12 && s.v('driven teeth') === 36 && s.v('input rpm') === 60; },
         why: ['Each turn of the small gear moves the big one only 12 of its 36 teeth: a third of a turn, with three times the turning force.', 'كل دورة للصغير تحرك الكبير ١٢ سنًا من ٣٦: ثلث دورة، بثلاثة أضعاف قوة الدوران.'] },
       { q: ['Swap them: 36 driving 12. Now…', 'اقلبهما: ٣٦ يدير ١٢. الآن…'], o: [['Three times faster, a third of the force', 'أسرع ثلاث مرات وثلث القوة'], ['Slower', 'أبطأ'], ['The same', 'كما هو']],
-        go: ['Set driver 36 and driven 12.', 'اجعل الدافع ٣٦ والمدفوع ١٢.'], ok: function (s) { return s.v('driver teeth') >= 30 && s.v('driven teeth') === 12; },
+        go: ['Set driver 36 and driven 12.', 'اجعل الدافع ٣٦ والمدفوع ١٢.'], ok: function (s) { return s.v('driver teeth') === 36 && s.v('driven teeth') === 12; },
         why: ['Speed up and force down by the same ratio: a gear never gives more of both. Energy is conserved.', 'ترتفع السرعة وتنقص القوة بالنسبة نفسها: لا يعطي الترس المزيد من الاثنين معًا. الطاقة محفوظة.'] }
     ]
   };

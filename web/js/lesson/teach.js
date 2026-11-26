@@ -112,7 +112,7 @@
   /* find the mistake: someone else's working, one line is wrong. Finding it teaches more than being told. */
   I.spot = function (c) {
     var s = c.step;
-    c.el.innerHTML = headHtml(s) + '<div class="sps">' + s.l.map(function (t, i) { return '<button class="sp-l" data-i="' + i + '" dir="ltr">' + math(t) + '</button>'; }).join('') + '</div>';
+    c.el.innerHTML = headHtml(s) + '<div class="sps">' + s.l.map(function (t, i) { return '<button class="sp-l" data-i="' + i + '" dir="' + (Array.isArray(t) && A.ar() ? 'rtl' : 'ltr') + '">' + math(t) + '</button>'; }).join('') + '</div>';
     var rows = $$('.sp-l', c.el);
     rows.forEach(function (b) {
       b.onclick = function () {

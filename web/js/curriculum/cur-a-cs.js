@@ -18,7 +18,7 @@
     [['NOT(x > 5 and y < 2) equals:', 'NOT(x > 5 and y < 2) تساوي:'], ['x <= 5 or y >= 2', 'x <= 5 or y >= 2'], ['x <= 5 and y >= 2', 'x <= 5 and y >= 2'], ['x > 5 or y < 2', 'x > 5 or y < 2']],
     function (r) { var n = r.int(2, 6); return P(['Rows in the truth table.', 'صفوف جدول الحقيقة.'], n + ' inputs', Math.pow(2, n)); }
   ]);
-  Topic('a12k.fsm', ['Finite state machines', 'الآلات محدودة الحالات'], 'path', [['A machine is in one state at a time, and each input moves it along an arrow. A turnstile has two states: locked and open. A coin opens it, and a push locks it. Validators and game characters work like this.', 'للآلة حالة واحدة كل مرة، وكل مدخل ينقلها. وللبوابة حالتان: مغلقة ومفتوحة.']], [
+  Topic('a12k.fsm', ['Finite state machines', 'الآلات محدودة الحالات'], 'compass', [['A machine is in one state at a time, and each input moves it along an arrow. A turnstile has two states: locked and open. A coin opens it, and a push locks it. Validators and game characters work like this.', 'للآلة حالة واحدة كل مرة، وكل مدخل ينقلها. وللبوابة حالتان: مغلقة ومفتوحة.']], [
     [['Turnstile locked; coin, push, push. It ends:', 'البوابة مغلقة؛ عملة، دفع، دفع. تنتهي:'], ['Locked', 'مغلقة'], ['Open', 'مفتوحة'], ['Broken', 'معطلة']],
     function (r) { var n = r.int(2, 9); return P(['How many states are active at once?', 'كم حالة نشطة معًا؟'], n + '-state machine', 1); },
     [['A good use of a state machine is:', 'استعمال جيد لها:'], ['Checking if a text is a valid number', 'فحص صحة عدد في نص'], ['Sorting a million items', 'ترتيب مليون عنصر'], ['Storing photos', 'حفظ الصور']]

@@ -19,8 +19,10 @@
 
   /* letter + vowel = sound */
   I.blend = function (c) {
+    var MK_AR = { 'fatḥah': 'فَتْحَة', 'kasrah': 'كَسْرَة', 'ḍammah': 'ضَمَّة' };
     var s = c.step, marks = s.marks || [['َ', 'fatḥah', 'a'], ['ِ', 'kasrah', 'i'], ['ُ', 'ḍammah', 'u']], cur = 0, lt = 0, ls = s.letters;
-    c.el.innerHTML = '<div class="blend-out ar" lang="ar" dir="rtl"></div><div class="bl-row" dir="rtl" data-l>' + ls.map(function (x, i) { return '<button class="tile" data-i="' + i + '" lang="ar">' + x + '</button>'; }).join('') + '</div><div class="bl-row">' + marks.map(function (m, i) { return '<button class="tile mk" data-m="' + i + '" lang="ar" aria-label="' + esc(m[1]) + '"><b class="mk-g">◌' + m[0] + '</b><small>' + esc(m[1]) + '</small></button>'; }).join('') + '</div>';
+    var ml = function (m) { return Array.isArray(m[1]) ? L(m[1]) : (A.ar() && MK_AR[m[1]] ? MK_AR[m[1]] : m[1]); };
+    c.el.innerHTML = '<div class="blend-out ar" lang="ar" dir="rtl"></div><div class="bl-row" dir="rtl" data-l>' + ls.map(function (x, i) { return '<button class="tile" data-i="' + i + '" lang="ar">' + x + '</button>'; }).join('') + '</div><div class="bl-row">' + marks.map(function (m, i) { var lb = ml(m); return '<button class="tile mk" data-m="' + i + '" lang="ar" aria-label="' + esc(lb) + '"><b class="mk-g">◌' + m[0] + '</b><small>' + esc(lb) + '</small></button>'; }).join('') + '</div>';
     var out = $('.blend-out', c.el);
     function paint(say) {
       var v = ls[lt] + marks[cur][0];

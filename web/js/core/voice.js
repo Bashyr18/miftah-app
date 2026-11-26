@@ -154,7 +154,7 @@
     });
   };
   V.ayah = function (s, a, opts) { opts = opts || {}; return V.play(V.url(opts.r || A.S.reciter || 'h', ('00' + s).slice(-3) + ('00' + a).slice(-3) + '.mp3'), opts); };
-  V.word = function (s, a, i) { return V.play(V.url('w', ('00' + s).slice(-3) + '_' + ('00' + a).slice(-3) + '_' + ('00' + i).slice(-3) + '.mp3')); };
+  V.word = function (s, a, i) { if (probing) { probing.ok = true; return Promise.resolve(false); } return V.play(V.url('w', ('00' + s).slice(-3) + '_' + ('00' + a).slice(-3) + '_' + ('00' + i).slice(-3) + '.mp3')); };
   V.dua = function (id) { return V.play(V.url('d', id + '.mp3')); };
 
   /* speech is a real person wherever there is one: a parent's recording first, then a real recording of that word. Only where
@@ -163,8 +163,8 @@
   V.real = function (text) { if (!window.SPEECH) return null; var w = String(text).trim().replace(/[.,!?;:،؟“”"]/g, ''); if (!/[؀-ۿ]/.test(w)) w = w.toLowerCase(); return window.SPEECH[w] != null ? 'audio/s/' + window.SPEECH[w] + '.ogg' : null; };
   /* a letter's name (بَاء) is recorded under the letter itself (ب): lessons pass the letter in their key, ar_ب */
   function realOf(text, opts) { var r = V.real(text); if (!r && opts && /^ar_.$/.test(opts.key || '')) r = V.real(opts.key.slice(3)); return r; }
-  /* the device may speak a letter's name (key ar_ب) or a letter with its vowel (ar_بَ), and nothing else */
-  V.deviceFor = function (text, opts) { return !!(opts && /^ar_.[ً-ْ]?$/.test(opts.key || '') && langs.ar && String(text).length < 24); };
+  /* the device may speak a letter's name (key ar_ب) or a letter with its vowel/madd (ar_بَ, ar_بَا), and nothing else */
+  V.deviceFor = function (text, opts) { return !!(opts && /^ar_.[ً-ّْ]?[اوي]?$/.test(opts.key || '') && langs.ar && String(text).length < 24); };
   V.can = function (text, opts) { if (!text) return false; opts = opts || {}; return !!have[opts.key || V.keyOf(text)] || !!realOf(text, opts) || V.deviceFor(text, opts); };
   V.say = function (text, opts) {
     opts = opts || {};

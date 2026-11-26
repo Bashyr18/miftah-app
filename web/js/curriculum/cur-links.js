@@ -56,9 +56,9 @@
   });
   /* lessons that lean on another subject */
   var USES = {
-    'p8.speed': ['m8.ratio'], 'p8.work': ['m6.order'], 'p8.newton': ['m6.alg'], 'p9.ohm': ['m8.alg' , 'm9.rearr'], 'p9.waves': ['m9.rearr'], 'p12.circ': ['m12.trig'], 'c9.moles': ['m8.ratio'], 'c8.react': ['m6.alg'],
+    'p8.speed': ['m8.ratio'], 'p8.work': ['m6.order'], 'p8.newton': ['m6.alg'], 'p9.ohm': ['m6.alg2', 'm9.rearr'], 'p9.waves': ['m9.rearr'], 'p12.circ': ['m12.trig'], 'c9.moles': ['m8.ratio'], 'c8.react': ['m6.alg'],
     'b9.inherit': ['m8.prob'], 'b9.ecosys': ['m6.pctof'], 'x13.relativity': ['m12.diff'], 'x13.em': ['m13.diffeq'],
-    'ai11.reg': ['m8.line'], 'ai11.grad': ['m12.diff'], 'ai12.nn': ['m13.chain', 'fm13.matrix'], 'ai12.vec': ['fm13.matrix', 'fm13.vector'], 'k10.crypto': ['g7.mod'], 'k9.func': ['m8.funcs', 'm10.funcs'], 'k12.complex': ['m12.log'],
+    'ai11.reg': ['m8.line'], 'ai11.grad': ['m12.diff'], 'ai12.nn': ['m13.chain', 'fm13.matrix'], 'ai12.vec': ['fm13.matrix', 'fm13.vector'], 'k10.crypto': ['g7.mod'], 'k9.func': ['m8.line', 'm10.funcs'], 'k12.complex': ['m12.log'],
     'en4.levers': ['m4.mul21'], 'en6.gears': ['m6.ratio'], 'en10.stress': ['m8.ratio'], 'en11.ac': ['p9.power'], 'en11.thermo': ['c9.energy'], 'en12.control': ['m12.diffuse'], 'en12.signal': ['m9.sohcah'], 'en8.arduino': ['k8.if'], 'en11.logicgates': ['k5.logic'],
     'd2.zakah': ['m3.frac'], 'd11.zakah': ['m7.zakah'], 'w10.inflation': ['m8.reppct'], 'w10.waqf': ['d2.zakah'], 'w9.climate': ['s3.water'], 'w4.khwarizmi': ['m6.alg'], 'b8.circ': ['s5.heart'], 'b9.evolve': ['d10.evolution'],
     'l10.budget': ['m4.budget'], 'l10.debt': ['d11.money'], 'e9.cite': ['d9.grades'], 'a12.tafsir': ['d8.tafsir'], 'a7.common': ['d6.quran'], 's4.light': ['d2.adhan'], 'm7.calendar': ['d3.calendar']

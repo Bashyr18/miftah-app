@@ -25,12 +25,12 @@
 
   /* ======== Year 1, age 5 ======== */
   U('m1-write', ['Writing our numbers', 'كتابة الأعداد'], 1, 1);
-  [[[1, 2, 3], ['Write 1, 2 and 3', 'اكتب ١ و٢ و٣'], 'pencil'], [[4, 5, 6], ['Write 4, 5 and 6', 'اكتب ٤ و٥ و٦'], 'crayon'], [[7, 8, 9], ['Write 7, 8 and 9', 'اكتب ٧ و٨ و٩'], 'paint'], [[0, 1], ['Zero, and writing 10', 'الصفر وكتابة ١٠'], 'egg']].forEach(function (x, i) {
+  [[[1, 2, 3], ['Write 1, 2 and 3', 'اكتب ١ و٢ و٣'], 'pencil'], [[4, 5, 6], ['Write 4, 5 and 6', 'اكتب ٤ و٥ و٦'], 'crayon'], [[7, 8, 9], ['Write 7, 8 and 9', 'اكتب ٧ و٨ و٩'], 'paint'], [[0, 1, 10], ['Zero, and writing 10', 'الصفر وكتابة ١٠'], 'egg']].forEach(function (x, i) {
     C.add('m1.w' + i, { title: x[1], art: x[2], soloN: 3,
       meet: [{ k: 'say', p: ['Every number has a shape. Your hand learns it by making it.', 'لكل عدد شكل. ويدك تتعلمه بكتابته.'], big: x[0].join('  ') }],
-      guided: function () { return traceN(x[0]).map(function (f) { return f(); }); },
-      solo: function (r) { var n = r.pick(x[0]) || 1; return n ? { k: 'plate', n: n, obj: r.pick(OB), p: ['How many?', 'كم العدد؟'] } : pad('5 − 5 = ?', 0); },
-      review: function (r) { var n = r.pick(x[0]) || 2; return { k: 'plate', n: n, obj: r.pick(OB), p: ['How many?', 'كم العدد؟'] }; } });
+      guided: function () { return traceN(x[0].filter(function (n) { return n < 10; })).map(function (f) { return f(); }); },
+      solo: function (r) { var n = r.pick(x[0]); return n > 0 ? { k: 'plate', n: n, obj: r.pick(OB), p: ['How many?', 'كم العدد؟'] } : pad('5 − 5 = ?', 0); },
+      review: function (r) { var n = r.pick(x[0]); return n > 0 ? { k: 'plate', n: n, obj: r.pick(OB), p: ['How many?', 'كم العدد؟'] } : pad('4 − 4 = ?', 0); } });
   });
   U('m1-more', ['Number stories to ten', 'قصص الأعداد إلى عشرة'], 1, 1);
   [6, 7, 8, 9].forEach(function (w) {

@@ -158,9 +158,9 @@
       if ((p.off || {})[rid]) return;
       C.rooms[rid].units.forEach(function (u) {
         if (u.band > st) return; var state = d.units[u.id]; if (state && state.t) return;
-        var list = u.skills.filter(function (s) { return s.band <= st; }); if (list.length < 2) return;
+        var list = u.skills.filter(function (s) { return s.band <= st; }); var need = Math.min(2, list.length); if (!need) return;
         var taught = list.filter(function (s) { return d.keys[s.id] && d.keys[s.id].forged; });
-        if (!list.every(function (s) { return M.met(s.id, pid); }) || taught.length < 2) return;
+        if (!list.every(function (s) { return M.met(s.id, pid); }) || taught.length < need) return;
         if (state && state.tried && (t - state.tried) / DAY < 3) return;
         out.push(u.id);
       });

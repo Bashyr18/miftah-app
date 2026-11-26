@@ -151,6 +151,10 @@
     function (r) { var u = r.int(1, 9) * 10; return P(['What is the atom economy, as a percentage?', 'ما الاقتصاد الذري كنسبة مئوية؟'], u + ' of 100 product mass useful', u); },
     [['Catalysts are favoured because they:', 'تفضل الحفازات لأنها:'], ['Save energy and are reused', 'توفر الطاقة ويعاد استعمالها'], ['Are used up', 'تستهلك'], ['Add waste', 'تزيد الهدر']]
   ]);
+  Topic('a14sc.cat', ['Catalysis and fuel cells', 'التحفيز وخلايا الوقود'], 'battery', [['A catalyst lowers the activation energy without changing the overall enthalpy. Hydrogen fuel cells convert chemical energy straight to electricity, leaving only water.', 'يخفض الحفاز طاقة التنشيط دون تغيير المحتوى الحراري الكلي. وتحول خلايا الوقود الهيدروجينية الطاقة الكيميائية مباشرة إلى كهرباء ولا تخلف إلا الماء.']], [
+    function (r) { var e = r.int(6, 15) * 10, c = r.int(1, 4) * 10; return P(['New activation energy in kJ/mol.', 'طاقة التنشيط الجديدة بـ kJ/mol.'], 'original ' + e + ', catalyst lowers by ' + c, e - c); },
+    [['What is the only chemical product of a hydrogen fuel cell?', 'ما الناتج الكيميائي الوحيد لخلية الوقود الهيدروجينية؟'], ['Water', 'الماء'], ['Carbon dioxide', 'ثاني أكسيد الكربون'], ['Nitrogen oxide', 'أكسيد النيتروجين']]
+  ]);
 
   /* ---------- biology, Years 12 to 14 ---------- */
   U('science', 'a12bi', ['A level biology: cells to systems', 'الأحياء: من الخلية إلى الأجهزة'], 4, 12);
@@ -198,5 +202,9 @@
     function (r) { var k = r.pick([2, 4, 5, 10]); return P(['Herd immunity threshold, %.', 'عتبة المناعة.'], 'R₀ = ' + k, 100 - 100 / k); },
     function (r) { var k = r.int(2, 4), g = r.int(2, 4); return P(['New cases in this generation, from one.', 'الحالات الجديدة في هذا الجيل.'], 'R = ' + k + ', generation ' + g, Math.pow(k, g)); },
     [['Quarantine works by lowering:', 'يعمل الحجر بخفض:'], ['Effective R', 'R الفعلي'], ['Temperature', 'الحرارة'], ['Age', 'العمر']]
+  ]);
+  Topic('a14sc.crispr', ['Gene editing and bioethics', 'تحرير الجينات وأخلاقيات الأحياء'], 'microscope', [['CRISPR uses a guide RNA to direct a Cas9 enzyme to cut DNA at a chosen sequence. Treating genetic disease brings hope, while editing heritable embryos raises deep ethical and Islamic questions of trust and harm.', 'يستعمل كريسبر حمضًا نوويًا مرشدًا لتوجيه إنزيم Cas9 لقص DNA في موضع محدد. وعلاج الأمراض الوراثية يبعث الأمل، أما تعديل الأجنة المتوارث فيطرح أسئلة أخلاقية وشرعية عميقة.']], [
+    [['In CRISPR-Cas9, what finds the target DNA sequence?', 'في كريسبر، ما الذي يحدد موضع DNA المستهدف؟'], ['The guide RNA', 'الحمض النووي المرشد RNA'], ['A ribosome', 'الريبوسوم'], ['Haemoglobin', 'الهيموجلوبين']],
+    [['Why is germline editing treated more cautiously than somatic editing?', 'لماذا يُتعامل مع التعديل الوراثي للخلايا الجنسية بحذر أشد؟'], ['Changes pass to future generations', 'التغيرات تنتقل إلى الأجيال القادمة'], ['It cannot cut DNA', 'لا يستطيع قص DNA'], ['It only works in plants', 'لا يعمل إلا في النباتات']]
   ]);
 })();

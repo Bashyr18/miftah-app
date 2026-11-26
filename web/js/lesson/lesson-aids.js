@@ -43,21 +43,31 @@
       $('#wk-x', sh).onclick = function () { g.clearRect(0, 0, r.width, r.height); ink = null; };
     });
   }
-  /* a plain calculator */
+  /* a scientific calculator (trig in degrees, powers, roots) */
   function calc() {
-    var keys = ['7', '8', '9', '÷', '4', '5', '6', '×', '1', '2', '3', '−', '0', '.', '=', '+', 'C', '√', 'x²', '±'];
-    A.sheet(L(['Calculator', 'الآلة الحاسبة']), '<div class="clc" dir="ltr"><output id="cl-o">0</output><div class="clc-k">' + keys.map(function (k) { return '<button data-c="' + k + '"' + (/[=]/.test(k) ? ' class="on"' : '') + '>' + k + '</button>'; }).join('') + '</div></div>', function (sh) {
+    var keys = ['sin', 'cos', 'tan', 'π', 'sin⁻¹', 'cos⁻¹', 'tan⁻¹', '⌫', '7', '8', '9', '÷', '4', '5', '6', '×', '1', '2', '3', '−', '0', '.', '=', '+', 'C', '√', 'x²', '±'];
+    A.sheet(L(['Calculator', 'الآلة الحاسبة']), '<div class="clc" dir="ltr"><output id="cl-o">0</output><div class="clc-k">' + keys.map(function (k) { return '<button data-c="' + k + '"' + (k === '=' ? ' class="on"' : /^(sin|cos|tan|π)/.test(k) ? ' class="fn"' : '') + '>' + k + '</button>'; }).join('') + '</div></div>', function (sh) {
       var o = $('#cl-o', sh), cur = '0', mem = null, op = null, fresh = true;
+      var DEG = Math.PI / 180;
+      var fmt = function (v) { return !isFinite(v) ? 'Error' : String(+v.toFixed(10)); };
       var show = function () { o.textContent = cur; };
-      var calcNow = function () { if (op == null || mem == null) return; var a = mem, b = parseFloat(cur), v = op === '+' ? a + b : op === '−' ? a - b : op === '×' ? a * b : b === 0 ? NaN : a / b; cur = isNaN(v) ? 'Error' : String(+v.toFixed(10)); mem = null; op = null; };
+      var calcNow = function () { if (op == null || mem == null) return; var a = mem, b = parseFloat(cur), v = op === '+' ? a + b : op === '−' ? a - b : op === '×' ? a * b : b === 0 ? NaN : a / b; cur = fmt(v); mem = null; op = null; };
       $$('[data-c]', sh).forEach(function (b) { b.onclick = function () {
-        var k = b.dataset.c;
+        var k = b.dataset.c, x = parseFloat(cur);
         if (/^\d$/.test(k)) { cur = fresh || cur === '0' || cur === 'Error' ? k : cur + k; fresh = false; }
-        else if (k === '.') { if (fresh) { cur = '0.'; fresh = false; } else if (cur.indexOf('.') < 0) cur += '.'; }
+        else if (k === '.') { if (fresh || cur === 'Error') { cur = '0.'; fresh = false; } else if (cur.indexOf('.') < 0) cur += '.'; }
+        else if (k === '⌫') { if (fresh || cur === 'Error' || cur.length <= 1) { cur = '0'; fresh = true; } else cur = cur.slice(0, -1); }
         else if (k === 'C') { cur = '0'; mem = null; op = null; fresh = true; }
-        else if (k === '±') cur = String(-parseFloat(cur) || 0);
-        else if (k === '√') { cur = parseFloat(cur) < 0 ? 'Error' : String(+Math.sqrt(parseFloat(cur)).toFixed(10)); fresh = true; }
-        else if (k === 'x²') { cur = String(+Math.pow(parseFloat(cur), 2).toFixed(10)); fresh = true; }
+        else if (k === 'π') { cur = fmt(Math.PI); fresh = true; }
+        else if (k === '±') cur = cur === 'Error' ? '0' : String(-x || 0);
+        else if (k === '√') { cur = x < 0 ? 'Error' : fmt(Math.sqrt(x)); fresh = true; }
+        else if (k === 'x²') { cur = fmt(Math.pow(x, 2)); fresh = true; }
+        else if (k === 'sin') { cur = fmt(Math.sin(x * DEG)); fresh = true; }
+        else if (k === 'cos') { cur = fmt(Math.cos(x * DEG)); fresh = true; }
+        else if (k === 'tan') { cur = Math.abs(Math.cos(x * DEG)) < 1e-12 ? 'Error' : fmt(Math.tan(x * DEG)); fresh = true; }
+        else if (k === 'sin⁻¹') { cur = x < -1 || x > 1 ? 'Error' : fmt(Math.asin(x) / DEG); fresh = true; }
+        else if (k === 'cos⁻¹') { cur = x < -1 || x > 1 ? 'Error' : fmt(Math.acos(x) / DEG); fresh = true; }
+        else if (k === 'tan⁻¹') { cur = fmt(Math.atan(x) / DEG); fresh = true; }
         else if (k === '=') { calcNow(); fresh = true; }
         else { calcNow(); mem = parseFloat(cur); op = k; fresh = true; }
         show();
@@ -143,8 +153,23 @@
     }
     var title = titleOf(c);
     if (pr) { if (title) pr.textContent = title; else pr.remove(); }
+    var split = I.splitFormulas || function (x) { return [x]; };
+    var parts = [].concat.apply([], lines.map(split));
+    var extraKey = '';
+    if (A.ar() && window.FKEYS && Array.isArray(s.p) && s.p[0]) {
+      var hasKey = parts.some(function (l) { return !!window.FKEYS[l.replace(/\.$/, '').trim()]; });
+      if (!hasKey) {
+        var enParts = [].concat.apply([], sentences(s.p[0].replace(WORKED, '')).map(split));
+        var seen = {}, rows = [];
+        enParts.concat(s.big ? [s.big] : []).forEach(function (l) {
+          var f = String(l).replace(/\.$/, '').trim();
+          (window.FKEYS[f] || []).forEach(function (k) { if (!seen[k[0]]) { seen[k[0]] = 1; rows.push(k); } });
+        });
+        if (rows.length) extraKey = '<div class="tch-f"><dl class="tch-sym">' + rows.map(function (k) { return '<div><dt dir="ltr">' + esc(k[0]) + '</dt><dd>' + esc(L([k[1], k[2]])) + '</dd></div>'; }).join('') + '</dl></div>';
+      }
+    }
     c.el.innerHTML = '<div class="tch">' + (s.tag ? '<small class="tch-tag">' + esc(L(s.tag)) + '</small>' : '') + (s.art ? '<div class="tch-art">' + A.art(s.art, 84) + '</div>' : '') + (s.dia ? '<div class="dia-w">' + s.dia + '</div>' : '') + (s.big ? '<p class="tch-eq" dir="ltr">' + esc(s.big) + '</p>' : '') +
-      group([].concat.apply([], lines.map(I.splitFormulas || function (x) { return [x]; }))) +
+      group(parts) + extraKey +
       (I.simButton && I.simFor ? I.simButton(I.simFor(c.skillId)) : '') + '</div>';
     c.done();
   };

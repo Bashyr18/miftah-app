@@ -185,7 +185,7 @@
   }
   C.add('t.wodd', {
     title: ['The odd word out', 'الكلمة الغريبة'], art: 'book',
-    meet: [{ k: 'say', p: ['Red, blue, green… and lion. Three are colours; lion does not belong.', 'أحمر، أزرق، أخضر… وأسد. ثلاثة ألوان، والأسد لا ينتمي.'], big: 'red · blue · green · lion' }],
+    meet: function () { return [{ k: 'say', p: ['Red, blue, green… and lion. Three are colours; lion does not belong.', 'أحمر، أزرق، أخضر… وأسد. ثلاثة ألوان، والأسد لا ينتمي.'], big: isAr() ? 'أحمر · أزرق · أخضر · أسد' : 'red · blue · green · lion', bigAr: isAr() }]; },
     guided: function (r) { return [oddWord(r)]; }, solo: oddWord, review: oddWord, soloN: 4
   });
 
@@ -205,7 +205,7 @@
   }
   C.add('t.analogy', {
     title: ['Is to… as… is to', 'نسبة إلى… مثل'], art: 'key', needs: ['t.wodd'],
-    meet: [{ k: 'say', p: ['Sheep is to lamb as cow is to calf: the second word is the young one.', 'الخروف إلى الحَمَل مثل البقرة إلى العِجل: الثانية هي الصغير.'], big: 'sheep : lamb :: cow : ?' }],
+    meet: function () { return [{ k: 'say', p: ['Sheep is to lamb as cow is to calf: the second word is the young one.', 'الخروف إلى الحَمَل مثل البقرة إلى العِجل: الثانية هي الصغير.'], big: isAr() ? 'خروف : حَمَل :: بقرة : ؟' : 'sheep : lamb :: cow : ?', bigAr: isAr() }]; },
     guided: function (r) { return [analogy(r)]; }, solo: analogy, review: analogy, soloN: 4
   });
 
@@ -221,7 +221,7 @@
   }
   C.add('t.same', {
     title: ['Words that mean the same', 'كلمات بمعنى واحد'], art: 'notebook', needs: ['t.analogy'],
-    meet: [{ k: 'say', p: ['Big and large mean nearly the same. Try them in a sentence: a big house, a large house.', '«كبير» و«ضخم» بمعنى متقارب. جرّبهما في جملة: بيت كبير، بيت ضخم.'], big: 'big = large' }],
+    meet: function () { return [{ k: 'say', p: ['Big and large mean nearly the same. Try them in a sentence: a big house, a large house.', '«كبير» و«ضخم» بمعنى متقارب. جرّبهما في جملة: بيت كبير، بيت ضخم.'], big: isAr() ? 'كبير = ضخم' : 'big = large', bigAr: isAr() }]; },
     guided: function (r) { return [same(r)]; }, solo: same, review: same, soloN: 4
   });
 
@@ -302,7 +302,7 @@
   }
   C.add('t.letters', {
     title: ['Letter patterns', 'أنماط الحروف'], art: 'letter',
-    meet: [{ k: 'say', p: ['A, C, E, G… it skips one letter each time. Next is I.', 'ا، ت، ج، خ… يقفز حرفًا في كل مرة في ترتيب الحروف. التالي ذ.'], big: 'A · C · E · G · ?' }],
+    meet: function () { return [{ k: 'say', p: ['A, C, E, G… it skips one letter each time. Next is I.', 'ا، ت، ج، خ… يقفز حرفًا في كل مرة في ترتيب الحروف. التالي ذ.'], big: isAr() ? 'ا · ت · ج · خ · ؟' : 'A · C · E · G · ?', bigAr: isAr() }]; },
     guided: function (r) { return [letters(r)]; }, solo: letters, review: letters, soloN: 4
   });
 
@@ -316,7 +316,7 @@
   }
   C.add('t.code', {
     title: ['Secret codes', 'الرموز السرية'], art: 'lock', needs: ['t.letters'],
-    meet: [{ k: 'say', p: ['Move every letter one place on: CAT becomes DBU. Every letter moves the same way.', 'انقل كل حرف خطوة واحدة في الترتيب: «قلم» تصبح «كمن». كل الحروف تنتقل بالطريقة نفسها.'], big: 'CAT → DBU' }],
+    meet: function () { return [{ k: 'say', p: ['Move every letter one place on: CAT becomes DBU. Every letter moves the same way.', 'انقل كل حرف خطوة واحدة في الترتيب: «قلم» تصبح «كمن». كل الحروف تنتقل بالطريقة نفسها.'], big: isAr() ? 'قلم ← كمن' : 'CAT → DBU', bigAr: isAr() }]; },
     guided: function (r) { return [code(r)]; }, solo: code, review: code, soloN: 4
   });
 
@@ -332,7 +332,7 @@
   }
   C.add('t.order', {
     title: ['Who is first?', 'مَن الأول؟'], art: 'ladder', needs: ['t.code'],
-    meet: [{ k: 'say', p: ['Ali is taller than Sara. Sara is taller than Musa. In a line: Ali, Sara, Musa. Ali is tallest.', 'عليّ أطول من سارة، وسارة أطول من موسى. في صفّ: عليّ، سارة، موسى. عليّ الأطول.'], big: 'Ali > Sara > Musa' }],
+    meet: function () { return [{ k: 'say', p: ['Ali is taller than Sara. Sara is taller than Musa. In a line: Ali, Sara, Musa. Ali is tallest.', 'عليّ أطول من سارة، وسارة أطول من موسى. في صفّ: عليّ، سارة، موسى. عليّ الأطول.'], big: isAr() ? 'عليّ > سارة > موسى' : 'Ali > Sara > Musa', bigAr: isAr() }]; },
     guided: function (r) { return [ordering(r)]; }, solo: ordering, review: ordering, soloN: 4
   });
 

@@ -247,7 +247,7 @@
     function (r) { var w = r.int(2, 9) * 10, h = r.int(2, 9) * 10; return P(['How many pixels does the image have?', 'كم بكسلًا في الصورة؟'], w + ' × ' + h + ' image', w * h); },
     function (r) { var n = r.int(3, 9); return P(OUT, 'c = 0; for i in 1..' + n + ': for j in 1..i: c += 1; print(c)', n * (n + 1) / 2); }
   ]);
-  Topic('x9k.pseudo', ['Planning with pseudocode', 'التخطيط بالكود الوصفي'], 'pen', [['Before typing, write the steps in plain words. Inputs, steps, outputs. Check it on one small example by hand. Five minutes of planning saves an hour of debugging, and pseudocode is on Cambridge papers.', 'قبل الكتابة دون الخطوات بكلمات بسيطة: مدخلات وخطوات ومخرجات. وجربها على مثال صغير باليد.']], [
+  Topic('x9k.pseudo', ['Planning with pseudocode', 'التخطيط بالكود الوصفي'], 'pencil', [['Before typing, write the steps in plain words. Inputs, steps, outputs. Check it on one small example by hand. Five minutes of planning saves an hour of debugging, and pseudocode is on Cambridge papers.', 'قبل الكتابة دون الخطوات بكلمات بسيطة: مدخلات وخطوات ومخرجات. وجربها على مثال صغير باليد.']], [
     [['What should a plan state first?', 'ما أول ما تذكره الخطة؟'], ['Inputs and the output you expect', 'المدخلات والناتج المتوقع'], ['The font', 'الخط'], ['The file name', 'اسم الملف']],
     function (r) { var a = r.int(2, 9), b = r.int(2, 9); return P(['Output of the plan.', 'ناتج الخطة.'], 'set total to ' + a + '; multiply by ' + b + '; add 1', a * b + 1); }
   ]);
@@ -305,7 +305,7 @@
     function (r) { var c = r.int(2, 9); return P(['What is this length in millimetres?', 'كم هذا الطول بالمليمتر؟'], c + ' cm', c * 10); }
   ]);
   U('engineering', 'x10e', ['Designing for real', 'تصميم حقيقي'], 3, 10, true);
-  Topic('x10e.brief', ['Writing a design brief', 'كتابة موجز التصميم'], 'pen', [['Who is it for? What must it do? What are the limits on cost, weight and time? Write measurable requirements: “lifts 2 kg” and not “is strong”. Then you can tell if you have succeeded.', 'لمن؟ وماذا يفعل؟ وما حدود الكلفة والوزن والزمن؟ اكتب متطلبات قابلة للقياس: "يرفع ٢ كغ" لا "قوي".']], [
+  Topic('x10e.brief', ['Writing a design brief', 'كتابة موجز التصميم'], 'pencil', [['Who is it for? What must it do? What are the limits on cost, weight and time? Write measurable requirements: “lifts 2 kg” and not “is strong”. Then you can tell if you have succeeded.', 'لمن؟ وماذا يفعل؟ وما حدود الكلفة والوزن والزمن؟ اكتب متطلبات قابلة للقياس: "يرفع ٢ كغ" لا "قوي".']], [
     [['Which requirement is measurable?', 'أي متطلب قابل للقياس؟'], ['Runs 8 hours on one charge', 'يعمل ٨ ساعات بشحنة'], ['Lasts a good while', 'يدوم مدة جيدة'], ['Looks modern', 'يبدو حديثًا']],
     [['Before designing, you should first:', 'قبل التصميم عليك أولًا:'], ['Talk to the people who will use it', 'الحديث مع المستخدمين'], ['Buy materials', 'شراء المواد'], ['Choose a colour', 'اختيار لون']]
   ]);

@@ -44,7 +44,7 @@
     [['Which is the stronger sentence?', 'أي جملة أقوى؟'], ['The harsh sounds make the storm feel violent', 'الأصوات القاسية تجعل العاصفة عنيفة'], ['This line has alliteration', 'في هذا السطر جناس'], ['The poet uses many words', 'يستعمل الشاعر كلمات كثيرة']],
     [['A good quotation is:', 'الاقتباس الجيد:'], ['Short, and analysed', 'قصير ومحلل'], ['Long, and left alone', 'طويل بلا تعليق'], ['Half a page', 'نصف صفحة']]
   ]);
-  Topic('a13en.arg', ['Writing a research essay', 'كتابة مقال بحثي'], 'pen', [['Ask a real question, and state a thesis you could lose. Each paragraph makes one claim, with evidence, and then says what follows. Answer the best objection, and cite everything.', 'اطرح سؤالًا حقيقيًا واذكر أطروحة قابلة للنقض. كل فقرة دعوى بدليل. ورد على أقوى اعتراض ووثق كل شيء.']], [
+  Topic('a13en.arg', ['Writing a research essay', 'كتابة مقال بحثي'], 'pencil', [['Ask a real question, and state a thesis you could lose. Each paragraph makes one claim, with evidence, and then says what follows. Answer the best objection, and cite everything.', 'اطرح سؤالًا حقيقيًا واذكر أطروحة قابلة للنقض. كل فقرة دعوى بدليل. ورد على أقوى اعتراض ووثق كل شيء.']], [
     [['A strong thesis is:', 'الأطروحة القوية:'], ['Arguable and specific', 'قابلة للنقاش ومحددة'], ['An obvious fact', 'حقيقة بديهية'], ['A question only', 'سؤال فقط']],
     [['Why state the best objection?', 'لماذا تذكر أقوى اعتراض؟'], ['It tests and strengthens your case', 'يختبر حجتك ويقويها'], ['To fill space', 'لملء الصفحة'], ['To confuse readers', 'لإرباك القارئ']]
   ]);
@@ -52,7 +52,7 @@
     [['After a hard chapter, the most useful step is:', 'بعد فصل صعب، أنفع خطوة:'], ['Summarise it from memory', 'التلخيص من الذاكرة'], ['Reread it passively', 'إعادة القراءة السلبية'], ['Underline more', 'تظليل أكثر']],
     [['To judge a book’s argument, ask:', 'للحكم على حجة كتاب اسأل:'], ['What does it assume?', 'ماذا يفترض؟'], ['How long is it?', 'كم طوله؟'], ['Who designed the cover?', 'من صمم الغلاف؟']]
   ]);
-  Topic('a14en.speak', ['Speaking in public', 'الخطابة'], 'talk', [['One message. A story to open, three points, a clear ending. Slow down, and pause. Rehearse aloud, and time it. Speak to people, not to your notes. Good khaṭībs have long known this.', 'رسالة واحدة. افتح بقصة ثم ثلاث نقاط ثم خاتمة واضحة. تمهل وتوقف، وتدرب بصوت عالٍ.']], [
+  Topic('a14en.speak', ['Speaking in public', 'الخطابة'], 'letter', [['One message. A story to open, three points, a clear ending. Slow down, and pause. Rehearse aloud, and time it. Speak to people, not to your notes. Good khaṭībs have long known this.', 'رسالة واحدة. افتح بقصة ثم ثلاث نقاط ثم خاتمة واضحة. تمهل وتوقف، وتدرب بصوت عالٍ.']], [
     function (r) { var m = r.int(3, 10); return P(['Words to write, at 130 a minute.', 'الكلمات بمعدل ١٣٠ في الدقيقة.'], m + ' minute talk', m * 130); },
     [['Nerves before speaking are best handled by:', 'أفضل علاج لتوتر الخطابة:'], ['Rehearsing aloud', 'التدرب بصوت عالٍ'], ['Reading faster', 'القراءة أسرع'], ['Avoiding eye contact', 'تجنب النظر']]
   ]);
@@ -67,7 +67,7 @@
     [['Under which root would you find مَدْرَسَة?', 'تحت أي جذر تجد مدرسة؟'], ['د ر س', 'د ر س'], ['م د ر', 'م د ر'], ['ر س م', 'ر س م']],
     [['Under which root would you find مَسْجِد?', 'تحت أي جذر تجد مسجد؟'], ['س ج د', 'س ج د'], ['م س ج', 'م س ج'], ['ج د م', 'ج د م']]
   ]);
-  Topic('a14a.speak', ['Holding a conversation', 'إجراء محادثة'], 'talk', [['Knowing grammar is not speaking. Ten minutes a day with a person beats an hour alone. Use set phrases: مَا رَأْيُكَ؟ what is your view? أَظُنُّ أَنَّ I think that. Mistakes are the price of fluency.', 'معرفة النحو ليست حديثًا. عشر دقائق مع شخص أنفع من ساعة وحدك. استعمل: ما رأيك؟ أظن أن. والخطأ ثمن الطلاقة.']], [
+  Topic('a14a.speak', ['Holding a conversation', 'إجراء محادثة'], 'letter', [['Knowing grammar is not speaking. Ten minutes a day with a person beats an hour alone. Use set phrases: مَا رَأْيُكَ؟ what is your view? أَظُنُّ أَنَّ I think that. Mistakes are the price of fluency.', 'معرفة النحو ليست حديثًا. عشر دقائق مع شخص أنفع من ساعة وحدك. استعمل: ما رأيك؟ أظن أن. والخطأ ثمن الطلاقة.']], [
     [['مَا رَأْيُكَ؟ asks:', 'ما رأيك؟ تسأل عن:'], ['What is your view?', 'رأيك'], ['What is your name?', 'اسمك'], ['Where is your house?', 'بيتك']],
     [['What builds speaking fastest?', 'ما الأسرع في بناء الحديث؟'], ['Short daily talk with a person', 'حديث يومي قصير مع شخص'], ['Only reading grammar', 'قراءة النحو فقط'], ['Waiting until perfect', 'انتظار الإتقان']]
   ]);

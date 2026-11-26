@@ -78,7 +78,7 @@
   ]);
   /* ---------- computing, Years 12 to 14 ---------- */
   U('computing', 'c12k', ['Algorithms you must know', 'خوارزميات لا غنى عنها'], 4, 12, true);
-  Topic('c12k.greedy', ['Greedy algorithms', 'الخوارزميات الطماعة'], 'path', [['Take the best step now and never look back. It is optimal for some problems, such as scheduling by earliest finish, and wrong for others. Prove it, or find a counterexample: coins 1, 3, 4 for 6 gives 4+1+1, but 3+3 is better.', 'خذ أفضل خطوة الآن. وهي مثلى لبعض المسائل وخاطئة لغيرها: عملات ١، ٣، ٤ لـ٦ تعطي ٤+١+١ و٣+٣ أفضل.']], [
+  Topic('c12k.greedy', ['Greedy algorithms', 'الخوارزميات الطماعة'], 'compass', [['Take the best step now and never look back. It is optimal for some problems, such as scheduling by earliest finish, and wrong for others. Prove it, or find a counterexample: coins 1, 3, 4 for 6 gives 4+1+1, but 3+3 is better.', 'خذ أفضل خطوة الآن. وهي مثلى لبعض المسائل وخاطئة لغيرها: عملات ١، ٣، ٤ لـ٦ تعطي ٤+١+١ و٣+٣ أفضل.']], [
     function (r) { var n = r.int(1, 9) * 5 + r.int(0, 4); return P(['Fewest coins from 5s and 1s.', 'أقل عدد من فئة ٥ و١.'], 'make ' + n, Math.floor(n / 5) + n % 5); },
     [['Greedy is guaranteed correct:', 'الطماعة صحيحة حتمًا:'], ['Only when proved for that problem', 'إذا ثبتت لتلك المسألة فقط'], ['For every kind of problem', 'لكل المسائل'], ['Whenever it runs quickly', 'كلما كانت سريعة']]
   ]);
@@ -164,11 +164,11 @@
     [['Most modern money takes the form of:', 'أغلب النقود الحديثة:'], ['Bank deposits', 'ودائع بنكية'], ['Gold coins', 'عملات ذهبية'], ['Paper notes', 'أوراق نقدية']]
   ]);
   U('english', 'c14en', ['Writing that counts', 'كتابة مؤثرة'], 4, 14, true);
-  Topic('c14en.acad', ['University writing', 'الكتابة الجامعية'], 'pen', [['Answer the question in your first paragraph. Each paragraph then makes one claim, with evidence and reasoning. Cut every word that does nothing. Read other scholars, argue with them fairly, and cite them.', 'أجب في الفقرة الأولى. كل فقرة دعوى بدليل وتعليل. واحذف ما لا يفيد. وناقش العلماء بإنصاف ووثقهم.']], [
+  Topic('c14en.acad', ['University writing', 'الكتابة الجامعية'], 'pencil', [['Answer the question in your first paragraph. Each paragraph then makes one claim, with evidence and reasoning. Cut every word that does nothing. Read other scholars, argue with them fairly, and cite them.', 'أجب في الفقرة الأولى. كل فقرة دعوى بدليل وتعليل. واحذف ما لا يفيد. وناقش العلماء بإنصاف ووثقهم.']], [
     [['Which sentence is better?', 'أي جملة أفضل؟'], ['Rising rents forced families out', 'أخرج غلاء الإيجار الأسر'], ['It could be argued, in some ways, that rents might matter', 'قد يقال إن الإيجار ربما يهم نوعًا ما'], ['Families and rents are things in society today', 'الأسر والإيجارات أشياء في المجتمع']],
     [['Using AI to write your essay and hiding it is:', 'كتابة مقالك بالذكاء الاصطناعي وإخفاؤه:'], ['Academic dishonesty', 'غش أكاديمي'], ['Good time management', 'إدارة جيدة للوقت'], ['A kind of research', 'نوع من البحث']]
   ]);
-  Topic('c14en.email', ['Writing to professionals', 'الكتابة للمختصين'], 'pen', [['Clear subject, polite greeting, who you are in one line, exactly what you ask, and a thank you. Short emails get answers. Check names and spelling. Reply within a day, even only to say you will reply.', 'موضوع واضح وتحية مهذبة ومن أنت في سطر وما تطلب بدقة والشكر. والرسائل القصيرة تُجاب.']], [
+  Topic('c14en.email', ['Writing to professionals', 'الكتابة للمختصين'], 'pencil', [['Clear subject, polite greeting, who you are in one line, exactly what you ask, and a thank you. Short emails get answers. Check names and spelling. Reply within a day, even only to say you will reply.', 'موضوع واضح وتحية مهذبة ومن أنت في سطر وما تطلب بدقة والشكر. والرسائل القصيرة تُجاب.']], [
     [['The best subject line to a professor:', 'أفضل عنوان رسالة لأستاذ:'], ['Question on Tuesday’s lab report', 'سؤال عن تقرير مختبر الثلاثاء'], ['Hi, I really need some help', 'مرحبًا، أحتاج مساعدة حقًا'], ['Urgent!!! Please read this now', 'عاجل!!! اقرأها الآن']],
     [['Which ending is best for a request?', 'أي خاتمة أفضل للطلب؟'], ['Could you reply by Friday? Thank you.', 'هل يمكن الرد قبل الجمعة؟ شكرًا.'], ['I expect a reply from you today.', 'أنتظر ردك اليوم.'], ['Sorry to have bothered you at all.', 'آسف على الإزعاج أصلًا.']]
   ]);
@@ -177,7 +177,7 @@
     [['A sharḥ is:', 'الشرح:'], ['A commentary on a text', 'تفسير لنص'], ['A short poem of praise', 'قصيدة مدح'], ['A kind of dictionary', 'نوع معجم']],
     [['وَقِيلَ usually signals:', 'وقيل تدل غالبًا على:'], ['Another reported view', 'قول آخر'], ['The author’s firm ruling', 'جزم المؤلف'], ['A new chapter', 'فصل جديد']]
   ]);
-  Topic('c14a.keep', ['Keeping your Arabic alive', 'إبقاء عربيتك حية'], 'talk', [['Languages fade unused. Read a page a day, keep a word list, and listen to a khuṭbah or lecture every week. Use it in duʿāʾ, and with others. Small and steady beats a month of effort once a year.', 'اللغة تضعف بلا استعمال. صفحة يوميًا وقائمة كلمات ومحاضرة أسبوعيًا. والقليل الدائم أفضل.']], [
+  Topic('c14a.keep', ['Keeping your Arabic alive', 'إبقاء عربيتك حية'], 'letter', [['Languages fade unused. Read a page a day, keep a word list, and listen to a khuṭbah or lecture every week. Use it in duʿāʾ, and with others. Small and steady beats a month of effort once a year.', 'اللغة تضعف بلا استعمال. صفحة يوميًا وقائمة كلمات ومحاضرة أسبوعيًا. والقليل الدائم أفضل.']], [
     [['Which plan is most likely to last?', 'أي خطة أدوم؟'], ['One page every day', 'صفحة كل يوم'], ['A whole book each summer', 'كتاب كامل كل صيف'], ['A course once in five years', 'دورة كل خمس سنوات']],
     function (r) { var d = r.int(2, 12); return P(['Pages read in this many weeks, at one a day.', 'الصفحات في هذه الأسابيع.'], d + ' weeks', d * 7); }
   ]);
@@ -204,7 +204,7 @@
     [['Weeks of low mood and no sleep call for:', 'أسابيع من الكآبة وقلة النوم تحتاج:'], ['Talking to someone, and seeing a doctor', 'الحديث مع أحد وزيارة طبيب'], ['Working harder until it passes', 'العمل أكثر حتى تزول'], ['Staying alone until it lifts', 'البقاء وحدك حتى تنقشع']],
     function (r) { var a = r.int(6, 9), d = r.int(2, 7); return P(['Hours of sleep in this time.', 'ساعات النوم.'], a + ' hours a night for ' + d + ' nights', a * d); }
   ]);
-  Topic('c14l2.friends', ['Choosing your circle', 'اختيار دائرتك'], 'talk', [['You become like those you spend time with. Seek out people who pray, work hard and tell you the truth. You can be kind to everyone, and still choose who is close. Leave a group that pulls you from your deen.', 'تصير كمن تصاحب. ابحث عمن يصلي ويجتهد ويصدقك. ويمكنك الإحسان للجميع واختيار المقربين.']], [
+  Topic('c14l2.friends', ['Choosing your circle', 'اختيار دائرتك'], 'heart', [['You become like those you spend time with. Seek out people who pray, work hard and tell you the truth. You can be kind to everyone, and still choose who is close. Leave a group that pulls you from your deen.', 'تصير كمن تصاحب. ابحث عمن يصلي ويجتهد ويصدقك. ويمكنك الإحسان للجميع واختيار المقربين.']], [
     [['Good friends are those who:', 'الأصدقاء الجيدون:'], ['Help you stay who you want to be', 'يعينونك على ما تريد أن تكون'], ['Always agree with what you do', 'يوافقونك دائمًا'], ['Have the most money to spend', 'أكثرهم مالًا']],
     [['Being kind to everyone means:', 'الإحسان للجميع يعني:'], ['You may still choose who is close', 'لك أن تختار المقربين'], ['You must follow them everywhere', 'تتبعهم في كل مكان'], ['You cannot say no to anyone', 'لا ترفض لأحد']]
   ]);

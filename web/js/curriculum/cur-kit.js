@@ -23,7 +23,7 @@
     else if (Array.isArray(old)) old.forEach(function (s) { pool.unshift(function () { return s; }); });
     else if (old) pool.unshift(function () { return old; });
     if (!pool.length) return;
-    sk.solo = function (r, i) { return pool[i % pool.length](r); };
+    sk.solo = function (r, i) { return pool[i % pool.length](r, i); };
     sk.soloN = Math.min(Math.max(pool.length, 3), 6);
     var rev0 = sk.review;
     sk.review = function (r) { var f = r.pick(pool.concat(rev0 ? [rev0] : [])); var o = f(r, 0); return Array.isArray(o) ? o[0] : o; };

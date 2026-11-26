@@ -63,10 +63,11 @@
   });
   var STORY1 = { id: 'e.story1', t: ['A story to retell', 'قصة تحكيها'], text: 'Zaid saw a bird on the path. It could not fly. He got a cup of water and put it near the bird. He sat and did not make a noise. Soon the bird drank. Then it flew up to a tree. Zaid was glad. He told his mum.', q: [[['What did Zaid get?', 'ماذا أحضر زيد؟'], [['A cup of water', 'كوب ماء', 1], ['A big box', 'صندوق كبير'], ['A red ball', 'كرة حمراء']]], [['Why did he sit quietly?', 'لماذا جلس بهدوء؟'], [['So the bird was not scared', 'حتى لا يخاف الطائر', 1], ['He was tired', 'لأنه متعب'], ['He was asleep', 'لأنه نائم']]], [['Was Zaid kind? How do you know?', 'هل كان زيد رحيمًا؟ كيف تعرف؟'], [['Yes: he helped and was gentle', 'نعم: ساعد وكان لطيفًا', 1], ['No: the bird flew off', 'لا: طار الطائر']]]] };
   function compSkill(S) {
+    var LAD = [['What it says', 'ما تقوله القصة'], ['What it means', 'ما تعنيه'], ['What you think', 'ما رأيك']];
     return {
-      title: S.t, art: 'bird',
+      title: S.t, art: 'bird', soloN: S.q.length,
       meet: [{ k: 'say', silent: true, p: ['Read it, or listen.', 'اقرأها أو استمع.'], lang: 'en', speak: S.text, html: '<div class="passage" dir="ltr">' + S.text + '</div>', autoSay: true }],
-      solo: S.q.map(function (q, i) { return { k: 'choice', p: q[0], cols: 1, err: 'understanding', qHtml: '<div class="pl-lad">' + ['What it says', 'What it means', 'What you think'][i] + '</div>', hint: ['Look back at the story.', 'ارجع إلى القصة.'], o: q[1].map(function (o) { return { t: [o[0], o[1]], ok: !!o[2] }; }) }; }),
+      solo: function (r, i) { var q = S.q[i % S.q.length]; return { k: 'choice', p: q[0], cols: 1, err: 'understanding', qHtml: '<div class="pl-lad">' + A.esc(A.L(LAD[i % LAD.length])) + '</div>', hint: ['Look back at the story.', 'ارجع إلى القصة.'], o: q[1].map(function (o) { return { t: [o[0], o[1]], ok: !!o[2] }; }) }; },
       make: [{ k: 'mission', art: 'book', t: ['Tell the story to someone in your own words: first, then, last.', 'احك القصة لأحدهم بكلماتك: أولًا، ثم، أخيرًا.'] }],
       review: function (r) { var q = S.q[0]; return { k: 'choice', p: q[0], cols: 1, err: 'understanding', o: q[1].map(function (o) { return { t: [o[0], o[1]], ok: !!o[2] }; }) }; }
     };

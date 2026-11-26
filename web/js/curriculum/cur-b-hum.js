@@ -49,11 +49,11 @@
   ]);
   /* ---------- English ---------- */
   U('english', 'x8e2', ['Sentences that work', 'جمل محكمة'], 3, 8, true);
-  Topic('x8e2.sent', ['Sentence control', 'التحكم في الجملة'], 'pen', [['A short sentence hits hard. A longer one, with a clause tucked inside, can carry a reader through a thought. Vary them on purpose. A comma cannot join two full sentences: use a full stop, semicolon or a joining word.', 'الجملة القصيرة قوية، والطويلة تحمل الفكرة. نوّعها عمدًا. ولا تصل الفاصلة بين جملتين تامتين.']], [
+  Topic('x8e2.sent', ['Sentence control', 'التحكم في الجملة'], 'pencil', [['A short sentence hits hard. A longer one, with a clause tucked inside, can carry a reader through a thought. Vary them on purpose. A comma cannot join two full sentences: use a full stop, semicolon or a joining word.', 'الجملة القصيرة قوية، والطويلة تحمل الفكرة. نوّعها عمدًا. ولا تصل الفاصلة بين جملتين تامتين.']], [
     [['Which is correct?', 'أيها صحيح؟'], ['It rained; we stayed in.', 'It rained; we stayed in.'], ['It rained, we stayed in.', 'It rained, we stayed in.'], ['It rained we stayed in.', 'It rained we stayed in.']],
     [['Why use one short sentence after several long ones?', 'لماذا جملة قصيرة بعد طويلة؟'], ['For impact', 'للتأثير'], ['To save ink', 'لتوفير الحبر'], ['It is a rule', 'إنها قاعدة']]
   ]);
-  Topic('x8e2.punct', ['Apostrophes, colons, semicolons', 'الفواصل المتقدمة'], 'pen', [['It’s means it is, and its shows belonging. A colon introduces: a list or an explanation. A semicolon joins two linked full sentences. The girls’ books belong to several girls, and the girl’s books to one.', 'it’s تعني it is وits للملكية. والنقطتان تقدمان قائمة أو شرحًا، والفاصلة المنقوطة تصل جملتين.']], [
+  Topic('x8e2.punct', ['Apostrophes, colons, semicolons', 'الفواصل المتقدمة'], 'pencil', [['It’s means it is, and its shows belonging. A colon introduces: a list or an explanation. A semicolon joins two linked full sentences. The girls’ books belong to several girls, and the girl’s books to one.', 'it’s تعني it is وits للملكية. والنقطتان تقدمان قائمة أو شرحًا، والفاصلة المنقوطة تصل جملتين.']], [
     [['Which is right?', 'أيها صحيح؟'], ['The dog wagged its tail.', 'The dog wagged its tail.'], ['The dog wagged it’s tail.', 'The dog wagged it’s tail.'], ['The dog wagged its’ tail.', 'The dog wagged its’ tail.']],
     [['“The boys’ coats” means coats belonging to:', '"The boys’ coats" تعني معاطف:'], ['More than one boy', 'أكثر من ولد'], ['One boy', 'ولد واحد'], ['No one', 'لا أحد']]
   ]);
@@ -62,11 +62,11 @@
     [['A strong comparison is organised by:', 'تنظم المقارنة القوية بحسب:'], ['Shared ideas, with both poems in each paragraph', 'الأفكار المشتركة مع القصيدتين في كل فقرة'], ['One poem, then the other', 'قصيدة ثم الأخرى'], ['Line numbers', 'أرقام الأسطر']],
     [['Which word signals a contrast?', 'أي كلمة تدل على التضاد؟'], ['Whereas', 'whereas'], ['Also', 'also'], ['Similarly', 'similarly']]
   ]);
-  Topic('x10e2.creative', ['Writing fiction under time', 'كتابة قصة في زمن محدد'], 'pen', [['Plan five minutes: one place, one problem, one change. Start in the middle of something. Show a feeling through what a person does. End on an image, rather than “it was all a dream”.', 'خطط خمس دقائق: مكان ومشكلة وتغير. ابدأ من وسط الحدث. أظهر الشعور بالفعل. واختم بصورة.']], [
+  Topic('x10e2.creative', ['Writing fiction under time', 'كتابة قصة في زمن محدد'], 'pencil', [['Plan five minutes: one place, one problem, one change. Start in the middle of something. Show a feeling through what a person does. End on an image, rather than “it was all a dream”.', 'خطط خمس دقائق: مكان ومشكلة وتغير. ابدأ من وسط الحدث. أظهر الشعور بالفعل. واختم بصورة.']], [
     [['Which shows fear better?', 'أيها يظهر الخوف أفضل؟'], ['Her hand shook on the door handle', 'ارتجفت يدها على المقبض'], ['She was very scared', 'كانت خائفة جدًا'], ['Fear was felt', 'شُعر بالخوف']],
     function (r) { var m = r.int(30, 60), p = r.int(3, 8); return P(['Minutes left for writing after planning.', 'الدقائق الباقية للكتابة.'], m + ' min, ' + p + ' min planning', m - p); }
   ]);
-  Topic('x10e2.persuade', ['Letters and articles that persuade', 'رسائل ومقالات مقنعة'], 'pen', [['Know your reader, and the form: a letter to a mayor differs from a school magazine article. Answer the objection, use one striking fact, and end with what you want done.', 'اعرف القارئ والصيغة. وأجب عن الاعتراض واستعمل حقيقة مؤثرة واختم بالمطلوب.']], [
+  Topic('x10e2.persuade', ['Letters and articles that persuade', 'رسائل ومقالات مقنعة'], 'pencil', [['Know your reader, and the form: a letter to a mayor differs from a school magazine article. Answer the objection, use one striking fact, and end with what you want done.', 'اعرف القارئ والصيغة. وأجب عن الاعتراض واستعمل حقيقة مؤثرة واختم بالمطلوب.']], [
     [['A persuasive piece should end with:', 'تختم القطعة المقنعة بـ:'], ['What you want the reader to do', 'ما تريد من القارئ فعله'], ['A new topic', 'موضوع جديد'], ['An apology', 'اعتذار']],
     [['Tone for a letter to a mayor is:', 'نبرة رسالة إلى عمدة:'], ['Formal and respectful', 'رسمية محترمة'], ['Chatty', 'دردشة'], ['Angry', 'غاضبة']]
   ]);
@@ -82,7 +82,7 @@
     [['اَلْجُمُعَة is:', 'الجمعة:'], ['Friday', 'يوم الجمعة'], ['Sunday', 'الأحد'], ['Monday', 'الإثنين']]
   ]);
   U('arabic', 'x10a', ['Arabic for study', 'العربية للدراسة'], 3, 10, true);
-  Topic('x10a.connect', ['Linking words', 'أدوات الربط'], 'pen', [['Write in links, not lists. لِأَنَّ because, لٰكِنَّ but, ثُمَّ then, إِذَا if, حَتَّى until. Note that لِأَنَّ and لٰكِنَّ are sisters of إِنَّ, so the noun after them is accusative.', 'اكتب بالروابط: لأن ولكن وثم وإذا وحتى. ولأن ولكن من أخوات إن فما بعدهما منصوب.']], [
+  Topic('x10a.connect', ['Linking words', 'أدوات الربط'], 'pencil', [['Write in links, not lists. لِأَنَّ because, لٰكِنَّ but, ثُمَّ then, إِذَا if, حَتَّى until. Note that لِأَنَّ and لٰكِنَّ are sisters of إِنَّ, so the noun after them is accusative.', 'اكتب بالروابط: لأن ولكن وثم وإذا وحتى. ولأن ولكن من أخوات إن فما بعدهما منصوب.']], [
     [['لِأَنَّ means:', 'لِأَنَّ تعني:'], ['Because', 'التعليل'], ['Then', 'الترتيب'], ['Until', 'الغاية']],
     [['ثُمَّ means:', 'ثُمَّ تعني:'], ['Then, after a while', 'الترتيب مع مهلة'], ['Because', 'التعليل'], ['But', 'الاستدراك']],
     [['The noun after لٰكِنَّ is:', 'الاسم بعد لكنَّ:'], ['Accusative', 'منصوب'], ['Nominative', 'مرفوع'], ['Genitive', 'مجرور']]
@@ -135,7 +135,7 @@
     [['Someone online threatens to share your photo. You should:', 'هددك شخص بنشر صورتك. عليك:'], ['Tell a trusted adult now, and stop replying', 'إخبار بالغ موثوق فورًا والتوقف عن الرد'], ['Pay them', 'الدفع'], ['Keep it secret', 'الكتمان']],
     [['A stranger your age asks to move to a private chat. It is:', 'غريب يطلب الانتقال إلى محادثة خاصة. هذا:'], ['A warning sign', 'علامة خطر'], ['Harmless', 'لا بأس'], ['Friendly proof', 'دليل صداقة']]
   ]);
-  Topic('x9l.conflict', ['Solving a conflict', 'حل الخلاف'], 'talk', [['Cool down first. Say what happened, how it felt, and what you want, without blaming: “I felt left out when…” Then listen, and repeat back what you heard. Repairing a relationship is rewarded. Ask an adult when someone is unsafe.', 'اهدأ أولًا. قل ما حدث وشعورك وما تريد بلا لوم. ثم استمع وأعد ما سمعت. وإصلاح ذات البين مأجور.']], [
+  Topic('x9l.conflict', ['Solving a conflict', 'حل الخلاف'], 'heart', [['Cool down first. Say what happened, how it felt, and what you want, without blaming: “I felt left out when…” Then listen, and repeat back what you heard. Repairing a relationship is rewarded. Ask an adult when someone is unsafe.', 'اهدأ أولًا. قل ما حدث وشعورك وما تريد بلا لوم. ثم استمع وأعد ما سمعت. وإصلاح ذات البين مأجور.']], [
     [['Which opening is best?', 'أي بداية أفضل؟'], ['I felt hurt when that was said', 'تأذيت حين قيل ذلك'], ['You always ruin everything', 'أنت تفسد كل شيء دائمًا'], ['Everyone hates you', 'الجميع يكرهك']],
     [['Before you reply in a heated moment:', 'قبل الرد وقت الغضب:'], ['Wait and calm down', 'انتظر واهدأ'], ['Reply at once', 'رد فورًا'], ['Post it publicly', 'انشر علنًا']]
   ]);

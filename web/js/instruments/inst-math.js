@@ -260,6 +260,7 @@
   /* the clock: drag the hands */
   I.clock = function (c) {
     var s = c.step, h = s.startH != null ? s.startH : 12, m = 0;
+    if (h === s.h && m === (s.m || 0)) h = (h % 12) + 1;
     var nums = ''; for (var i = 1; i <= 12; i++) { var an = (i * 30 - 90) * Math.PI / 180; nums += '<text x="' + (100 + Math.cos(an) * 72) + '" y="' + (106 + Math.sin(an) * 72) + '" class="clk-n">' + N(i) + '</text>'; }
     var ticks = ''; for (var ti = 0; ti < 60; ti++) { var big = ti % 5 === 0, ta = ti * 6 * Math.PI / 180; ticks += '<line x1="' + (100 + Math.sin(ta) * (big ? 80 : 83)).toFixed(1) + '" y1="' + (100 - Math.cos(ta) * (big ? 80 : 83)).toFixed(1) + '" x2="' + (100 + Math.sin(ta) * 86).toFixed(1) + '" y2="' + (100 - Math.cos(ta) * 86).toFixed(1) + '" stroke="#3a2a18" stroke-width="' + (big ? 2.2 : .9) + '" stroke-linecap="round"/>'; }
     var ctrls = '<div class="clk-ctrl" dir="ltr" style="display:flex;gap:8px;justify-content:center;align-items:center;flex-wrap:wrap;margin-top:8px">' +
