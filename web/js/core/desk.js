@@ -46,7 +46,7 @@
   /* the parent area's own lock, shared with these grown-up pages */
 
   /* ================= the rail ================= */
-  var IMMERSIVE = { welcome: 1, who: 1, lesson: 1, stop: 1, nursery: 1, exam: 1, paper: 1, watch: 1, place: 1, flash: 1, write: 1, challenge: 1, marking: 1, sheet: 1 };
+  var IMMERSIVE = { welcome: 1, who: 1, lesson: 1, stop: 1, nursery: 1, exam: 1, paper: 1, watch: 1, place: 1, flash: 1, write: 1, challenge: 1, marking: 1, sheet: 1, hifz: 1, rest: 1, cards: 1 };
   var rail = document.createElement('aside'); rail.id = 'rail'; rail.setAttribute('aria-label', 'Miftāḥ');
   var mini = false; try { mini = localStorage.getItem('miftah.rail') === 'mini'; } catch (e) { }
   function avatar(p, size) { return '<span class="rl-av h-' + esc(p.hue || 'gold') + '" style="width:' + size + 'px;height:' + size + 'px;font-size:' + Math.round(size * .42) + 'px">' + esc((p.name || '?').charAt(0).toUpperCase()) + '</span>'; }
@@ -58,30 +58,36 @@
     return '<svg class="rl-ring" width="' + size + '" height="' + size + '" viewBox="0 0 ' + size + ' ' + size + '"><circle cx="' + size / 2 + '" cy="' + size / 2 + '" r="' + r + '" fill="none" stroke="var(--line2)" stroke-width="3"/><circle cx="' + size / 2 + '" cy="' + size / 2 + '" r="' + r + '" fill="none" stroke="var(--gold-d,#c79c52)" stroke-width="3" stroke-linecap="round" stroke-dasharray="' + (c * f).toFixed(1) + ' ' + c.toFixed(1) + '" transform="rotate(-90 ' + size / 2 + ' ' + size / 2 + ')"/></svg>';
   }
   var linkState = { on: false, phones: [] };
+  function rlLink(href, on, icon, label, extra) {
+    return '<a class="rl-i' + (on ? ' on' : '') + '" href="' + href + '" title="' + esc(label) + '" aria-label="' + esc(label) + '">' + icon + '<span>' + esc(label) + '</span>' + (extra || '') + '</a>';
+  }
   function drawRail() {
     var view = document.body.dataset.view || 'home', p = A.P(), parent = /^(parent|desk)$/.test(view);
-    var navSrc = $('.view .nav'), items = navSrc ? $$('a', navSrc).map(function (a) { return '<a href="' + a.getAttribute('href') + '" class="rl-i' + (a.classList.contains('on') ? ' on' : '') + '">' + a.innerHTML + '</a>'; }).join('') : '';
-    if (!items && p && !parent) items = '<a href="#/home" class="rl-i' + (view === 'home' ? ' on' : '') + '">' + A.icon('path', 20) + '<span>' + esc(L(['Today', 'اليوم'])) + '</span></a><a href="#/rooms" class="rl-i' + (view === 'rooms' || view === 'room' ? ' on' : '') + '">' + A.icon('rooms', 20) + '<span>' + esc(L(['Rooms', 'الغرف'])) + '</span></a>';
+    var navSrc = $('.view .nav'), items = navSrc ? $$('a', navSrc).map(function (a) { var lb = (a.textContent || '').trim(); return '<a href="' + a.getAttribute('href') + '" class="rl-i' + (a.classList.contains('on') ? ' on' : '') + '" title="' + esc(lb) + '" aria-label="' + esc(lb) + '">' + a.innerHTML + '</a>'; }).join('') : '';
+    if (!items && p && !parent) items = rlLink('#/home', view === 'home', A.icon('path', 20), L(['Today', 'اليوم'])) + rlLink('#/rooms', view === 'rooms' || view === 'room', A.icon('rooms', 20), L(['Rooms', 'الغرف']));
     var kids = (A.S.profiles || []);
     var who = p ? (function () {
       var td = todayOf(p), st = A.STAGES[A.stage(p)];
-      return '<button class="rl-me" data-desk="switch" title="' + esc(L(['Switch learner', 'غيّر المتعلّم'])) + '">' + avatar(p, 38) + '<span class="grow"><b>' + esc(p.name) + '</b><small>' + esc(L(st.name)) + ' · ' + A.num(td.n) + ' / ' + A.num(td.t) + '</small><i class="rl-prog"><em style="width:' + (td.t ? Math.round(100 * td.n / td.t) : 0) + '%"></em></i></span></button>' +
-        (kids.length > 1 ? '<div class="rl-kids">' + kids.filter(function (k) { return k.id !== p.id; }).map(function (k) { return '<button data-desk="kid" data-id="' + esc(k.id) + '" title="' + esc(k.name) + '">' + avatar(k, 28) + '</button>'; }).join('') + '</div>' : '');
+      return '<button class="rl-me" data-desk="switch" title="' + esc(L(['Switch learner', 'غيّر المتعلّم'])) + '" aria-label="' + esc(p.name + ' · ' + L(['Switch learner', 'غيّر المتعلّم'])) + '">' + avatar(p, 38) + '<span class="grow"><b>' + esc(p.name) + '</b><small>' + esc(L(st.name)) + ' · ' + A.num(td.n) + ' / ' + A.num(td.t) + '</small><i class="rl-prog"><em style="width:' + (td.t ? Math.round(100 * td.n / td.t) : 0) + '%"></em></i></span></button>' +
+        (kids.length > 1 ? '<div class="rl-kids">' + kids.filter(function (k) { return k.id !== p.id; }).map(function (k) { return '<button data-desk="kid" data-id="' + esc(k.id) + '" title="' + esc(k.name) + '" aria-label="' + esc(k.name) + '">' + avatar(k, 28) + '</button>'; }).join('') + '</div>' : '');
     })() : '';
-    var pkids = parent ? kids.map(function (k) { var on = location.hash.indexOf('#/parent/' + k.id) === 0; return '<a class="rl-i' + (on ? ' on' : '') + '" href="#/parent/' + esc(k.id) + '/today">' + avatar(k, 22) + '<span>' + esc(k.name) + '</span></a>'; }).join('') : '';
+    var pkids = parent ? kids.map(function (k) { var on = location.hash.indexOf('#/parent/' + k.id) === 0; return rlLink('#/parent/' + esc(k.id) + '/today', on, avatar(k, 22), k.name); }).join('') : '';
     var dot = linkState.on ? '<i class="rl-dot' + (linkState.phones.length ? ' ok' : '') + '"></i>' : '';
+    var foldLbl = mini ? L(['Widen the rail', 'وسّع الشريط']) : L(['Narrow the rail', 'ضيّق الشريط']);
+    var srchLbl = L(['Search or jump', 'ابحث أو انتقل']);
     rail.innerHTML =
-      '<div class="rl-top"><a class="rl-brand" href="#/' + (parent ? 'parent' : 'home') + '"><img class="rl-mark" src="icon.svg" alt="" width="36" height="36"><span class="rl-word"><b>Miftāḥ</b><small dir="rtl">مِفْتَاح</small></span></a><button class="rl-fold" data-desk="fold" title="' + esc(L(['Narrow the rail', 'ضيّق الشريط'])) + '">' + ic('collapse', 18) + '</button></div>' +
-      '<button class="rl-search" data-desk="palette">' + ic('search', 18) + '<span>' + esc(L(['Search or jump', 'ابحث أو انتقل'])) + '</span>' + kbd('Ctrl K') + '</button>' + '<div class="upd-slot rl-up">' + (window.Upd ? Upd.chip() : '') + '</div>' +
-      (parent ? '<div class="rl-sec">' + esc(L(['Family', 'العائلة'])) + '</div><nav class="rl-nav"><a class="rl-i' + (location.hash === '#/parent' ? ' on' : '') + '" href="#/parent">' + A.icon('grown', 20) + '<span>' + esc(L(['Everyone', 'الجميع'])) + '</span></a>' + pkids + '</nav>'
+      '<div class="rl-top"><a class="rl-brand" href="#/' + (parent ? 'parent' : 'home') + '" title="Miftāḥ"><img class="rl-mark" src="icon.svg" alt="" width="36" height="36"><span class="rl-word"><b>Miftāḥ</b><small dir="rtl">مِفْتَاح</small></span></a><button class="rl-fold" data-desk="fold" title="' + esc(foldLbl) + '" aria-label="' + esc(foldLbl) + '">' + ic('collapse', 18) + '</button></div>' +
+      '<button class="rl-search" data-desk="palette" title="' + esc(srchLbl) + ' (Ctrl+K)" aria-label="' + esc(srchLbl) + '">' + ic('search', 18) + '<span>' + esc(srchLbl) + '</span>' + kbd('Ctrl K') + '</button>' + '<div class="upd-slot rl-up">' + (window.Upd ? Upd.chip() : '') + '</div>' +
+      (parent ? '<div class="rl-sec">' + esc(L(['Family', 'العائلة'])) + '</div><nav class="rl-nav">' + rlLink('#/parent', location.hash === '#/parent', A.icon('grown', 20), L(['Everyone', 'الجميع'])) + pkids + '</nav>'
         : (who + (items ? '<nav class="rl-nav">' + items + '</nav>' : ''))) +
       '<div class="rl-sec">' + esc(L(['Grown-ups', 'للكبار'])) + '</div><nav class="rl-nav">' +
-      (parent ? '<a class="rl-i" href="#/home">' + A.icon('path', 20) + '<span>' + esc(L(['Back to learning', 'العودة إلى التعلّم'])) + '</span></a>' : '<a class="rl-i" href="#/parent">' + A.icon('lock', 20) + '<span>' + esc(L(['Parent area', 'ركن الوالدين'])) + '</span></a>') +
-      '<a class="rl-i' + (location.hash === '#/desk/print' ? ' on' : '') + '" href="#/desk/print">' + A.icon('print', 20) + '<span>' + esc(L(['Print Studio', 'استوديو الطباعة'])) + '</span></a>' +
-      '<a class="rl-i' + (location.hash === '#/desk/link' ? ' on' : '') + '" href="#/desk/link">' + ic('phone', 20) + '<span>' + esc(L(['Phone and computer', 'الهاتف والحاسوب'])) + '</span>' + dot + '</a>' +
-      '<a class="rl-i' + (location.hash === '#/desk/pc' ? ' on' : '') + '" href="#/desk/pc">' + ic('pc', 20) + '<span>' + esc(L(['This computer', 'هذا الحاسوب'])) + '</span></a>' +
+      (parent ? rlLink('#/home', false, A.icon('path', 20), L(['Back to learning', 'العودة إلى التعلّم'])) : rlLink('#/parent', false, A.icon('lock', 20), L(['Parent area', 'ركن الوالدين']))) +
+      rlLink('#/desk/print', location.hash.indexOf('#/desk/print') === 0, A.icon('print', 20), L(['Print Studio', 'استوديو الطباعة'])) +
+      rlLink('#/desk/link', location.hash === '#/desk/link', ic('phone', 20), L(['Phone and computer', 'الهاتف والحاسوب']), dot) +
+      rlLink('#/parent/settings', location.hash === '#/parent/settings', A.icon('gear', 20), L(['Settings', 'الإعدادات'])) +
+      rlLink('#/desk/pc', location.hash === '#/desk/pc', ic('pc', 20), L(['This computer', 'هذا الحاسوب'])) +
       '</nav><div class="grow"></div>' +
-      '<div class="rl-foot"><button class="rl-tool" data-desk="focus" title="' + esc(L(['Focus: the whole screen for a lesson', 'تركيز: الشاشة كلها للدرس'])) + '">' + ic('focus', 19) + '<span>' + esc(L(['Focus', 'تركيز'])) + '</span></button><button class="rl-tool" data-desk="keys" title="' + esc(L(['Keyboard shortcuts', 'اختصارات لوحة المفاتيح'])) + '">' + ic('kbd', 19) + '<span>' + esc(L(['Keys', 'المفاتيح'])) + '</span></button>' + A.dn() + '</div>';
+      '<div class="rl-foot"><button class="rl-tool" data-desk="focus" title="' + esc(L(['Focus: the whole screen for a lesson', 'تركيز: الشاشة كلها للدرس'])) + '" aria-label="' + esc(L(['Focus', 'تركيز'])) + '">' + ic('focus', 19) + '<span>' + esc(L(['Focus', 'تركيز'])) + '</span></button><button class="rl-tool" data-desk="keys" title="' + esc(L(['Keyboard shortcuts', 'اختصارات لوحة المفاتيح'])) + '" aria-label="' + esc(L(['Keyboard shortcuts', 'اختصارات لوحة المفاتيح'])) + '">' + ic('kbd', 19) + '<span>' + esc(L(['Keys', 'المفاتيح'])) + '</span></button>' + A.dn() + '</div>';
   }
   function placeRail() {
     var view = document.body.dataset.view || 'home';
@@ -257,21 +263,26 @@
 
   /* ================= the keyboard ================= */
   /* small key labels on the choices of a lesson, so a child can see which key is which */
+  var PLAY_VIEWS = { lesson: 1, stop: 1, exam: 1, paper: 1, place: 1 };
   /* a wide lesson: what to work on becomes one block, so it centres against the answer beside it */
   function pair() {
     if (innerWidth < 1150 || innerHeight < 660) return;
     $$('.step-in').forEach(function (si) {
       if (si.classList.contains('dk-2')) return;
-      var ans = $$(':scope>.pad, :scope>.ch', si)[0], rest = Array.prototype.slice.call(si.children).filter(function (c) { return c !== ans; });
+      var ans = $$(':scope>.pad, :scope>.ch, :scope>.expr', si)[0], rest = Array.prototype.slice.call(si.children).filter(function (c) { return c !== ans; });
       if (!ans || !rest.length) return;
       var q = document.createElement('div'); q.className = 'dk-lq';
       si.insertBefore(q, si.firstChild); rest.forEach(function (c) { q.appendChild(c); });
       si.classList.add('dk-2');
       /* a sum gets squared paper beside it, always open: working out is part of the work, not a hint */
-      if (ans.classList.contains('pad')) workPaper(q);
+      if (ans.classList.contains('pad') || ans.classList.contains('expr')) workPaper(q);
     });
     /* the lesson's name over the step, so a parent glancing across knows what is being learned */
-    var head = $('.pl-head'), sk = C.skill(A.route().split('/')[1]);
+    var head = $('.pl-head'), parts = A.route().split('/'), sk = parts[0] === 'lesson' ? C.skill(parts[1]) : null;
+    if (!sk && parts[0] === 'stop' && window.Plan && Plan.today) {
+      var stp = (Plan.today().stops || [])[+parts[1]];
+      if (stp && stp.s) sk = C.skill(stp.s);
+    }
     if (head && sk && !$('.dk-lt', head)) head.insertAdjacentHTML('afterbegin', '<div class="dk-lt">' + esc(L(C.rooms[sk.room].name)) + ' · ' + esc(L(sk.title)) + '</div>');
   }
   function workPaper(host) {
@@ -279,24 +290,36 @@
     w.innerHTML = '<div class="dk-work-h"><span>' + esc(L(['Working', 'مساحة الحل'])) + '</span><button type="button">' + esc(L(['Clear', 'امسح'])) + '</button></div><canvas></canvas>';
     host.appendChild(w);
     var c = $('canvas', w), g = c.getContext('2d'), on = false;
-    var size = function () { var r = c.getBoundingClientRect(), dpr = Math.min(2, devicePixelRatio || 1); if (!r.width) return; c.width = r.width * dpr; c.height = r.height * dpr; g.setTransform(dpr, 0, 0, dpr, 0, 0); g.lineWidth = 2.4; g.lineCap = 'round'; g.lineJoin = 'round'; g.strokeStyle = getComputedStyle(w).color; };
+    var size = function () {
+      var r = c.getBoundingClientRect(), dpr = Math.min(2, devicePixelRatio || 1); if (!r.width || !r.height) return;
+      var nw = Math.round(r.width * dpr), nh = Math.round(r.height * dpr);
+      if (c.width === nw && c.height === nh) return;
+      var snap = null;
+      if (c.width && c.height) { snap = document.createElement('canvas'); snap.width = c.width; snap.height = c.height; snap.getContext('2d').drawImage(c, 0, 0); }
+      c.width = nw; c.height = nh; g.setTransform(dpr, 0, 0, dpr, 0, 0); g.lineWidth = 2.4; g.lineCap = 'round'; g.lineJoin = 'round'; g.strokeStyle = getComputedStyle(w).color;
+      if (snap) { g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.drawImage(snap, 0, 0); g.restore(); }
+    };
     requestAnimationFrame(size);
+    if (window.ResizeObserver) { var ro = new ResizeObserver(size); ro.observe(c); }
     var at = function (e) { var r = c.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; };
-    c.onpointerdown = function (e) { on = true; try { c.setPointerCapture(e.pointerId); } catch (x) { } var q = at(e); g.beginPath(); g.moveTo(q[0], q[1]); e.preventDefault(); };
+    c.onpointerdown = function (e) { size(); g.strokeStyle = getComputedStyle(w).color; on = true; try { c.setPointerCapture(e.pointerId); } catch (x) { } var q = at(e); g.beginPath(); g.moveTo(q[0], q[1]); e.preventDefault(); };
     c.onpointermove = function (e) { if (!on) return; var q = at(e); g.lineTo(q[0], q[1]); g.stroke(); };
     c.onpointerup = c.onpointercancel = function () { on = false; };
     $('button', w).onclick = function () { g.clearRect(0, 0, c.width, c.height); };
   }
   function hints() {
-    if (document.body.dataset.view !== 'lesson' && document.body.dataset.view !== 'stop') return;
+    if (!PLAY_VIEWS[document.body.dataset.view]) return;
     pair();
+    $$('[data-kbd]').forEach(function (b) { b.removeAttribute('data-kbd'); });
     var opts = choices(); opts.forEach(function (b, i) { if (i < 9) b.setAttribute('data-kbd', A.num(i + 1)); });
   }
   function choices() { return $$('.step .opt:not([disabled]), .step .numopt:not([disabled]), .gate .numopt:not([disabled]), .sheet .numopt:not([disabled])').filter(function (b) { return b.offsetParent; }); }
   var mo = new MutationObserver(function () { clearTimeout(mo._t); mo._t = setTimeout(hints, 60); });
-  document.addEventListener('DOMContentLoaded', function () { var app = $('#app'); if (app) { mo.observe(app, { childList: true, subtree: true }); screens.observe(app, { childList: true }); } });
+  document.addEventListener('DOMContentLoaded', function () { var app = $('#app'); if (app) { mo.observe(app, { childList: true, subtree: true, attributes: true, attributeFilter: ['disabled'] }); screens.observe(app, { childList: true }); } });
   function typing(e) { var t = e.target; return t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)); }
+  function interactiveFocused() { var a = document.activeElement; return !!(a && a !== document.body && (a.tagName === 'BUTTON' || a.tagName === 'A' || a.getAttribute('role') === 'button' || a.getAttribute('role') === 'switch')); }
   function visible(el) { return el && el.offsetParent && !el.disabled; }
+  function syncZoomUI(z) { var pct = Math.round(z * 100), zr = $('#pc-z'), zo = $('#pc-zo'); if (zr) zr.value = pct; if (zo) zo.textContent = A.num(pct) + '%'; }
   var AR = '٠١٢٣٤٥٦٧٨٩';
   document.addEventListener('keydown', function (e) {
     var k = e.key, ctrl = e.ctrlKey || e.metaKey;
@@ -307,9 +330,9 @@
     if (k === 'F1' || (k === '?' && !typing(e))) { e.preventDefault(); Desk.keys(); return; }
     if (ctrl && (k === '=' || k === '+')) { e.preventDefault(); zoom(+0.1); return; }
     if (ctrl && k === '-') { e.preventDefault(); zoom(-0.1); return; }
-    if (ctrl && k === '0') { e.preventDefault(); B.deskZoom(1); return; }
+    if (ctrl && k === '0') { e.preventDefault(); B.deskZoom(1); syncZoomUI(1); A.toast(L(['Size', 'الحجم']) + ' ' + A.num(100) + '%'); return; }
     if (ctrl && k === ',') { e.preventDefault(); if (Desk.focusOn) { Desk.askUnlock(); return; } A.go('desk/pc'); return; }
-    if (ctrl && (k === 'p' || k === 'P')) { e.preventDefault(); if (Desk.focusOn) { Desk.askUnlock(); return; } var pr = $('#pp-go'); if (visible(pr)) pr.click(); else A.go('desk/print'); return; }
+    if (ctrl && (k === 'p' || k === 'P')) { e.preventDefault(); if (Desk.focusOn) { Desk.askUnlock(); return; } var pr = $('#pp-go') || $('#mk-print') || $('#ink-print'); if (visible(pr)) pr.click(); else A.go('desk/print'); return; }
     if (ctrl && e.shiftKey && (k === 'l' || k === 'L')) { e.preventDefault(); var dn = $('.dn'); if (dn) dn.click(); return; }
     if (ctrl && (k === 'q' || k === 'Q')) { e.preventDefault(); if (Desk.focusOn) { Desk.askUnlock(); return; } B.quit(); return; }
     if (ctrl && /^[1-9]$/.test(k) && !Desk.focusOn) { var kid = (A.S.profiles || [])[+k - 1]; if (kid && !/^(lesson|stop|exam|paper)$/.test(document.body.dataset.view)) { e.preventDefault(); A.S.cur = kid.id; A.saveNow(); A.go('home'); A.rerender(); } return; }
@@ -321,24 +344,36 @@
       return;
     }
     if ((e.altKey && k === 'ArrowLeft') || (k === 'BrowserBack')) { e.preventDefault(); if (window.__native.onBack) window.__native.onBack(); return; }
-    if (typing(e) || ctrl || e.altKey) return;
-    /* in a lesson: the number pad, the choices, and Enter for whatever comes next */
+    if (typing(e) || ctrl || e.altKey || $('.sheet.on')) return;
+    /* in a lesson: the number pad, expression pad, choices, and Enter for whatever comes next */
     var digit = /^[0-9]$/.test(k) ? k : AR.indexOf(k) >= 0 ? String(AR.indexOf(k)) : null;
     var pad = $('.step .pad');
     if (pad && digit != null) { var pb = $('button[data-d="' + digit + '"]', pad); if (visible(pb)) { e.preventDefault(); press(pb); } return; }
     if (pad && (k === '.' || k === '-' || k === '/')) { var sb = $('button[data-d="' + k + '"]', pad); if (visible(sb)) { e.preventDefault(); press(sb); } return; }
     if (pad && k === 'Backspace') { var del = $('.pad-del', pad); if (visible(del)) { e.preventDefault(); press(del); } return; }
+    var xk = $('.step .xkeys');
+    if (xk) {
+      var xmap = { '*': '×', '/': '÷', '-': '−' };
+      var xval = digit != null ? digit : (xmap[k] || k);
+      if (k === 'Backspace') { var xd = $('button[data-x="del"]', xk); if (visible(xd)) { e.preventDefault(); press(xd); return; } }
+      else if (k === 'Enter') { var xg = $('button[data-x="go"]', xk); if (visible(xg)) { e.preventDefault(); press(xg); return; } }
+      else if (xval.length === 1) {
+        var xb = $$('button[data-x]', xk).filter(function (b) { return b.dataset.x === xval || b.dataset.x === k; })[0];
+        if (visible(xb)) { e.preventDefault(); press(xb); return; }
+      }
+    }
     if (k === 'Enter') {
+      if (interactiveFocused() && !pad) return;
       var go = pad && $('.pad-go', pad), nx = $('.pl-next'), pri = $$('.step .btn.pri, .pl-foot .btn.pri, .view .btn.pri.big').filter(visible)[0];
       var target = visible(go) ? go : visible(nx) ? nx : pri;
       if (target) { e.preventDefault(); press(target); }
       return;
     }
     if (digit != null && digit !== '0') { var ch = choices()[+digit - 1]; if (ch) { e.preventDefault(); press(ch); } return; }
-    if (k === ' ' && document.body.dataset.view === 'lesson') { var sp = $('.pl-sp, .step [data-a="say"], .step .listen'); if (visible(sp)) { e.preventDefault(); press(sp); } }
+    if (k === ' ' && PLAY_VIEWS[document.body.dataset.view] && !interactiveFocused()) { var sp = $('.pl-sp, .step [data-a="say"], .step .listen'); if (visible(sp)) { e.preventDefault(); press(sp); } }
   });
   function press(b) { b.classList.add('kpress'); setTimeout(function () { b.classList.remove('kpress'); }, 140); b.click(); }
-  function zoom(d) { var z = 1; try { z = info().zoom || 1; } catch (e) { } z = Math.round((z + d) * 10) / 10; B.deskZoom(z); A.toast(L(['Size', 'الحجم']) + ' ' + A.num(Math.round(z * 100)) + '%'); }
+  function zoom(d) { var z = 1; try { z = info().zoom || 1; } catch (e) { } z = Math.max(0.5, Math.min(2.5, Math.round((z + d) * 10) / 10)); B.deskZoom(z); syncZoomUI(z); A.toast(L(['Size', 'الحجم']) + ' ' + A.num(Math.round(z * 100)) + '%'); }
 
   Desk.keys = function () {
     var row = function (k, t) { return '<div class="dk-k"><span>' + k + '</span><b>' + esc(L(t)) + '</b></div>'; };
@@ -362,13 +397,19 @@
 
   /* ================= the command bar ================= */
   var pal = null;
+  function normSearch(s) {
+    return String(s || '').toLowerCase()
+      .replace(/[\u064b-\u065f\u0670\u0640]/g, '')
+      .replace(/[أإآ]/g, 'ا').replace(/ى/g, 'ي').replace(/ة/g, 'ه');
+  }
   function entries() {
-    var out = [], p = A.P(), add = function (group, icon, title, sub, run, words, rawSub) { out.push({ g: group, ic: icon, t: title, s: sub || '', rawSub: !!rawSub, run: run, w: (title + ' ' + (sub || '') + ' ' + (words || '')).toLowerCase() }); };
+    var out = [], p = A.P(), add = function (group, icon, title, sub, run, words, rawSub) { out.push({ g: group, ic: icon, t: title, s: sub || '', rawSub: !!rawSub, run: run, tn: normSearch(title), w: normSearch(title + ' ' + (sub || '') + ' ' + (words || '')) }); };
     (A.S.profiles || []).forEach(function (k, i) { add(L(['Children', 'الأطفال']), avatar(k, 22), k.name, L(A.STAGES[A.stage(k)].name), function () { A.S.cur = k.id; A.saveNow(); A.go('home'); A.rerender(); }, 'child ' + (i + 1)); });
     if (p) {
       Object.keys(C.rooms).forEach(function (r) { var rm = C.rooms[r]; if ((p.off || {})[r]) return; add(L(['Subjects', 'المواد']), A.icon('rooms', 20), L(rm.name), '', function () { A.go('room/' + r); }, r); });
       var n = 0, st = A.stage(p);
       Object.keys(C.rooms).forEach(function (r) {
+        if ((p.off || {})[r]) return;
         C.rooms[r].units.forEach(function (u) {
           if (u.band > st + 1) return;
           u.skills.forEach(function (s) {
@@ -381,6 +422,7 @@
     }
     var G = L(['Grown-ups', 'للكبار']);
     add(G, A.icon('lock', 20), L(['Parent area', 'ركن الوالدين']), '', function () { A.go('parent'); }, 'family dashboard');
+    add(G, A.icon('gear', 20), L(['Settings', 'الإعدادات']), L(['Language, look, reciter, reminders, data', 'اللغة والمظهر والقارئ والتذكير والبيانات']), function () { A.go('parent/settings'); }, 'settings preferences language theme reciter pin');
     if (p) {
       [['today', ['Today', 'اليوم']], ['log', ['Lessons', 'الدروس']], ['make', ['Print', 'الطباعة']], ['hear', ['Qurʾān', 'القرآن']], ['plan', ['Plan', 'الخطة']], ['set', ['Settings', 'الإعدادات']]].forEach(function (x) {
         add(G, A.icon('grown', 20), p.name + ' · ' + L(x[1]), L(['Parent area', 'ركن الوالدين']), function () { A.go('parent/' + p.id + '/' + x[0]); }, x[0]);
@@ -399,7 +441,7 @@
   }
   function score(e, q) {
     if (!q) return e.g === L(['Lessons', 'الدروس']) ? -1 : 1;
-    var w = e.w, t = e.t.toLowerCase();
+    var w = e.w, t = e.tn;
     if (t.indexOf(q) === 0) return 100 - t.length / 100;
     var i = w.indexOf(q); if (i >= 0) return 60 - i / 100;
     var j = 0; for (var k = 0; k < w.length && j < q.length; k++) if (w[k] === q[j]) j++;
@@ -408,24 +450,25 @@
   Desk.palette = function () {
     if (pal) { close(); return; }
     var all = entries(), sel = 0, shown = [];
-    pal = document.createElement('div'); pal.className = 'dk-pal'; pal.setAttribute('role', 'dialog');
+    pal = document.createElement('div'); pal.className = 'dk-pal'; pal.setAttribute('role', 'dialog'); pal.setAttribute('aria-modal', 'true');
     pal.innerHTML = '<div class="dk-pal-bg"></div><div class="dk-pal-box"><label class="dk-pal-in">' + ic('search', 20) + '<input id="pal-q" autocomplete="off" spellcheck="false" placeholder="' + esc(L(['Search children, subjects, lessons, tools…', 'ابحث في الأطفال والمواد والدروس والأدوات…'])) + '">' + kbd('Esc') + '</label><div class="dk-pal-list" id="pal-l" role="listbox"></div><div class="dk-pal-foot">' + kbd('↑') + kbd('↓') + '<span>' + esc(L(['move', 'تنقّل'])) + '</span>' + kbd('Enter') + '<span>' + esc(L(['open', 'افتح'])) + '</span></div></div>';
     document.body.appendChild(pal);
     var q = $('#pal-q', pal), list = $('#pal-l', pal);
     function draw() {
-      var s = q.value.trim().toLowerCase();
+      var s = normSearch(q.value.trim());
       shown = all.map(function (e) { return { e: e, s: score(e, s) }; }).filter(function (x) { return x.s >= 0; });
       if (!s) shown = shown.filter(function (x) { return x.e.g !== L(['Lessons', 'الدروس']); });
       shown.sort(function (a, b) { return b.s - a.s; }); shown = shown.slice(0, 40).map(function (x) { return x.e; });
       if (s) { /* grouped by kind, best first */ var order = []; shown.forEach(function (e) { if (order.indexOf(e.g) < 0) order.push(e.g); }); shown.sort(function (a, b) { return order.indexOf(a.g) - order.indexOf(b.g); }); }
       sel = Math.min(sel, Math.max(0, shown.length - 1));
       var last = null;
-      list.innerHTML = shown.length ? shown.map(function (e, i) { var head = e.g !== last ? '<div class="dk-pal-g">' + esc(e.g) + '</div>' : ''; last = e.g; return head + '<button class="dk-pal-i' + (i === sel ? ' on' : '') + '" data-i="' + i + '" role="option"><span class="dk-pal-ic">' + e.ic + '</span><span class="grow"><b>' + esc(e.t) + '</b>' + (e.s ? '<small>' + (e.rawSub ? e.s : esc(e.s)) + '</small>' : '') + '</span>' + (i === sel ? A.icon('next', 16) : '') + '</button>'; }).join('') : '<p class="dk-pal-none">' + esc(L(['Nothing by that name', 'لا شيء بهذا الاسم'])) + '</p>';
+      list.innerHTML = shown.length ? shown.map(function (e, i) { var head = e.g !== last ? '<div class="dk-pal-g">' + esc(e.g) + '</div>' : ''; last = e.g; return head + '<button class="dk-pal-i' + (i === sel ? ' on' : '') + '" data-i="' + i + '" role="option" aria-selected="' + (i === sel ? 'true' : 'false') + '"><span class="dk-pal-ic">' + e.ic + '</span><span class="grow"><b>' + esc(e.t) + '</b>' + (e.s ? '<small>' + (e.rawSub ? e.s : esc(e.s)) + '</small>' : '') + '</span>' + (i === sel ? A.icon('next', 16) : '') + '</button>'; }).join('') : '<p class="dk-pal-none">' + esc(L(['Nothing by that name', 'لا شيء بهذا الاسم'])) + '</p>';
       var on = $('.dk-pal-i.on', list); if (on) on.scrollIntoView({ block: 'nearest' });
     }
     function run(i) { var e = shown[i]; if (!e) return; close(); setTimeout(e.run, 10); }
     q.addEventListener('input', function () { sel = 0; draw(); });
-    q.addEventListener('keydown', function (e) {
+    pal.addEventListener('keydown', function (e) {
+      if (e.key === 'Tab') { e.preventDefault(); q.focus(); return; }
       if (e.key === 'ArrowDown') { e.preventDefault(); sel = Math.min(shown.length - 1, sel + 1); draw(); }
       else if (e.key === 'ArrowUp') { e.preventDefault(); sel = Math.max(0, sel - 1); draw(); }
       else if (e.key === 'Enter') { e.preventDefault(); run(sel); }
@@ -519,7 +562,7 @@
     var body = '<section class="dk-hero2">' + art + '<div><h2>' + esc(L(['One family record, on every device', 'سجلّ عائلي واحد على كل جهاز'])) + '</h2><p>' + esc(L(['Your phone and this computer join their records on your home Wi-Fi. No account, no cloud, and nothing leaves the house.', 'يدمج هاتفك وهذا الحاسوب سجلّيهما عبر شبكة البيت. بلا حساب ولا سحابة، ولا يغادر شيء البيت.'])) + '</p></div></section>';
     body += '<div class="dk-grid2"><section class="card">' + sw('link', on, L(['Let my phone find this computer', 'دع هاتفي يجد هذا الحاسوب']), L(['Windows may ask once to allow Miftāḥ on private networks. Choose Allow.', 'قد يسألك ويندوز مرة واحدة عن السماح لمفتاح على الشبكات الخاصة. اختر السماح.']));
     if (on) {
-      body += '<div class="dk-pc"><span>' + ic('pc', 18) + '<b>' + esc(i.machine || '') + '</b></span>' + '<small>' + esc(addr ? L(['On the home Wi-Fi', 'على شبكة المنزل']) : L(['Not on a home network', 'غير متصل بشبكة منزلية'])) + '</small>' + '</div>';
+      body += '<div class="dk-pc"><span>' + ic('pc', 18) + '<b>' + esc(i.machine || '') + '</b></span>' + (addr ? '<code>' + esc(addr) + '</code>' : '<small>' + esc(L(['Not on a home network', 'غير متصل بشبكة منزلية'])) + '</small>') + '</div>';
       body += '<div class="dk-code" id="lk-code"><button class="btn pri wide" id="lk-new">' + esc(L(['Pair a phone', 'اقرن هاتفًا'])) + '</button></div>';
       body += '<ol class="dk-steps"><li>' + esc(L(['On the phone, open Miftāḥ, then Parent area › Devices.', 'في الهاتف افتح مفتاح ثم ركن الوالدين › الأجهزة.'])) + '</li><li>' + esc(L(['Tap Find my computer and choose', 'اضغط ابحث عن حاسوبي واختر']) + ' ' + (i.machine || '')) + '.</li><li>' + esc(L(['Enter the pairing code shown here.', 'أدخل رمز الاقتران الظاهر هنا.'])) + '</li></ol>';
     }
@@ -572,9 +615,12 @@
       '<div class="li"><span class="grow"><b>' + esc(L(['Recitations kept', 'التلاوات المحفوظة'])) + '</b><small>' + (au.files ? bytes(au.bytes || 0) : esc(L(['None yet', 'لا شيء بعد']))) + '</small></span>' + (au.files ? '<button class="btn ghost sm" id="pc-au-clr">' + esc(L(['Clear', 'مسح'])) + '</button>' : '') + '</div>' +
       '<div class="li"><span class="grow"><b>' + esc(L(['Printables', 'المطبوعات'])) + '</b><small>' + esc(L(['Documents › Miftah › Printables', 'المستندات › Miftah › Printables'])) + '</small></span><button class="btn ghost sm" id="pc-prints">' + esc(L(['Open', 'افتح'])) + '</button></div></section></div>';
     if (window.Upd && Upd.can()) body += Upd.card('pc');
-    var bk = i.backups || [];
+    var bk = i.backups || [], today = A.day();
     body += '<section class="card"><h3>' + ic('restore', 18) + ' ' + esc(L(['Backups', 'النسخ الاحتياطية'])) + '</h3><p class="dk-note">' + esc(L(['One copy a day, the last thirty days. Going back joins nothing and loses nothing: today’s record is kept as a backup first.', 'نسخة كل يوم لآخر ثلاثين يومًا. الرجوع لا يُضيّع شيئًا: يُحفظ سجل اليوم نسخةً أولًا.'])) + '</p><div class="dk-bk">' +
-      (bk.length ? bk.slice(0, 30).map(function (b, j) { var d = new Date(b.name + 'T12:00:00'); return '<button class="dk-bk-i" data-bk="' + esc(b.name) + '"' + (j === 0 ? ' disabled' : '') + '><b>' + esc(d.toLocaleDateString(A.ar() ? 'ar-u-nu-arab' : 'en', { weekday: 'short', day: 'numeric', month: 'short' })) + '</b><small>' + (j === 0 ? esc(L(['Today', 'اليوم'])) : bytes(b.bytes)) + '</small></button>'; }).join('') : '<p class="dk-empty">' + esc(L(['The first backup is made today.', 'تُصنع أول نسخة اليوم.'])) + '</p>') + '</div><button class="btn ghost sm" id="pc-bkdir">' + ic('folder', 16) + '<span>' + esc(L(['Show the backups folder', 'أظهر مجلد النسخ'])) + '</span></button></section>';
+      (bk.length ? bk.slice(0, 30).map(function (b) {
+        var meta = bkLabel(b.name, false), isToday = b.name === today;
+        return '<button class="dk-bk-i" data-bk="' + esc(b.name) + '"' + (isToday ? ' disabled' : '') + '><b>' + esc(meta.title) + '</b><small>' + esc(isToday ? L(['Today', 'اليوم']) : (meta.sub ? meta.sub + ' · ' + bytes(b.bytes) : bytes(b.bytes))) + '</small></button>';
+      }).join('') : '<p class="dk-empty">' + esc(L(['The first backup is made today.', 'تُصنع أول نسخة اليوم.'])) + '</p>') + '</div><button class="btn ghost sm" id="pc-bkdir">' + ic('folder', 16) + '<span>' + esc(L(['Show the backups folder', 'أظهر مجلد النسخ'])) + '</span></button></section>';
     body += '<p class="dk-ver">Miftāḥ ' + esc(i.version || '') + ' · Windows · ' + esc(L(['Open source, MIT licence', 'مفتوح المصدر، رخصة MIT'])) + '</p>';
     return {
       cls: 'dkv', html: page(L(['This computer', 'هذا الحاسوب']), i.machine || '', body, ic('pc', 26)),
@@ -593,10 +639,21 @@
       }
     };
   }
+  function bkLabel(name, full) {
+    var loc = A.ar() ? 'ar-u-nu-arab' : 'en';
+    var opts = full ? { weekday: 'long', day: 'numeric', month: 'long' } : { weekday: 'short', day: 'numeric', month: 'short' };
+    var m = String(name || '').match(/^(\d{4}-\d{2}-\d{2})(?:-before-(.+?)(?:-(\d{2})(\d{2})\d{2})?)?$/);
+    if (!m) return { title: String(name || ''), sub: '' };
+    var dt = new Date(m[1] + 'T12:00:00');
+    var ds = isNaN(dt.getTime()) ? m[1] : dt.toLocaleDateString(loc, opts);
+    if (!m[2]) return { title: ds, sub: '' };
+    var tm = m[3] ? ' · ' + A.num(m[3] + ':' + m[4]) : '';
+    return { title: ds + tm, sub: L(['Before restore', 'قبل الاسترجاع']) };
+  }
   function restore(name) {
     var txt = B.backup(name); var o; try { o = A.Sync.parse(txt); } catch (e) { o = null; }
     if (!o || !Array.isArray(o.profiles)) { A.toast(L(['That backup could not be read', 'تعذّرت قراءة النسخة'])); return; }
-    var d = new Date(name + 'T12:00:00').toLocaleDateString(A.ar() ? 'ar-u-nu-arab' : 'en', { weekday: 'long', day: 'numeric', month: 'long' });
+    var meta = bkLabel(name, true), d = meta.sub ? meta.title + ' (' + meta.sub + ')' : meta.title;
     A.sheet(L(['Go back to', 'ارجع إلى']) + ' ' + d, '<p class="dk-note">' + esc(L(['The record returns to how it was that day. Everything after it is set aside, not lost: today is saved as a backup first.', 'يعود السجل كما كان ذلك اليوم. ما بعده يُحفظ جانبًا ولا يضيع: يُحفظ اليوم نسخةً أولًا.'])) + '</p><div class="dk-row2"><button class="btn pri" id="bk-go">' + esc(L(['Go back', 'ارجع'])) + '</button><button class="btn ghost" id="bk-no">' + esc(L(['Keep today', 'أبقِ اليوم'])) + '</button></div>', function (sh) {
       $('#bk-no', sh).onclick = A.closeSheet;
       $('#bk-go', sh).onclick = function () {
@@ -642,7 +699,7 @@
           chosen.forEach(function (k, i) { var r = Print.make(k.id, pid, seed + i * 7919); if (!r) return; Print.keep(r, pid); html += r.html; made++; });
           if (!made) { A.toast(L(['Nothing to print yet', 'لا شيء للطباعة بعد'])); return; }
           Desk._pdf = !!pdf;
-          Print.send(html, 'Miftah ' + p.name + ' ' + new Date().toISOString().slice(0, 10));
+          Print.send(html, 'Miftah ' + p.name + ' ' + A.day());
         };
         $('#ps-print', v).onclick = function () { make(false); };
         $('#ps-pdf', v).onclick = function () { make(true); };

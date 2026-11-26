@@ -252,7 +252,7 @@
   };
   window.__native.onRoute = function (h) { location.hash = h; };
   window.__native.onResume = function () { if (cur && cur.resume) cur.resume(); else if (parse(A.route()).name === 'home') render(); };
-  window.__native.onInsets = function (t, b) { var s = document.documentElement.style; s.setProperty('--sat', t + 'px'); s.setProperty('--sab', b + 'px'); };
+  window.__native.onInsets = function (t, b, l, r) { var s = document.documentElement.style; s.setProperty('--sat', (t || 0) + 'px'); s.setProperty('--sab', (b || 0) + 'px'); if (l != null) s.setProperty('--sal', l + 'px'); if (r != null) s.setProperty('--sar', r + 'px'); };
 
   /* delegated actions */
   document.addEventListener('click', function (e) {

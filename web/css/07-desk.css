@@ -78,6 +78,7 @@ body.rail-mini #rail .rl-dot{position:absolute;top:8px;inset-inline-end:8px}
   html.is-desk body.has-rail #app{margin-inline-start:0}
   html.is-desk body.has-rail .view .nav{display:grid!important}
   html.is-desk body.has-rail .view .nav::before{display:block!important}
+  html.is-desk body.has-rail .topbtns .dn,html.is-desk body.has-rail .th .dn,html.is-desk body.has-rail .abar .dn{display:inline-flex}
   html.is-desk body.has-rail .toast{left:50%}
   html.is-desk body.has-rail .view{padding-bottom:calc(92px + var(--sab))}
 }
@@ -106,24 +107,25 @@ body.rail-mini #rail .rl-dot{position:absolute;top:8px;inset-inline-end:8px}
 html.is-desk .kpress{transform:scale(.95)!important;transition:transform .08s!important}
 /* key labels on lesson choices */
 html.is-desk [data-kbd]{position:relative}
+html.is-desk .opt[data-kbd]{padding-inline-start:32px}
 html.is-desk [data-kbd]::after{content:attr(data-kbd);position:absolute;top:6px;inset-inline-start:7px;min-width:18px;height:18px;padding:0 4px;border-radius:5px;display:grid;place-items:center;font:700 11px/1 var(--f);color:var(--t3);background:var(--bg);border:1px solid var(--line2);pointer-events:none;opacity:.9}
+html.is-desk .numopt.sm[data-kbd]::after{display:none}
 @media (hover:none){ html.is-desk [data-kbd]::after{display:none} }
 
 /* ---------- lessons on a big screen: two equal halves, the question and its answer, centred and in proportion ---------- */
 @media (min-width:1150px) and (min-height:660px){
-  html.is-desk body[data-view=lesson] .pl-head,html.is-desk body[data-view=lesson] .pl-msg,html.is-desk body[data-view=lesson] .pl-foot{max-width:1080px}
-  html.is-desk body[data-view=lesson] .step{max-width:1080px}
-  html.is-desk body[data-view=lesson] .pl-prompt{font-size:clamp(21px,1.5vw,26px)}
-  html.is-desk body[data-view=lesson] .step-in.dk-2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:center;position:relative;min-height:min(52vh,460px)}
+  html.is-desk :is(body[data-view=lesson],body[data-view=stop],body[data-view=exam],body[data-view=paper],body[data-view=place]) :is(.pl-head,.pl-msg,.pl-foot,.step){max-width:1080px}
+  html.is-desk :is(body[data-view=lesson],body[data-view=stop],body[data-view=exam],body[data-view=paper],body[data-view=place]) .pl-prompt{font-size:clamp(21px,1.5vw,26px)}
+  html.is-desk :is(body[data-view=lesson],body[data-view=stop],body[data-view=exam],body[data-view=paper],body[data-view=place]) .step-in.dk-2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:center;position:relative;min-height:min(52vh,460px)}
   /* a quiet line down the middle, so the two halves read as one page */
-  html.is-desk body[data-view=lesson] .step-in.dk-2::after{content:'';position:absolute;left:50%;top:4%;bottom:4%;width:1px;background:var(--line2)}
-  html.is-desk body[data-view=lesson] .dk-lq{grid-column:1;display:grid;gap:14px;justify-items:center;align-content:center;padding:0 36px;min-width:0}
-  html.is-desk body[data-view=lesson] .dk-lq>*{max-width:100%}
-  html.is-desk body[data-view=lesson] .step-in.dk-2>.pad,html.is-desk body[data-view=lesson] .step-in.dk-2>.ch{grid-column:2;justify-self:center;width:calc(100% - 72px);max-width:440px}
-  html.is-desk body[data-view=lesson] .pad-eq{font-size:clamp(34px,2.8vw,48px)}
-  html.is-desk body[data-view=lesson] .pad button{min-height:64px;font-size:26px}
-  html.is-desk body[data-view=lesson] .ch .opt{min-height:76px}
-  html.is-desk body[data-view=lesson] .dia,html.is-desk body[data-view=lesson] .pad-v svg{max-height:50vh}
+  html.is-desk :is(body[data-view=lesson],body[data-view=stop],body[data-view=exam],body[data-view=paper],body[data-view=place]) .step-in.dk-2::after{content:'';position:absolute;left:50%;top:4%;bottom:4%;width:1px;background:var(--line2)}
+  html.is-desk :is(body[data-view=lesson],body[data-view=stop],body[data-view=exam],body[data-view=paper],body[data-view=place]) .dk-lq{grid-column:1;display:grid;gap:14px;justify-items:center;align-content:center;padding:0 36px;min-width:0}
+  html.is-desk :is(body[data-view=lesson],body[data-view=stop],body[data-view=exam],body[data-view=paper],body[data-view=place]) .dk-lq>*{max-width:100%}
+  html.is-desk :is(body[data-view=lesson],body[data-view=stop],body[data-view=exam],body[data-view=paper],body[data-view=place]) .step-in.dk-2>:is(.pad,.ch,.expr){grid-column:2;justify-self:center;width:calc(100% - 72px);max-width:440px}
+  html.is-desk :is(body[data-view=lesson],body[data-view=stop],body[data-view=exam],body[data-view=paper],body[data-view=place]) .pad-eq{font-size:clamp(34px,2.8vw,48px)}
+  html.is-desk :is(body[data-view=lesson],body[data-view=stop],body[data-view=exam],body[data-view=paper],body[data-view=place]) .pad button{min-height:64px;font-size:26px}
+  html.is-desk :is(body[data-view=lesson],body[data-view=stop],body[data-view=exam],body[data-view=paper],body[data-view=place]) .ch .opt{min-height:76px}
+  html.is-desk :is(body[data-view=lesson],body[data-view=stop],body[data-view=exam],body[data-view=paper],body[data-view=place]) :is(.dia,.pad-v svg){max-height:50vh}
 }
 
 /* ---------- full screen, focus, files being dropped ---------- */
@@ -175,7 +177,7 @@ html[lang=ar] .dk-pal-in input{font-family:var(--f-ui-ar)}
 .dk-h p{color:var(--t3);font-size:14px;margin-top:2px}
 .dk .card{padding:20px}
 .dk .card h3{display:flex;align-items:center;gap:8px;font-size:15px;margin-bottom:12px}
-.dk .card+.card{margin-top:0}
+.dk .dk-grid2>.card+.card{margin-top:0}
 .dk>section+section,.dk>.dk-grid2+section,.dk>section+.dk-grid2{margin-top:16px}
 .dk-grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,380px),1fr));gap:16px;align-items:start}
 .dk .btn.ghost{border:1px solid var(--line2);background:var(--s1);color:var(--t1)}
@@ -392,7 +394,7 @@ html.is-desk body.has-rail .simstage{inset-inline-start:var(--rail)}
 
 /* a lesson on a computer: its name above, squared working paper under the sum, the answer opposite */
 .dk-lt{font-size:13px;font-weight:700;color:var(--t3);text-align:center;margin-bottom:6px;letter-spacing:.01em}
-html.is-desk body[data-view=lesson] .dk-lq{align-self:stretch;align-content:start;padding-top:8px}
+html.is-desk :is(body[data-view=lesson],body[data-view=stop],body[data-view=exam],body[data-view=paper],body[data-view=place]) .dk-lq{align-self:stretch;align-content:start;padding-top:8px}
 .dk-work{width:100%;max-width:460px;display:flex;flex-direction:column;border-radius:16px;border:1px solid var(--line2);background:var(--s1);color:var(--t1);overflow:hidden;box-shadow:var(--hi)}
 .dk-work-h{display:flex;align-items:center;justify-content:space-between;padding:8px 10px 8px 14px;border-bottom:1px solid var(--line);font-size:12.5px;font-weight:700;color:var(--t3)}
 .dk-work-h button{height:30px;padding:0 12px;border-radius:99px;border:1px solid var(--line2);font-size:12.5px;font-weight:700;color:var(--t2);background:var(--bg)}
@@ -400,7 +402,7 @@ html.is-desk body[data-view=lesson] .dk-lq{align-self:stretch;align-content:star
 .dk-work canvas{display:block;width:100%;height:clamp(150px,26vh,260px);touch-action:none;cursor:crosshair;
   background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);background-size:22px 22px;background-position:-1px -1px}
 /* the aid button for working is not needed when the paper is already open */
-html.is-desk body[data-view=lesson]:has(.dk-work) [data-a=aid-work]{display:none}
+html.is-desk :is(body[data-view=lesson],body[data-view=stop],body[data-view=exam],body[data-view=paper],body[data-view=place]):has(.dk-work) [data-a=aid-work]{display:none}
 /* the command bar's field is the whole bar: no ring of its own */
 html.is-desk .dk-pal-in input:focus-visible,html.is-desk .dk-pal-in input:focus{box-shadow:none;outline:0;border:0}
 /* the command bar's field sits inside its strip with room above and below: the app's own input style (border, full height) never reaches the panel's edge */

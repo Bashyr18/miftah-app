@@ -202,10 +202,10 @@ impl App {
         let today = store::today();
         let (ch, cm) = (t.wHour as i32, t.wMinute as i32);
         if *self.last_remind.borrow() == today || ch != hh || cm < mi || cm > mi + 5 { return; }
-        *self.last_remind.borrow_mut() = today;
+        *self.last_remind.borrow_mut() = today.clone();
         unsafe { if IsWindowVisible(self.hwnd).as_bool() && GetForegroundWindow() == self.hwnd { return; } }   /* already here */
         let ar = cfg["lang"].as_str() == Some("ar");
-        let next = cfg["next"].as_str().unwrap_or("");
+        let next = if cfg["day"].as_str() == Some(today.as_str()) { cfg["next"].as_str().unwrap_or("") } else { "" };
         self.balloon(if ar { "باب اليوم ينتظر" } else { "Today’s door is waiting" }, if next.is_empty() { if ar { "افتح مفتاح" } else { "Open Miftāḥ" } } else { next });
     }
 
@@ -438,7 +438,7 @@ fn main() {
     APP.with(|s| *s.borrow_mut() = Some(a.clone()));
     a.title_bar(&theme(), false);
     if !start_tray { unsafe { let _ = ShowWindow(hwnd, if store::flag("max") { SW_SHOWMAXIMIZED } else { SW_SHOWNORMAL }); let _ = UpdateWindow(hwnd); let _ = SetFocus(Some(hwnd)); } }
-    a.tray(store::flag("tray"));
+    a.tray(start_tray || store::flag("tray"));
     listen();
     unsafe { SetTimer(Some(hwnd), TIMER_REMIND, 20000, None); }
     {

@@ -203,7 +203,9 @@
       $('#sy-in', sh).onclick = function () {
         A.closeSheet(); A.__syncIn = true;
         if (A.N.has()) { A.N.call('importFile'); return; }
-        var f = document.createElement('input'); f.type = 'file'; f.accept = 'application/json'; f.onchange = function () { var r = new FileReader(); r.onload = function () { window.__native.onImport(r.result); }; r.readAsText(f.files[0]); }; f.click();
+        var f = document.createElement('input'); f.type = 'file'; f.accept = 'application/json';
+        f.oncancel = function () { A.__syncIn = false; };
+        f.onchange = function () { if (!f.files || !f.files[0]) { A.__syncIn = false; return; } var r = new FileReader(); r.onload = function () { window.__native.onImport(r.result); }; r.readAsText(f.files[0]); }; f.click();
       };
     });
   };

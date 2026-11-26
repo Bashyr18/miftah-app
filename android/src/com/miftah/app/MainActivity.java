@@ -174,7 +174,7 @@ public class MainActivity extends Activity {
                 if (pendingFileCb != null) { pendingFileCb.onReceiveValue(null); pendingFileCb = null; }
                 pendingFileCb = cb;
                 Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE).setType("*/*")
-                    .putExtra(Intent.EXTRA_MIME_TYPES, new String[]{"text/plain", "text/csv", "text/tab-separated-values", "text/markdown", "application/json", "application/octet-stream"});
+                    .putExtra(Intent.EXTRA_MIME_TYPES, new String[]{"text/plain", "text/csv", "text/comma-separated-values", "application/csv", "text/tab-separated-values", "text/markdown", "application/json", "application/octet-stream"});
                 try {
                     startActivityForResult(i, REQ_FILE);
                     return true;
@@ -257,17 +257,18 @@ public class MainActivity extends Activity {
     private void pushInsets() {
         if (lastInsets == null || web == null) return;
         float dp = getResources().getDisplayMetrics().density;
-        int top, bottom, ime = 0;
+        int top, bottom, left, right, ime = 0;
         if (Build.VERSION.SDK_INT >= 30) {
             android.graphics.Insets sb = lastInsets.getInsets(WindowInsets.Type.systemBars() | WindowInsets.Type.displayCutout());
             android.graphics.Insets im = lastInsets.getInsets(WindowInsets.Type.ime());
-            top = sb.top; bottom = sb.bottom; ime = im.bottom;
+            top = sb.top; bottom = sb.bottom; left = sb.left; right = sb.right; ime = im.bottom;
         } else {
             top = lastInsets.getSystemWindowInsetTop(); bottom = lastInsets.getStableInsetBottom();
+            left = lastInsets.getSystemWindowInsetLeft(); right = lastInsets.getSystemWindowInsetRight();
             int sys = lastInsets.getSystemWindowInsetBottom(); if (sys > bottom + 100) ime = sys;
         }
         root.setPadding(0, 0, 0, ime > 0 ? ime : 0);
-        if (loaded) js("__native.onInsets(" + Math.round(top / dp) + "," + (ime > 0 ? 0 : Math.round(bottom / dp)) + ")");
+        if (loaded) js("__native.onInsets(" + Math.round(top / dp) + "," + (ime > 0 ? 0 : Math.round(bottom / dp)) + "," + Math.round(left / dp) + "," + Math.round(right / dp) + ")");
     }
     /* ---------- the screen's shape: its size in dp, and on a foldable where the hinge is and how far it is open ----------
        The hinge comes from the device's own window extensions (androidx.window.extensions, a shared library on foldables,
@@ -911,6 +912,8 @@ public class MainActivity extends Activity {
             if (pendingSave.getAndSet(json) == null) savePool.execute(() -> flushSavedState(files));
         }
         String loadState() {
+            String pending = pendingSave.get();
+            if (pending != null) return pending;
             File f = new File(getFilesDir(), "state.json");
             if (!f.exists()) return null;
             try (InputStream is = new FileInputStream(f)) {
@@ -1119,7 +1122,10 @@ public class MainActivity extends Activity {
             }).start();
         }
         void lanSync(final String state, final boolean quiet) {
-            if (state == null || state.length() > 30_000_000) return;
+            if (state == null || state.length() > 30_000_000) {
+                ui.post(() -> js("window.__native.onLanSynced&&__native.onLanSynced(false,null,'fail',0,0," + quiet + ")"));
+                return;
+            }
             new Thread(() -> {
                 Link.Result r = null; String err = null;
                 try { r = link().sync(state, phoneName(), new Link.Files() { public File media() { return mediaDir(); } public File voice() { return voiceDir(); } }); }

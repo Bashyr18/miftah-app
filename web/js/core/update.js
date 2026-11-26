@@ -20,26 +20,26 @@
   /* ---------- the card, on the phone's Settings and the computer's This computer page ---------- */
   U.card = function (where) {
     var st = U.state, v = U.info, lbl, act = '';
-    var btn = function (id, cls, icon, t) { return '<button class="btn ' + cls + '" id="' + id + '">' + (icon ? ic(I[icon], 18) : '') + '<span>' + esc(t) + '</span></button>'; };
+    var btn = function (a, cls, icon, t) { return '<button class="btn ' + cls + '" data-upd-act="' + a + '">' + (icon ? ic(I[icon], 18) : '') + '<span>' + esc(t) + '</span></button>'; };
     if (st === 'checking') { lbl = L(['Checking…', 'جارٍ التحقق…']); act = '<span class="upd-spin">' + ic(I.spin, 20) + '</span>'; }
-    else if (st === 'latest') { lbl = L(['Up to date', 'أحدث إصدار']); act = btn('upd-chk', 'ghost sm', '', L(['Check again', 'تحقق مجددًا'])); }
-    else if (st === 'ready') { lbl = L(['Version ' + v.name + ' is ready', 'الإصدار ' + A.num(v.name) + ' جاهز']); act = btn('upd-go', 'pri', 'up', L(['Update', 'حدّث'])); }
+    else if (st === 'latest') { lbl = L(['Up to date', 'أحدث إصدار']); act = btn('chk', 'ghost sm', '', L(['Check again', 'تحقق مجددًا'])); }
+    else if (st === 'ready') { lbl = L(['Version ' + v.name + ' is ready', 'الإصدار ' + A.num(v.name) + ' جاهز']); act = btn('go', 'pri', 'up', L(['Update', 'حدّث'])); }
     else if (st === 'downloading') { lbl = L(['Downloading version ' + v.name, 'تنزيل الإصدار ' + A.num(v.name)]); act = '<span class="upd-pct">' + A.num(Math.round(U.p * 100)) + '%</span>'; }
-    else if (st === 'allow') { lbl = L(['Allow Miftāḥ to install updates, then Update', 'اسمح لمفتاح بتثبيت التحديثات ثم حدّث']); act = btn('upd-go', 'pri', 'up', L(['Update', 'حدّث'])); }
+    else if (st === 'allow') { lbl = L(['Allow Miftāḥ to install updates, then Update', 'اسمح لمفتاح بتثبيت التحديثات ثم حدّث']); act = btn('go', 'pri', 'up', L(['Update', 'حدّث'])); }
     else if (st === 'installing') { lbl = U.platform() === 'windows' ? L(['Closing to update…', 'يُغلق ليُحدَّث…']) : L(['Continue in the installer', 'تابع في المثبّت']); act = '<span class="upd-ok">' + ic(I.ok, 20) + '</span>'; }
-    else if (st === 'checksum' || st === 'failed') { lbl = st === 'checksum' ? L(['The download did not match. Nothing was changed.', 'لم يطابق التنزيل. لم يتغير شيء.']) : L(['The download did not finish. Nothing was changed.', 'لم يكتمل التنزيل. لم يتغير شيء.']); act = btn('upd-go', 'ghost sm', '', L(['Try again', 'أعد المحاولة'])); }
-    else if (st === 'error') { lbl = L(['Could not reach GitHub', 'تعذّر الوصول إلى GitHub']); act = btn('upd-chk', 'ghost sm', '', L(['Try again', 'أعد المحاولة'])); }
-    else { lbl = ''; act = btn('upd-chk', 'ghost sm', '', L(['Check for updates', 'ابحث عن تحديث'])); }
+    else if (st === 'checksum' || st === 'failed') { lbl = st === 'checksum' ? L(['The download did not match. Nothing was changed.', 'لم يطابق التنزيل. لم يتغير شيء.']) : L(['The download did not finish. Nothing was changed.', 'لم يكتمل التنزيل. لم يتغير شيء.']); act = btn('go', 'ghost sm', '', L(['Try again', 'أعد المحاولة'])); }
+    else if (st === 'error') { lbl = L(['Could not reach GitHub', 'تعذّر الوصول إلى GitHub']); act = btn('chk', 'ghost sm', '', L(['Try again', 'أعد المحاولة'])); }
+    else { lbl = ''; act = btn('chk', 'ghost sm', '', L(['Check for updates', 'ابحث عن تحديث'])); }
     var ready = st === 'ready' || st === 'allow' || st === 'downloading';
     return '<section class="card upd' + (ready ? ' on' : '') + '" data-upd="' + esc(where) + '"><h3>' + ic(I.up, 18) + ' ' + esc(L(['Updates', 'التحديثات'])) + '</h3>' +
       '<div class="upd-row"><span class="upd-v"><b>Miftāḥ ' + esc(A.num(name())) + '</b>' + (lbl ? '<small>' + esc(lbl) + '</small>' : '') + '</span>' + act + '</div>' +
       (st === 'downloading' ? '<div class="upd-bar"><i style="width:' + Math.round(U.p * 100) + '%"></i></div>' : '') +
       (ready && v.notes && v.notes.length ? '<ul class="upd-notes">' + v.notes.slice(0, 4).map(function (n) { return '<li>' + esc(L(n)) + '</li>'; }).join('') + '</ul>' : '') +
-      '<button class="li upd-auto" id="upd-auto"><span class="grow"><b>' + esc(L(['Check once a week', 'تحقق مرة في الأسبوع'])) + '</b></span><span class="switch' + (S().auto ? ' on' : '') + '"></span></button></section>';
+      '<button class="li upd-auto" role="switch" aria-checked="' + (S().auto ? 'true' : 'false') + '" data-upd-act="auto"><span class="grow"><b>' + esc(L(['Check once a week', 'تحقق مرة في الأسبوع'])) + '</b></span><span class="switch' + (S().auto ? ' on' : '') + '"></span></button></section>';
   };
   function bind() {
     document.querySelectorAll('[data-upd]').forEach(function (c) {
-      var chk = c.querySelector('#upd-chk'), go = c.querySelector('#upd-go'), au = c.querySelector('#upd-auto');
+      var chk = c.querySelector('[data-upd-act="chk"]'), go = c.querySelector('[data-upd-act="go"]'), au = c.querySelector('[data-upd-act="auto"]');
       if (chk) chk.onclick = U.check;
       if (go) go.onclick = U.install;
       if (au) au.onclick = function () { S().auto = !S().auto; A.saveNow(); paint(); };
@@ -66,10 +66,10 @@
       /* the same pieces in the same order: patch each; otherwise swap only the pieces between the heading and the switch */
       if (oc.length === nc.length) { for (var i = 0; i < nc.length; i++) if (oc[i].tagName !== 'H3') patch(oc[i], nc[i]); }
       else {
-        var keep = el.querySelector('#upd-auto');
+        var keep = el.querySelector('[data-upd-act="auto"]');
         oc.forEach(function (c) { if (c.tagName !== 'H3' && c !== keep) c.remove(); });
-        nc.forEach(function (c) { if (c.tagName === 'H3' || c.id === 'upd-auto') return; keep ? el.insertBefore(c, keep) : el.appendChild(c); });
-        if (keep) { var sw = n.querySelector('#upd-auto'); if (sw) patch(keep, sw); }
+        nc.forEach(function (c) { if (c.tagName === 'H3' || (c.dataset && c.dataset.updAct === 'auto')) return; keep ? el.insertBefore(c, keep) : el.appendChild(c); });
+        if (keep) { var sw = n.querySelector('[data-upd-act="auto"]'); if (sw) patch(keep, sw); }
       }
     });
     bind(); pill();
@@ -78,12 +78,13 @@
   /* ---------- the flow ---------- */
   U.check = function () {
     if (!U.can()) return;
-    U.state = 'checking'; paint(); S().last = Date.now(); A.saveNow();
+    U.state = 'checking'; paint();
     if (A.N.call('updateCheck') === false) { U.state = 'error'; paint(); }
   };
   U.onCheck = function (json) {
     var r = null; try { r = typeof json === 'string' ? JSON.parse(json) : json; } catch (e) { }
     if (!r || !r.latest || !r.current) { U.state = 'error'; paint(); return; }
+    S().last = Date.now();
     U.info = r.latest; U.cur = r.current;
     U.state = (+U.info.code || 0) > (+U.cur.code || 0) && U.info[U.platform()] ? 'ready' : 'latest';
     /* kept, so the notice is still there tomorrow, until this copy is the new version */

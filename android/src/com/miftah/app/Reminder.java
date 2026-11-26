@@ -57,7 +57,9 @@ public class Reminder extends BroadcastReceiver {
         }
         Intent open = new Intent(Intent.ACTION_VIEW, Uri.parse("miftah://route/home"), c, MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
         PendingIntent pi = PendingIntent.getActivity(c, 2, open, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
-        String next = cfg.optString("next", "");
+        Calendar cal = Calendar.getInstance();
+        String today = String.format(java.util.Locale.US, "%04d-%02d-%02d", cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1, cal.get(Calendar.DAY_OF_MONTH));
+        String next = today.equals(cfg.optString("day", "")) ? cfg.optString("next", "") : "";
         Notification n = new Notification.Builder(c, CH).setSmallIcon(R.drawable.ic_notif)
                 .setContentTitle(ar ? "باب اليوم ينتظر" : "Today’s door is waiting")
                 .setContentText(next.isEmpty() ? (ar ? "افتح مفتاح" : "Open Miftāḥ") : next)

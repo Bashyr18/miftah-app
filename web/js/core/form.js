@@ -55,11 +55,11 @@
     /* the hinge arrives in dp of the screen; the page is laid out in its own px, smaller by the scale */
     F.fold = f && f.state === 2 ? { half: true, vertical: !!f.vertical, a: Math.round((f.vertical ? f.l : f.t) / s), b: Math.round((f.vertical ? f.r : f.b) / s) } : null;
     /* written again whenever the size changes, not only the scale: turning a foldable keeps its scale but swaps its width */
-    var want = s === 1 ? meta0 : 'width=' + Math.round(w / s) + ', initial-scale=' + s + ', minimum-scale=' + s + ', maximum-scale=' + s + ', viewport-fit=cover, interactive-widget=resizes-content, user-scalable=no';
+    var want = s === 1 ? meta0 : 'width=' + Math.round(w / s) + ', initial-scale=' + s + ', minimum-scale=' + s + ', viewport-fit=cover, interactive-widget=resizes-content';
     F.scale = s;
     if (meta && meta.getAttribute('content') !== want) meta.setAttribute('content', want);
     root.classList.toggle('f-scaled', s > 1);
-    apply();
+    requestAnimationFrame(apply);
   };
 
   /* ---------- in a browser on a dual-screen or foldable device: the Viewport Segments API ---------- */

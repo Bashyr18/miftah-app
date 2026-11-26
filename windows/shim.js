@@ -26,27 +26,38 @@
   var native = function () { return window.__native || {}; };
 
   /* recording: the browser's own recorder, AAC in an MP4 box like the phone's, handed to the app when it stops */
-  var rec = null, chunks = [], recKey = null, mic = null;
+  var rec = null, chunks = [], recKey = null, mic = null, recSeq = 0;
   function recType() { var t = ['audio/mp4;codecs=mp4a.40.2', 'audio/mp4', 'audio/webm;codecs=opus', 'audio/webm']; for (var i = 0; i < t.length; i++) if (window.MediaRecorder && MediaRecorder.isTypeSupported(t[i])) return t[i]; return ''; }
   function recStart(key) {
-    recKey = key; chunks = [];
+    if (rec && rec.state !== 'inactive') return false;
+    var seq = ++recSeq; recKey = key; chunks = [];
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      if (native().onMic) native().onMic(false, false);
+      if (window.A && A.micHelp) A.micHelp();
+      return false;
+    }
     navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } }).then(function (s) {
+      if (seq !== recSeq) { s.getTracks().forEach(function (t) { t.stop(); }); return; }
       mic = s; var type = recType();
       rec = new MediaRecorder(s, type ? { mimeType: type, audioBitsPerSecond: 96000 } : undefined);
       rec.ondataavailable = function (e) { if (e.data && e.data.size) chunks.push(e.data); };
       rec.onstop = function () {
-        var b = new Blob(chunks, { type: rec && rec.mimeType || 'audio/mp4' }), k = recKey; chunks = [];
+        var b = new Blob(chunks, { type: (rec && rec.mimeType) || type || 'audio/mp4' }), k = recKey; chunks = [];
         if (mic) mic.getTracks().forEach(function (t) { t.stop(); }); mic = null;
         var r = new FileReader();
         r.onload = function () { var ok = call('voiceSave', [k, String(r.result).split(',')[1] || '']); if (ok && window.Voice && Voice.refreshVoices) Voice.refreshVoices(); };
         r.readAsDataURL(b);
       };
       rec.start(250);
-      if (native().onMic) native().onMic(true, false);
-    }).catch(function () { if (native().onMic) native().onMic(false, false); if (window.A && A.micHelp) A.micHelp(); });
+    }).catch(function () {
+      if (seq !== recSeq) return;
+      document.querySelectorAll('.rec[data-rec], #hf-rec.rec').forEach(function (el) { el.classList.remove('rec'); });
+      if (native().onMic) native().onMic(false, false);
+      if (window.A && A.micHelp) A.micHelp();
+    });
     return true;
   }
-  function recStop() { if (rec && rec.state !== 'inactive') rec.stop(); rec = null; }
+  function recStop() { recSeq++; if (rec && rec.state !== 'inactive') rec.stop(); else if (mic) { mic.getTracks().forEach(function (t) { t.stop(); }); mic = null; } rec = null; }
 
   var names = ['ready', 'saveState', 'loadState', 'version', 'haptic', 'lastTheme', 'rememberTheme', 'setSystemBars', 'speak', 'speakStop', 'speakLangs', 'openVoiceSettings', 'micAllowed', 'openAppSettings',
     'voiceList', 'audioKeep', 'audioStats', 'audioClear', 'sync', 'requestNotifications', 'pinWidget', 'exportFile', 'shareFamily', 'shareImage', 'shareChallenge',
@@ -76,6 +87,8 @@
   function stop(e) { if (e.dataTransfer && Array.prototype.indexOf.call(e.dataTransfer.types || [], 'Files') >= 0) { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; (document.documentElement && document.documentElement.classList.add('dropping')); } }
   addEventListener('dragenter', stop); addEventListener('dragover', stop);
   addEventListener('dragleave', function (e) { if (!e.relatedTarget) document.documentElement.classList.remove('dropping'); });
+  addEventListener('dragend', function () { document.documentElement.classList.remove('dropping'); });
+  addEventListener('blur', function () { document.documentElement.classList.remove('dropping'); });
   addEventListener('drop', function (e) {
     document.documentElement.classList.remove('dropping');
     if (!e.dataTransfer || !e.dataTransfer.files || !e.dataTransfer.files.length) return;
