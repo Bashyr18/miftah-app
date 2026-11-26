@@ -133,8 +133,9 @@
     var at = 0, tool = 'pen', color = mode === 'parent' ? 'r' : 'k', size = mode === 'parent' ? 3 : 2.4, undo = [], penSeen = false;
     var tools = edit ? '<div class="ink-tools" role="toolbar">' +
       (mode === 'child' ? ['k', 'b', 'g'].map(function (c) { return '<button class="ink-c' + (c === color ? ' on' : '') + '" data-c="' + c + '" style="--c:' + COLORS[c] + '" aria-label="' + esc(L({ k: ['Black', 'أسود'], b: ['Blue', 'أزرق'], g: ['Green', 'أخضر'] }[c])) + '"><i></i></button>'; }).join('') : '<button class="ink-c on" data-c="r" style="--c:' + COLORS.r + '" aria-label="' + esc(L(['Red', 'أحمر'])) + '"><i></i></button>') +
-      '<span class="ink-sep"></span><button class="ink-t on" data-t="pen" aria-label="' + esc(L(['Write', 'اكتب'])) + '">' + A.icon('pen', 20) + '</button><button class="ink-t" data-t="erase" aria-label="' + esc(L(['Rub out', 'امسح'])) + '"><svg class="ic" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M7 21h10M5.5 14.5l7-7a2 2 0 0 1 2.8 0l3.2 3.2a2 2 0 0 1 0 2.8L13 19H8.5l-3-3a1.1 1.1 0 0 1 0-1.5z"/><path d="M9.5 10.5l6 6"/></svg></button>' +
-      '<button class="ink-t" data-t="undo" aria-label="' + esc(L(['Undo', 'تراجع'])) + '"><svg class="ic" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14L4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg></button></div>' : '';
+      '<span class="ink-sep"></span><button class="ink-t on" data-t="pen" aria-pressed="true" aria-label="' + esc(L(['Write', 'اكتب'])) + '">' + A.icon('pen', 20) + '</button><button class="ink-t" data-t="erase" aria-pressed="false" aria-label="' + esc(L(['Rub out', 'امسح'])) + '"><svg class="ic" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M7 21h10M5.5 14.5l7-7a2 2 0 0 1 2.8 0l3.2 3.2a2 2 0 0 1 0 2.8L13 19H8.5l-3-3a1.1 1.1 0 0 1 0-1.5z"/><path d="M9.5 10.5l6 6"/></svg></button>' +
+      '<button class="ink-t" data-t="pan" aria-pressed="false" aria-label="' + esc(L(['Move page', 'تحريك الصفحة'])) + '" title="' + esc(L(['Move page', 'تحريك الصفحة'])) + '"><svg class="ic" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M3 12h18M9 6l3-3 3 3M9 18l3 3 3-3M6 9l-3 3 3 3M18 9l3 3-3 3"/></svg></button>' +
+      '<button class="ink-t" data-t="undo" disabled aria-label="' + esc(L(['Undo', 'تراجع'])) + '"><svg class="ic" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14L4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg></button></div>' : '';
     host.innerHTML = '<div class="ink' + (edit ? ' edit' : '') + '"><style>' + Print.CSS.replace('@page{size:A4;margin:11mm}', '') + '</style>' +
       '<div class="ink-stage"><div class="ink-box"><div class="ink-page"></div><canvas class="ink-cv"></canvas></div></div>' +
       '<div class="ink-bar">' + tools + '<div class="ink-pg ink-zm"><button class="ink-t" data-z="1" aria-label="' + esc(L(['Page width or whole page', 'عرض الصفحة أو الصفحة كاملة'])) + '" title="' + esc(L(['Page width or whole page', 'عرض الصفحة أو الصفحة كاملة'])) + '"><svg class="ic" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5M8.5 11h5M11 8.5v5"/></svg></button></div><div class="ink-pg"><button class="ink-t" data-pg="-1" aria-label="' + esc(L(['Previous page', 'الصفحة السابقة'])) + '">' + A.icon('back', 20) + '</button><span class="ink-n"></span><button class="ink-t" data-pg="1" aria-label="' + esc(L(['Next page', 'الصفحة التالية'])) + '">' + A.icon('next', 20) + '</button></div>' + (hooks.extra || '') + '</div></div>';
@@ -154,10 +155,10 @@
     var wideFit = Ink.wide != null ? Ink.wide : (innerWidth >= 1000 && innerHeight < 1100);
     function fit() {
       page.style.transform = 'none'; PW = page.offsetWidth || 794; PH = page.offsetHeight || 1123;   /* the whole sheet of paper, margins included */
-      var aw = stage.clientWidth - 16, ah = stage.clientHeight - 16, whole = Math.max(.2, Math.min(aw / PW, ah / PH, 1.6)), wide = Math.min(Math.min(aw - 32, 1000) / PW, 1.6);
+      var aw = stage.clientWidth - 16, ah = stage.clientHeight - 16, whole = Math.max(.2, Math.min(aw / PW, ah / PH, 1.6)), wide = Math.max(Math.min(Math.min(aw - 32, 1000) / PW, 1.6), Math.min(whole * 1.65, 1.1));
       s = wideFit ? Math.max(whole, wide) : whole;
-      stage.classList.toggle('scroll', PH * s > ah + 1);
-      var zb = $('[data-z]', host); if (zb) { zb.classList.toggle('on', wideFit); zb.parentNode.hidden = wide - whole < .08; }
+      stage.classList.toggle('scroll', PH * s > ah + 1 || PW * s > aw + 1);
+      var zb = $('[data-z]', host); if (zb) { zb.classList.toggle('on', wideFit); zb.setAttribute('aria-pressed', wideFit ? 'true' : 'false'); zb.parentNode.hidden = wide - whole < .08; }
       page.style.transform = 'scale(' + s + ')'; box.style.width = PW * s + 'px'; box.style.height = PH * s + 'px'; paint();
     }
     function show(i) {
@@ -169,7 +170,15 @@
     }
     function pt(e) { var r = cv.getBoundingClientRect(); return [Math.round((e.clientX - r.left) / r.width * 1000), Math.round((e.clientY - r.top) / r.width * 1000)]; }
     if (edit) {
+      var inkRoot = $('.ink', host), undoBtn = $('[data-t=undo]', host);
+      var syncUndo = function () { if (undoBtn) undoBtn.disabled = !undo.length; };
+      var setTool = function (t) {
+        tool = t;
+        if (inkRoot) inkRoot.classList.toggle('pan', t === 'pan');
+        $$('[data-t]', host).forEach(function (x) { if (x.dataset.t !== 'undo') { var on = x.dataset.t === t; x.classList.toggle('on', on); x.setAttribute('aria-pressed', on ? 'true' : 'false'); } });
+      };
       cv.addEventListener('pointerdown', function (e) {
+        if (tool === 'pan') return;
         if (e.pointerType === 'pen') penSeen = true;
         if (penSeen && e.pointerType === 'touch') return;   /* the hand resting on the screen while a pen writes */
         e.preventDefault(); try { cv.setPointerCapture(e.pointerId); } catch (x) { }
@@ -186,20 +195,20 @@
       var end = function () {
         if (!cur) return; var c = cur; cur = null;
         if (!c.erase) { var l = layer(mine); l.push(c); undo.push({ add: c, page: at }); }
-        A.save(); paint(); if (hooks.change) hooks.change();
+        syncUndo(); A.save(); paint(); if (hooks.change) hooks.change();
       };
       cv.addEventListener('pointerup', end); cv.addEventListener('pointercancel', end);
-      var rub = function (p) { var l = layer(mine); for (var i = l.length - 1; i >= 0; i--) if (hit(l[i], p[0], p[1], 14)) { undo.push({ del: l[i], page: at, i: i }); l.splice(i, 1); } paint(); };
-      $$('[data-c]', host).forEach(function (b) { b.onclick = function () { color = b.dataset.c; tool = 'pen'; $$('[data-c]', host).forEach(function (x) { x.classList.toggle('on', x === b); }); $$('[data-t]', host).forEach(function (x) { x.classList.toggle('on', x.dataset.t === 'pen'); }); }; });
+      var rub = function (p) { var l = layer(mine); for (var i = l.length - 1; i >= 0; i--) if (hit(l[i], p[0], p[1], 14)) { undo.push({ del: l[i], page: at, i: i }); l.splice(i, 1); } syncUndo(); paint(); };
+      $$('[data-c]', host).forEach(function (b) { b.onclick = function () { color = b.dataset.c; setTool('pen'); $$('[data-c]', host).forEach(function (x) { x.classList.toggle('on', x === b); }); }; });
       $$('[data-t]', host).forEach(function (b) { b.onclick = function () {
         var t = b.dataset.t;
-        if (t === 'undo') { var u = undo.pop(); if (!u) return; var l = (sh[mine] || {})[u.page] || []; if (u.add) { var j = l.indexOf(u.add); if (j >= 0) l.splice(j, 1); } else l.splice(Math.min(u.i, l.length), 0, u.del); if (u.page !== at) show(u.page); else paint(); A.save(); return; }
-        tool = t; $$('[data-t]', host).forEach(function (x) { if (x.dataset.t !== 'undo') x.classList.toggle('on', x === b); });
+        if (t === 'undo') { var u = undo.pop(); if (!u) return; var l = (sh[mine] || {})[u.page] || []; if (u.add) { var j = l.indexOf(u.add); if (j >= 0) l.splice(j, 1); } else l.splice(Math.min(u.i, l.length), 0, u.del); syncUndo(); if (u.page !== at) show(u.page); else paint(); A.save(); return; }
+        setTool(t);
       }; });
     }
     $$('[data-pg]', host).forEach(function (b) { b.onclick = function () { show(at + +b.dataset.pg); }; });
     var zb = $('[data-z]', host); if (zb) zb.onclick = function () { wideFit = Ink.wide = !wideFit; stage.scrollTop = 0; fit(); };
-    var key = function (e) { if ((e.ctrlKey || e.metaKey) && (e.key === 'z' || e.key === 'Z') && edit) { e.preventDefault(); var u = $('[data-t=undo]', host); if (u) u.click(); } else if (e.key === 'PageDown' || (e.key === 'ArrowRight' && !edit)) show(at + 1); else if (e.key === 'PageUp' || (e.key === 'ArrowLeft' && !edit)) show(at - 1); };
+    var key = function (e) { var rtl = A.ar(); if ((e.ctrlKey || e.metaKey) && (e.key === 'z' || e.key === 'Z') && edit) { e.preventDefault(); var u = $('[data-t=undo]', host); if (u && !u.disabled) u.click(); } else if (e.key === 'PageDown' || (e.key === (rtl ? 'ArrowLeft' : 'ArrowRight') && !edit)) show(at + 1); else if (e.key === 'PageUp' || (e.key === (rtl ? 'ArrowRight' : 'ArrowLeft') && !edit)) show(at - 1); };
     var onR = function () { clearTimeout(fit._t); fit._t = setTimeout(fit, 80); };
     addEventListener('resize', onR); document.addEventListener('keydown', key);
     show(0);
@@ -259,7 +268,7 @@
     var state = open ? '' : sh.marked ? L(['Marked', 'صُحّحت']) + ' · ' + A.num(sh.right) + ' / ' + A.num(sh.q.length) : sh.done ? L(['Checked', 'تمت المراجعة']) : L(['Sent to your grown-up', 'أُرسلت إلى الكبير']);
     return {
       bare: true,
-      html: '<div class="ink-v"><header class="ink-h"><a class="ink-back" href="' + backHref + '" aria-label="' + esc(L(['Back', 'رجوع'])) + '">' + A.icon('back', 20) + '</a><div class="grow"><b>' + esc(Print.titleOf(sh)) + '</b><small>' + esc(open ? L(['Write on the page. It saves as you go.', 'اكتب على الصفحة. تُحفظ أولًا بأول.']) : state) + '</small></div>' + (open ? '<button class="btn pri sm" id="ink-fin">' + esc(L(['Finished', 'انتهيت'])) + '</button>' : '<div class="ink-h-acts"><span class="ink-st">' + esc(state) + '</span><button class="btn sec sm" id="ink-print" aria-label="' + esc(L(['Print or PDF', 'طباعة أو PDF'])) + '">' + A.icon('print', 16) + '<span>' + esc(L(['PDF', 'PDF'])) + '</span></button></div>') + '</header><div id="ink-host" class="ink-host"></div></div>',
+      html: '<div class="ink-v"><header class="ink-h"><a class="ink-back" href="' + backHref + '" aria-label="' + esc(L(['Back', 'رجوع'])) + '">' + A.icon('back', 20) + '</a><div class="grow"><b>' + esc(Print.titleOf(sh)) + '</b>' + (open ? '<small>' + esc(L(['Write on the page. It saves as you go.', 'اكتب على الصفحة. تُحفظ أولًا بأول.'])) + '</small>' : '') + '</div>' + (open ? '<button class="btn pri sm" id="ink-fin">' + esc(L(['Finished', 'انتهيت'])) + '</button>' : '<div class="ink-h-acts"><span class="ink-st">' + esc(state) + '</span><button class="btn sec sm" id="ink-print" aria-label="' + esc(L(['Print or PDF', 'طباعة أو PDF'])) + '">' + A.icon('print', 16) + '<span>' + esc(L(['PDF', 'PDF'])) + '</span></button></div>') + '</header><div id="ink-host" class="ink-host"></div></div>',
       mount: function (v) {
         stop = Ink.mount($('#ink-host', v), sh, p.id, open ? 'child' : 'view');
         var pr = $('#ink-print', v); if (pr) pr.onclick = function () { Ink.print(sh, p.id); };
@@ -268,7 +277,7 @@
           var any = Object.keys(sh.ink || {}).some(function (k) { return (sh.ink[k] || []).length; });
           A.sheet(L(['Send it to your grown-up?', 'أترسلها إلى الكبير؟']), '<p class="ink-q">' + esc(any ? L(['After this you cannot change it. They will mark it, and you will see their marks here.', 'بعدها لا يمكنك تغييرها. سيصححها وسترى تصحيحه هنا.']) : L(['There is no writing on it yet.', 'لا كتابة عليها بعد.'])) + '</p><div class="ink-q2"><button class="btn pri" id="ink-yes"' + (any ? '' : ' disabled') + '>' + esc(L(['Send it', 'أرسلها'])) + '</button><button class="btn sec" id="ink-no">' + esc(L(['Keep writing', 'أكمل الكتابة'])) + '</button></div>', function (s2) {
             $('#ink-no', s2).onclick = A.closeSheet;
-            var y = $('#ink-yes', s2); if (y) y.onclick = function () { sh.sub = A.now().getTime(); A.saveNow(); A.closeSheet(); if (window.Fx) Fx.bloomAt(f, '#f1d59e', true); A.toast(L(['Sent. Well done.', 'أُرسلت. أحسنت.'])); A.go('home'); };
+            var y = $('#ink-yes', s2); if (y) y.onclick = function () { sh.sub = A.now().getTime(); A.saveNow(); A.closeSheet(); if (window.Fx) Fx.bloomAt(f, '#f1d59e', true); A.toast(L(['Sent. Well done.', 'أُرسلت. أحسنت.'])); A.go(args[1] === 'list' ? 'sheets' : 'home'); };
           });
         };
       },

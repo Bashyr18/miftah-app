@@ -19,8 +19,8 @@
     }
     function finish() {
       var d = A.D(pid); for (var i = 0; i < lo; i++) if (!M.met(list[i].id, pid)) d.placed[list[i].id] = 1; d.path = null; A.saveNow();
-      var nx = list[lo];
-      host.innerHTML = '<div class="forge h-' + r.hue + '"><div class="forge-key">' + A.art('key', Math.min(innerWidth, innerHeight) * .4) + '</div><div class="forge-txt"><small>' + esc(L(r.name)) + '</small><h2>' + esc(nx ? T('Your door is ready') : T('You know all of this')) + '</h2><p>' + esc(nx ? L(nx.title) : T('Every door here is already open for you.')) + '</p><button class="btn pri big" id="fgo">' + esc(T('Continue')) + '</button></div></div>';
+      var nx = list[lo], none = !list.length;
+      host.innerHTML = '<div class="forge h-' + r.hue + '"><div class="forge-key">' + A.art('key', Math.min(innerWidth, innerHeight) * .4) + '</div><div class="forge-txt"><small>' + esc(L(r.name)) + '</small><h2>' + esc(none ? L(['Nothing to place here yet', 'لا شيء لتحديد مستواه هنا بعد']) : nx ? T('Your door is ready') : T('You know all of this')) + '</h2><p>' + esc(none ? L(['This subject has no placement check at this stage.', 'ليس لهذه المادة فحص مستوى في هذه المرحلة.']) : nx ? L(nx.title) : T('Every door here is already open for you.')) + '</p><button class="btn pri big" id="fgo">' + esc(T('Continue')) + '</button></div></div>';
       $('#fgo', host).onclick = function () { A.go('parent/' + pid + '/rooms'); };
     }
     return { bare: true, hue: r.hue, html: '<div id="plh"></div>', mount: function (v) { host = $('#plh', v); probe(); }, unmount: function () { Player.stop(); Voice.stop(); }, onBack: function () { Player.stop(); A.go('parent/' + pid + '/rooms'); return 'handled'; } };
@@ -36,23 +36,26 @@
   A.V.cards = function (args) {
     var pid = args[0], kind = args[1], p = A.profile(pid);
     if (!p || (kind !== 'cards-ar' && kind !== 'cards-en')) return { redirect: 'parent' };
-    var list = cardsFor(kind, pid), i = 0;
+    var list = cardsFor(kind, pid), i = 0, sayT = null;
     return {
       bare: true, hue: 'gold',
-      html: '<div class="pl h-gold"><div class="pl-top"><a class="pl-x" href="#/parent/' + esc(pid) + '/sheet/' + esc(kind) + '" aria-label="' + esc(T('Leave')) + '">' + A.icon('close', 24) + '</a><div class="pl-bar" id="cd-n" style="text-align:center;color:var(--t2)"></div><div style="width:48px"></div></div><div class="pl-body"><div class="step" id="cd"></div></div><div class="pl-foot"><button class="btn pri big" id="cd-next" style="margin-inline-start:auto"><span>' + esc(T('Next')) + '</span>' + A.icon('next', 24).replace('class="ic"', 'class="ic ic-flip"') + '</button></div></div>',
+      html: '<div class="pl h-gold"><div class="pl-top"><a class="pl-x" href="#/parent/' + esc(pid) + '/sheet/' + esc(kind) + '" aria-label="' + esc(T('Leave')) + '">' + A.icon('close', 24) + '</a><div class="pl-bar" id="cd-n" style="text-align:center;color:var(--t2)"></div><div style="width:48px"></div></div><div class="pl-body"><div class="step" id="cd"></div></div><div class="pl-foot"><button class="btn sec big" id="cd-prev" aria-label="' + esc(L(['Previous', 'السابق'])) + '">' + A.icon('back', 24).replace('class="ic"', 'class="ic ic-flip"') + '</button><button class="btn pri big" id="cd-next" style="margin-inline-start:auto"><span>' + esc(T('Next')) + '</span>' + A.icon('next', 24).replace('class="ic"', 'class="ic ic-flip"') + '</button></div></div>',
       mount: function (v) {
         function show() {
-          var c = list[i], el = $('#cd', v);
-          if (!c) { el.innerHTML = '<div class="empty">' + A.art('key', 100) + '<p>' + esc(T('Nothing here yet. These fill up as they learn.')) + '</p></div>'; $('#cd-next', v).style.display = 'none'; return; }
+          clearTimeout(sayT);
+          var c = list[i], el = $('#cd', v), prev = $('#cd-prev', v), next = $('#cd-next', v);
+          if (!c) { el.innerHTML = '<div class="empty">' + A.art('key', 100) + '<p>' + esc(T('Nothing here yet. These fill up as they learn.')) + '</p></div>'; next.style.display = 'none'; prev.style.display = 'none'; return; }
+          prev.style.display = list.length > 1 ? '' : 'none';
           $('#cd-n', v).textContent = A.num(i + 1) + ' / ' + A.num(list.length);
           el.innerHTML = '<button class="fcard" id="fc">' + (c.ar ? '<span class="fc-big ar" lang="ar">' + c.big + '</span>' : '<span class="fc-big" dir="ltr">' + esc(c.big) + '</span>') + (c.art ? A.art(c.art, 110) : '') + '<small ' + (c.ar ? 'class="ar" lang="ar"' : 'dir="ltr"') + '>' + esc(c.sub) + '</small></button>';
           var say = function () { if (c.snd) window.I.sound(c.snd); else Voice.say(c.say, { lang: c.lang, key: c.key }); };
-          $('#fc', el).onclick = function () { say(); Fx.pop(this); }; setTimeout(say, 240);
+          $('#fc', el).onclick = function () { say(); Fx.pop(this); }; sayT = setTimeout(say, 240);
         }
+        $('#cd-prev', v).onclick = function () { i = (i - 1 + Math.max(1, list.length)) % Math.max(1, list.length); Fx.tap(); show(); };
         $('#cd-next', v).onclick = function () { i = (i + 1) % Math.max(1, list.length); Fx.tap(); show(); };
         show();
       },
-      unmount: function () { Voice.stop(); }
+      unmount: function () { clearTimeout(sayT); Voice.stop(); }
     };
   };
 })();

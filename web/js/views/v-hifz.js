@@ -19,7 +19,7 @@
   function trans(s, a) { return A.ar() ? '' : '<div class="tx-p"><div class="tx-l">' + esc(T('Translation')) + '</div><div class="tx-t" dir="ltr">' + esc(Q.q[s].v[a - 1][2]) + '</div></div>'; }
   function bindWords(root, s, a) {
     $$('.w', root).forEach(function (w) {
-      var act = function () { if (w.classList.contains('hid')) { w.classList.add('peek'); return; } Voice.word(s, a, +w.dataset.w); };
+      var act = function () { if (w.classList.contains('hid') && !w.classList.contains('peek')) { w.classList.add('peek'); return; } Voice.word(s, a, +w.dataset.w); };
       w.onclick = act;
       w.onkeydown = function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); act(); } };
     });
@@ -55,7 +55,7 @@
     function next() {
       if (i >= queue.length) return finish();
       var it = queue[i], dots = $('#hf-dots');
-      dots.innerHTML = queue.length > 1 ? queue.map(function (_, j) { return '<i class="' + (j < i ? 'on' : '') + '"></i>'; }).join('') : '';
+      dots.innerHTML = queue.length > 14 ? '<span style="font-size:12px;color:var(--t3)">' + A.num(i + 1) + ' / ' + A.num(queue.length) + '</span>' : queue.length > 1 ? queue.map(function (_, j) { return '<i class="' + (j < i ? 'on' : '') + '"></i>'; }).join('') : '';
       if (it.tier === 'sabaq') learn(it, function (g) { i++; if (g > 0 && !slipped) Hifz.advance(it.a); else if (g === 0) slipped = true; next(); });
       else recall(it, function () { i++; next(); });
     }
@@ -128,15 +128,15 @@
 
   /* recording stays on the phone, so a parent can listen later */
   var recOn = false;
-  function recBtn(s, a) { return A.N.has() ? '<button class="round off" id="hf-rec" aria-label="' + esc(T('Record me')) + '">' + A.icon('mic', 28) + '</button>' : ''; }
+  function recBtn(s, a) { return A.N.has() ? '<button class="round off" id="hf-rec" aria-pressed="false" aria-label="' + esc(T('Record me')) + '">' + A.icon('mic', 28) + '</button>' : ''; }
   function stopRec() { if (recOn) { A.N.call('recStop'); recOn = false; } }
   function bindRec(s, a) {
     var b = $('#hf-rec'); if (!b) return;
     var key = Voice.recKey(A.S.cur, s, a);
     b.onclick = function () {
-      if (!recOn) { if (A.N.call('recStart', key)) { recOn = true; b.classList.add('rec'); b.classList.remove('off'); A.toast(A.L(['Recording. Recite, then tap again.', 'جارٍ التسجيل. اقرأ ثم انقر مجددًا.'])); } else A.micHelp(); }
+      if (!recOn) { if (A.N.call('recStart', key)) { recOn = true; b.classList.add('rec'); b.classList.remove('off'); b.setAttribute('aria-pressed', 'true'); b.setAttribute('aria-label', L(['Stop recording', 'إيقاف التسجيل'])); A.toast(A.L(['Recording. Recite, then tap again.', 'جارٍ التسجيل. اقرأ ثم انقر مجددًا.'])); } else A.micHelp(); }
       else {
-        stopRec(); b.classList.remove('rec'); b.classList.add('off');
+        stopRec(); b.classList.remove('rec'); b.classList.add('off'); b.setAttribute('aria-pressed', 'false'); b.setAttribute('aria-label', T('Record me'));
         var d = A.D(), verse = s + ':' + a;
         d.recs = d.recs || {}; d.recs[verse] = A.now().getTime();
         if (d.recSources) delete d.recSources[verse];
@@ -169,18 +169,23 @@
     var h = Hifz.state(), curS = order[h.i], st = A.N.has() && Voice.stats ? Voice.stats() : {};
     var list = order.map(function (s) {
       var k = Hifz.known(s), su = Q.q[s], isCur = s === curS, full = k.n >= k.of && k.of;
-      return '<a class="kitem h-emerald' + (isCur ? ' now' : '') + '" href="#/surah/' + s + '" data-qs="' + s + '"><span class="kbox" style="font-family:var(--f-ar);font-size:16px;color:var(--h)" lang="ar">' + AN(s) + '</span><span class="grow"><b>' + esc(SN(s)) + '</b><small>' + (isCur ? esc(T('Learning now')) + ' · ' : '') + A.num(k.n) + ' / ' + A.num(k.of) + '</small></span><span class="qa-slot">' + shelfTag(s, st) + '</span>' + (A.ar() ? '' : '<span lang="ar" style="font-family:var(--f-ar);font-size:20px;color:var(--t2)">' + su.ar.replace(/^سُورَةُ\s*/, '') + '</span>') + (full ? A.icon('check', 20) : '') + '</a>';
+      return '<a class="kitem h-emerald' + (isCur ? ' now' : '') + '" href="#/surah/' + s + '" data-qs="' + s + '"><span class="kbox" style="font-family:var(--f-ar);font-size:16px;color:var(--h)" lang="ar">' + AN(s) + '</span><span class="grow"><b>' + esc(SN(s)) + '</b><small>' + (isCur ? esc(T('Learning now')) + ' · ' : '') + A.num(k.n) + ' / ' + A.num(k.of) + '</small></span><span class="qa-slot">' + shelfTag(s, st) + '</span>' + (A.ar() ? '' : '<span class="kitem-ar" lang="ar">' + su.ar.replace(/^سُورَةُ\s*/, '') + '</span>') + (full ? A.icon('check', 20) : '') + '</a>';
     }).join('');
+    var teen = A.stage() >= 3;
+    var navH = teen
+      ? '<nav class="nav" aria-label="' + esc(L(['Sections', 'الأقسام'])) + '"><a href="#/home">' + A.icon('path', 21) + '<span>' + esc(L(['Today', 'اليوم'])) + '</span></a><a href="#/rooms" class="on">' + A.icon('rooms', 21) + '<span>' + esc(L(['Subjects', 'المواد'])) + '</span></a><a href="#/study">' + A.icon('book', 21) + '<span>' + esc(L(['Study', 'الدراسة'])) + '</span></a><a href="#/keys">' + A.icon('keys', 21) + '<span>' + esc(L(['Record', 'السجل'])) + '</span></a></nav>'
+      : '<nav class="nav" aria-label="' + esc(T('Sections')) + '"><a href="#/home">' + A.icon('path', 22) + '<span>' + esc(T('Today')) + '</span></a><a href="#/rooms" class="on">' + A.icon('rooms', 22) + '<span>' + esc(T('Rooms')) + '</span></a><a href="#/keys">' + A.icon('keys', 22) + '<span>' + esc(T('My keys')) + '</span></a></nav>';
     return {
       hue: 'emerald',
-      html: '<div class="ph h-emerald">' + (A.hasImg('portal-quran') ? '<span class="ph-portal">' + A.portalImg('quran', true) + '</span>' : '<svg class="girih" viewBox="0 0 100 100">' + A.girih(null, .55) + '</svg>') + '<a class="backp" href="#/rooms">' + A.icon('back', 18) + '<span>' + esc(A.stage() >= 3 ? L(['Subjects', 'المواد']) : T('Rooms')) + '</span></a><h1>' + esc(T('Qurʾān')) + '</h1><p>' + esc(T('Listen, repeat, and keep it in your heart')) + '</p></div><div class="wrap"><button class="btn pri big wide" data-a="hf-now" style="margin:16px 0 4px">' + esc(T('Today’s portion')) + '</button>' + (A.N.has() ? '<div class="qa-row">' + (curS ? '<button class="btn ghost" data-a="hf-keep" data-s="' + curS + '">' + A.icon('download', 18) + '<span>' + esc(L(['Download ' + SN(curS), 'تنزيل تلاوة ' + SN(curS)])) + '</span></button>' : '') + '<button class="btn ghost" data-a="hf-offline">' + A.icon('speak', 18) + '<span>' + esc(L(['Offline audio', 'التلاوة دون إنترنت'])) + '</span></button></div>' : '') + '<div class="unit"><div class="kl">' + list + '</div></div></div>',
+      html: '<div class="ph h-emerald">' + (A.hasImg('portal-quran') ? '<span class="ph-portal">' + A.portalImg('quran', true) + '</span>' : '<svg class="girih" viewBox="0 0 100 100">' + A.girih(null, .55) + '</svg>') + '<a class="backp" href="#/rooms">' + A.icon('back', 18) + '<span>' + esc(teen ? L(['Subjects', 'المواد']) : T('Rooms')) + '</span></a><h1>' + esc(T('Qurʾān')) + '</h1><p>' + esc(T('Listen, repeat, and keep it in your heart')) + '</p></div><div class="wrap"><button class="btn pri big wide" data-a="hf-now" style="margin:16px 0 4px">' + esc(T('Today’s portion')) + '</button>' + (A.N.has() ? '<div class="qa-row">' + (curS ? '<button class="btn ghost" data-a="hf-keep" data-s="' + curS + '">' + A.icon('download', 18) + '<span>' + esc(L(['Download ' + SN(curS), 'تنزيل تلاوة ' + SN(curS)])) + '</span></button>' : '') + '<button class="btn ghost" data-a="hf-offline">' + A.icon('speak', 18) + '<span>' + esc(L(['Offline audio', 'التلاوة دون إنترنت'])) + '</span></button></div>' : '') + '<div class="unit"><div class="kl">' + list + '</div></div></div>' + navH,
       mount: function (v) {
         if (curS && window.Voice && Voice.keep) Voice.keep(curS);
         if (A.N.has() && Voice.onKeep) {
-          unsubKeep = Voice.onKeep(function (done, total) {
+          unsubKeep = Voice.onKeep(function (done, total, bad) {
             if (!v.isConnected || done < total) return;
             var fresh = Voice.stats();
             $$('[data-qs]', v).forEach(function (a) { var slot = $('.qa-slot', a); if (slot) slot.innerHTML = shelfTag(+a.dataset.qs, fresh); });
+            if (bad > 0) A.toast(L(['Downloaded with ' + bad + ' missing', 'تعذّر تنزيل ' + A.num(bad)]));
           });
         }
       },
@@ -214,8 +219,20 @@
         var cl = $('#qa-clr', sh); if (cl) cl.hidden = !(Voice.stats().files > 0);
         if (done >= total) { var curB2 = $('#qa-cur', sh); if (curB2) curB2.disabled = false; var juzB2 = $('#qa-juz', sh); if (juzB2) juzB2.disabled = false; }
       }) : function () { };
-      var curB = $('#qa-cur', sh); if (curB) curB.onclick = function () { Voice.keep(curS, true); var p0 = $('#qa-prog', sh); if (p0) { p0.hidden = false; p0.textContent = L(['Downloading…', 'جارٍ التنزيل…']); } };
-      var juzB = $('#qa-juz', sh); if (juzB) juzB.onclick = function () { var n = Voice.keepMany(juzAmma); var p0 = $('#qa-prog', sh); if (p0) { p0.hidden = false; p0.textContent = n ? L(['Downloading…', 'جارٍ التنزيل…']) : L(['Already ready offline', 'جاهز بالفعل دون إنترنت']); } };
+      var curB = $('#qa-cur', sh), juzB = $('#qa-juz', sh);
+      function lockDl(on) { if (curB) curB.disabled = on; if (juzB) juzB.disabled = on; }
+      if (curB) curB.onclick = function () {
+        var stNow = Voice.stats(), cov = Voice.surahCoverage ? Voice.surahCoverage(curS, stNow, r) : null;
+        var p0 = $('#qa-prog', sh);
+        if (cov && (cov.state === 'bundled' || cov.state === 'saved')) { if (p0) { p0.hidden = false; p0.textContent = L(['Already ready offline', 'جاهز بالفعل دون إنترنت']); } return; }
+        lockDl(true); Voice.keep(curS, true); if (p0) { p0.hidden = false; p0.textContent = L(['Downloading…', 'جارٍ التنزيل…']); }
+      };
+      if (juzB) juzB.onclick = function () {
+        var stNow = Voice.stats(), todo = juzAmma.filter(function (s) { var k = Voice.surahState(s, stNow, r); return k !== 'bundled' && k !== 'saved'; });
+        var p0 = $('#qa-prog', sh);
+        if (!todo.length) { if (p0) { p0.hidden = false; p0.textContent = L(['Already ready offline', 'جاهز بالفعل دون إنترنت']); } return; }
+        lockDl(true); var n = Voice.keepMany(todo); if (p0) { p0.hidden = false; p0.textContent = n ? L(['Downloading…', 'جارٍ التنزيل…']) : L(['Already ready offline', 'جاهز بالفعل دون إنترنت']); } if (!n) lockDl(false);
+      };
       var clrB = $('#qa-clr', sh); if (clrB) clrB.onclick = function () { if (clrB.dataset.arm !== '1') { clrB.dataset.arm = '1'; clrB.textContent = L(['Tap again to clear', 'انقر مجددًا للمسح']); return; } unsub(); Voice.clearAudio(); A.closeSheet(); A.toast(L(['Cleared', 'تم المسح'])); A.rerender(); };
     });
   };
@@ -231,7 +248,7 @@
     function stText() { return A.N.has() && Voice.surahCoverage ? coverageLabel(Voice.surahCoverage(s, Voice.stats())) : ''; }
     return {
       hue: 'emerald',
-      html: '<div class="ph h-emerald"><a class="backp" href="#/room/quran">' + A.icon('back', 18) + '<span>' + esc(T('Qurʾān')) + '</span></a><h1>' + esc(SN(s)) + '</h1>' + (A.ar() ? '' : '<p lang="ar" style="font-family:var(--f-ar);font-size:24px">' + su.ar + '</p>') + (A.N.has() ? '<p class="qa-surah-st" id="qa-surah-st" role="status" aria-live="polite">' + esc(stText()) + '</p>' : '') + '</div><div class="wrap">' + (s !== 1 && s !== 9 ? '<div class="bsm" style="margin:12px 0">' + Q.bsm + '</div>' : '') + rows + '<div style="height:90px"></div></div><div class="nav"><button class="btn sm sec" id="s-rec">' + esc(A.S.reciter === 'h' ? T('Teaching pace') : T('Flowing')) + '</button>' + (A.N.has() ? '<button class="btn sm ghost" data-a="hf-keep" data-s="' + s + '">' + A.icon('download', 16) + '<span>' + esc(L(['Download', 'تنزيل التلاوة'])) + '</span></button>' : '') + '<button class="round" id="s-play" style="width:50px;height:50px" aria-label="' + esc(T('Listen')) + '">' + A.icon('play', 24) + '</button></div>',
+      html: '<div class="ph h-emerald"><a class="backp" href="#/room/quran">' + A.icon('back', 18) + '<span>' + esc(T('Qurʾān')) + '</span></a><h1>' + esc(SN(s)) + '</h1>' + (A.ar() ? '' : '<p lang="ar" style="font-family:var(--f-ar);font-size:24px">' + su.ar + '</p>') + (A.N.has() ? '<p class="qa-surah-st" id="qa-surah-st" role="status" aria-live="polite">' + esc(stText()) + '</p>' : '') + '</div><div class="wrap">' + (s !== 1 && s !== 9 ? '<div class="bsm" style="margin:12px 0">' + Q.bsm + '</div>' : '') + rows + '<div style="height:90px"></div></div><div class="surah-bar"><button class="btn sm sec" id="s-rec">' + esc(A.S.reciter === 'h' ? T('Teaching pace') : T('Flowing')) + '</button><button class="round" id="s-play" style="width:48px;height:48px" aria-label="' + esc(T('Listen')) + '">' + A.icon('play', 24) + '</button>' + (A.N.has() ? '<button class="btn sm ghost" data-a="hf-keep" data-s="' + s + '">' + A.icon('download', 16) + '<span>' + esc(L(['Download', 'تنزيل'])) + '</span></button>' : '<span style="width:48px"></span>') + '</div>',
       mount: function (v) {
         $$('.tx-v', v).forEach(function (row) { bindWords(row, s, +row.dataset.a2); });
         var pb = $('#s-play', v), stEl = $('#qa-surah-st', v);
@@ -244,12 +261,13 @@
           });
         }
         function mark(i) { $$('.tx-v .quran .w', v).forEach(function (w) { w.classList.remove('on'); }); var r = $$('.tx-v', v)[i]; if (r) { $$('.w', r).forEach(function (w) { w.classList.add('on'); }); r.scrollIntoView({ behavior: 'smooth', block: 'center' }); } }
+        function setPlayUi(on) { pb.innerHTML = A.icon(on ? 'pause' : 'play', 24); pb.setAttribute('aria-label', on ? L(['Pause', 'إيقاف مؤقت']) : T('Listen')); }
         function go() {
-          if (cur >= su.v.length) { playing = false; cur = 0; pb.innerHTML = A.icon('play', 24); mark(-1); return; }
+          if (cur >= su.v.length) { playing = false; cur = 0; setPlayUi(false); mark(-1); return; }
           mark(cur);
-          Voice.ayah(s, su.v[cur][0]).then(function (ok) { if (!playing) return; if (ok) { cur++; go(); } else { playing = false; pb.innerHTML = A.icon('play', 24); } });
+          Voice.ayah(s, su.v[cur][0]).then(function (ok) { if (!playing) return; if (ok) { cur++; go(); } else { playing = false; setPlayUi(false); } });
         }
-        pb.onclick = function () { playing = !playing; pb.innerHTML = A.icon(playing ? 'pause' : 'play', 24); if (playing) go(); else Voice.stop(); };
+        pb.onclick = function () { playing = !playing; setPlayUi(playing); if (playing) go(); else Voice.stop(); };
         $('#s-rec', v).onclick = function () { A.S.reciter = A.S.reciter === 'h' ? 'a' : 'h'; A.save(); this.textContent = A.S.reciter === 'h' ? T('Teaching pace') : T('Flowing'); refreshSt(); if (playing) { Voice.stop(); playing = true; go(); } };
       },
       unmount: function () { playing = false; Voice.stop(); if (unsubKeep) { unsubKeep(); unsubKeep = null; } }

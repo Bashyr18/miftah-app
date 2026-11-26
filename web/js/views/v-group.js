@@ -93,15 +93,15 @@
   function pickChild(title, done) {
     var kids = A.S.profiles; if (kids.length === 1) { done(kids[0].id); return; }
     A.sheet(title, '<div class="lst">' + kids.map(function (p) { return '<button class="li" data-pid="' + p.id + '"><span class="grow"><b>' + esc(p.name) + '</b><small>' + esc(who(p, false)) + '</small></span>' + A.icon('next', 16) + '</button>'; }).join('') + '</div>', function (sh) {
-      $$('[data-pid]', sh).forEach(function (b) { b.onclick = function () { A.closeSheet(); setTimeout(function () { done(b.dataset.pid); }, 220); }; });
+      $$('[data-pid]', sh).forEach(function (b) { b.onclick = function () { done(b.dataset.pid); }; });
     });
   }
   G.weekly = function () {
     pickChild(L(['Whose week?', 'أسبوع من؟']), function (pid) {
       var showName = !!A.S.cardNames;
-      A.sheet(L(['Weekly card', 'بطاقة الأسبوع']), '<div class="grp-opt"><button class="li" id="grp-name"><span class="grow"><b>' + esc(L(['Show their first name', 'أظهر الاسم الأول'])) + '</b><small>' + esc(L(['Off: the card says only their year.', 'عند الإيقاف لا تذكر البطاقة إلا السنة الدراسية.'])) + '</small></span><span class="switch' + (showName ? ' on' : '') + '"></span></button><button class="btn pri wide" id="grp-make">' + esc(L(['Make the card', 'اصنع البطاقة'])) + '</button></div>', function (sh) {
-        $('#grp-name', sh).onclick = function () { showName = !showName; A.S.cardNames = showName; A.saveNow(); $('.switch', sh).classList.toggle('on', showName); };
-        $('#grp-make', sh).onclick = function () { A.closeSheet(); fontsReady().then(function () { setTimeout(function () { preview(G.weekCanvas(pid, showName), L(['Weekly card', 'بطاقة الأسبوع']), L(['Our week of learning, made with Miftāḥ.', 'أسبوع تعلّمنا، مع مفتاح.']), 'Miftah-week.png'); }, 220); }); };
+      A.sheet(L(['Weekly card', 'بطاقة الأسبوع']), '<div class="grp-opt"><button class="li" id="grp-name" role="switch" aria-checked="' + (showName ? 'true' : 'false') + '"><span class="grow"><b>' + esc(L(['Show their first name', 'أظهر الاسم الأول'])) + '</b><small>' + esc(L(['Off: the card says only their year.', 'عند الإيقاف لا تذكر البطاقة إلا السنة الدراسية.'])) + '</small></span><span class="switch' + (showName ? ' on' : '') + '"></span></button><button class="btn pri wide" id="grp-make">' + esc(L(['Make the card', 'اصنع البطاقة'])) + '</button></div>', function (sh) {
+        $('#grp-name', sh).onclick = function () { showName = !showName; A.S.cardNames = showName; A.saveNow(); this.setAttribute('aria-checked', showName ? 'true' : 'false'); $('.switch', sh).classList.toggle('on', showName); };
+        $('#grp-make', sh).onclick = function () { fontsReady().then(function () { preview(G.weekCanvas(pid, showName), L(['Weekly card', 'بطاقة الأسبوع']), L(['Our week of learning, made with Miftāḥ.', 'أسبوع تعلّمنا، مع مفتاح.']), 'Miftah-week.png'); }); };
       });
     });
   };
@@ -125,8 +125,8 @@
     var room = 'math', y = Math.max(1, Math.min.apply(null, A.S.profiles.map(function (p) { return Flow.yearOf(p) || 1; }).concat([5])));
     function paint(sh) {
       var ys = years(room); if (ys.indexOf(y) < 0) y = ys[0];
-      $('#grp-rooms', sh).innerHTML = C.order.filter(function (r) { return r !== 'quran' && years(r).length; }).map(function (r) { return '<button class="chip2' + (r === room ? ' on' : '') + '" data-r="' + r + '">' + esc(L(C.rooms[r].name)) + '</button>'; }).join('');
-      $('#grp-years', sh).innerHTML = ys.map(function (v) { return '<button class="chip2' + (v === y ? ' on' : '') + '" data-y="' + v + '">' + esc(L(C.yearName(v))) + '</button>'; }).join('');
+      $('#grp-rooms', sh).innerHTML = C.order.filter(function (r) { return r !== 'quran' && years(r).length; }).map(function (r) { return '<button class="chip2' + (r === room ? ' on' : '') + '" aria-pressed="' + (r === room ? 'true' : 'false') + '" data-r="' + r + '">' + esc(L(C.rooms[r].name)) + '</button>'; }).join('');
+      $('#grp-years', sh).innerHTML = ys.map(function (v) { return '<button class="chip2' + (v === y ? ' on' : '') + '" aria-pressed="' + (v === y ? 'true' : 'false') + '" data-y="' + v + '">' + esc(L(C.yearName(v))) + '</button>'; }).join('');
       $$('[data-r]', sh).forEach(function (b) { b.onclick = function () { room = b.dataset.r; paint(sh); }; });
       $$('[data-y]', sh).forEach(function (b) { b.onclick = function () { y = +b.dataset.y; paint(sh); }; });
     }
@@ -137,7 +137,7 @@
         G.keep(ch); A.closeSheet();
         var json = JSON.stringify(ch), cap = L(['A Miftāḥ challenge: ', 'تحدٍّ في مفتاح: ']) + L(C.rooms[room].name) + ' · ' + L(C.yearName(y)) + L(['. Open the file with Miftāḥ.', '. افتح الملف بتطبيق مفتاح.']);
         if (A.N.has()) A.N.call('shareChallenge', json, cap);
-        else { var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([json], { type: 'application/json' })); a.download = 'Miftah-challenge.json'; a.click(); }
+        else { var u = URL.createObjectURL(new Blob([json], { type: 'application/json' })), a = document.createElement('a'); a.href = u; a.download = 'Miftah-challenge.json'; a.click(); setTimeout(function () { URL.revokeObjectURL(u); }, 60000); A.toast(L(['Challenge file ready', 'ملف التحدي جاهز'])); }
       };
     });
   };
@@ -187,10 +187,12 @@
       var done = A.S.profiles.filter(function (p) { return ch.res && Object.prototype.hasOwnProperty.call(ch.res, p.id); }).map(function (p) { var r = ch.res[p.id]; return esc(p.name) + ' ' + (r.incomplete ? esc(L(['Attempt ended early', 'انتهت المحاولة مبكرًا'])) : N(r.ok) + '/' + N(r.n)); }).join(' · ');
       return '<button class="li" data-seed="' + esc(ch.seed) + '"><span class="grow"><b>' + esc(L(C.rooms[ch.room].name)) + ' · ' + esc(L(C.yearName(ch.y))) + '</b><small>' + (done || esc(L(['Not taken yet', 'لم يُؤخذ بعد']))) + '</small></span>' + A.icon('next', 16) + '</button>';
     }).join('');
-    A.sheet(L(['Your homeschool group', 'مجموعتك المنزلية']), '<div class="grp"><p>' + esc(L(['Share with a WhatsApp or Telegram group you already belong to. No account, and nothing leaves this phone unless you send it.', 'شارك مع مجموعة واتساب أو تيليجرام تنتمي إليها. بلا حساب، ولا يخرج شيء من هذا الهاتف إلا ما ترسله أنت.'])) + '</p><div class="grp-b"><button class="tl-b" id="grp-week">' + A.icon('star', 24) + '<span>' + esc(L(['Weekly card', 'بطاقة الأسبوع'])) + '</span></button><button class="tl-b" id="grp-ch">' + A.icon('target', 24) + '<span>' + esc(L(['Send a challenge', 'أرسل تحديًا'])) + '</span></button></div>' + (rows ? '<h4>' + esc(L(['Challenges', 'التحديات'])) + '</h4><div class="lst">' + rows + '</div>' : '<small class="grp-hint">' + esc(L(['When someone sends a challenge, tap the file in the chat and open it with Miftāḥ.', 'حين يرسل أحدهم تحديًا، انقر الملف في المحادثة وافتحه بتطبيق مفتاح.'])) + '</small>') + '</div>', function (sh) {
-      $('#grp-week', sh).onclick = function () { A.closeSheet(); setTimeout(G.weekly, 220); };
-      $('#grp-ch', sh).onclick = function () { A.closeSheet(); setTimeout(G.make, 220); };
-      $$('[data-seed]', sh).forEach(function (b) { b.onclick = function () { var ch = list.filter(function (x) { return String(x.seed) === b.dataset.seed; })[0]; A.closeSheet(); setTimeout(function () { G.arrived(ch); }, 220); }; });
+    A.sheet(L(['Your homeschool group', 'مجموعتك المنزلية']), '<div class="grp"><p>' + esc(window.MIFTAH_DESKTOP
+      ? L(['Share with a WhatsApp or Telegram group you already belong to. No account, and nothing leaves this computer unless you send it.', 'شارك مع مجموعة واتساب أو تيليجرام تنتمي إليها. بلا حساب، ولا يخرج شيء من هذا الحاسوب إلا ما ترسله أنت.'])
+      : L(['Share with a WhatsApp or Telegram group you already belong to. No account, and nothing leaves this phone unless you send it.', 'شارك مع مجموعة واتساب أو تيليجرام تنتمي إليها. بلا حساب، ولا يخرج شيء من هذا الهاتف إلا ما ترسله أنت.'])) + '</p><div class="grp-b"><button class="tl-b" id="grp-week">' + A.icon('star', 24) + '<span>' + esc(L(['Weekly card', 'بطاقة الأسبوع'])) + '</span></button><button class="tl-b" id="grp-ch">' + A.icon('target', 24) + '<span>' + esc(L(['Send a challenge', 'أرسل تحديًا'])) + '</span></button></div>' + (rows ? '<h4>' + esc(L(['Challenges', 'التحديات'])) + '</h4><div class="lst">' + rows + '</div>' : '<small class="grp-hint">' + esc(L(['When someone sends a challenge, tap the file in the chat and open it with Miftāḥ.', 'حين يرسل أحدهم تحديًا، انقر الملف في المحادثة وافتحه بتطبيق مفتاح.'])) + '</small>') + '</div>', function (sh) {
+      $('#grp-week', sh).onclick = function () { G.weekly(); };
+      $('#grp-ch', sh).onclick = function () { G.make(); };
+      $$('[data-seed]', sh).forEach(function (b) { b.onclick = function () { var ch = list.filter(function (x) { return String(x.seed) === b.dataset.seed; })[0]; G.arrived(ch); }; });
     });
   };
   A.acts['grp-open'] = function () { G.open(); };

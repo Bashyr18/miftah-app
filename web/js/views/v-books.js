@@ -319,7 +319,7 @@
   }
   function importSheet() {
     var rooms = B.ROOMS().map(function (r) { return '<option value="' + r + '">' + esc(L(C.rooms[r].name)) + '</option>'; }).join('');
-    A.sheet(L(['Import a course', 'استيراد مقرر']), '<div class="ed"><button class="btn sec wide" id="bk-file-b">' + A.icon('download', 18) + '<span>' + esc(L(['Choose a course file (.json or .txt)', 'اختر ملف مقرر (json أو txt)'])) + '</span></button><input type="file" id="bk-file" accept=".json,.txt,.md,.csv,application/json,text/plain" hidden><input class="input" id="bk-imp-n" dir="auto" placeholder="' + esc(L(['Course name (optional if in file)', 'اسم المقرر (اختياري إن كان في الملف)'])) + '"><label class="bk-y"><span>' + esc(L(['Subject', 'المادة'])) + '</span><select class="input" id="bk-imp-r"><option value="">' + esc(L(['From file', 'من الملف'])) + '</option>' + rooms + '</select></label><label for="bk-imp-t" class="bk-help">' + esc(L(['Paste a shared course or lessons below', 'الصق مقررًا مُشارَكًا أو دروسًا أدناه'])) + '</label><textarea class="input bk-ta big" id="bk-imp-t" dir="auto" spellcheck="false" placeholder="' + esc(A.ar() ? '# 1 الدرس الأول\nبَيْتٌ = a house' : '# 1 Lesson 1\nterm = meaning') + '"></textarea><button class="btn pri wide" id="bk-imp-go">' + esc(L(['Import course', 'استيراد المقرر'])) + '</button></div>', function (sh) {
+    A.sheet(L(['Import a course', 'استيراد مقرر']), '<div class="ed"><button class="btn sec wide" id="bk-file-b">' + A.icon('download', 18) + '<span>' + esc(L(['Choose a course file (.json or .txt)', 'اختر ملف مقرر (json أو txt)'])) + '</span></button><input type="file" id="bk-file" accept=".json,.txt,.md,.csv,application/json,text/plain" hidden><input class="tin" id="bk-imp-n" dir="auto" aria-label="' + esc(L(['Course name', 'اسم المقرر'])) + '" placeholder="' + esc(L(['Course name (optional if in file)', 'اسم المقرر (اختياري إن كان في الملف)'])) + '"><label class="bk-y"><span>' + esc(L(['Subject', 'المادة'])) + '</span><select class="tin" id="bk-imp-r" aria-label="' + esc(L(['Subject', 'المادة'])) + '"><option value="">' + esc(L(['From file', 'من الملف'])) + '</option>' + rooms + '</select></label><label for="bk-imp-t" class="bk-help">' + esc(L(['Paste a shared course or lessons below', 'الصق مقررًا مُشارَكًا أو دروسًا أدناه'])) + '</label><textarea class="tin bk-ta big" id="bk-imp-t" dir="auto" spellcheck="false" placeholder="' + esc(A.ar() ? '# 1 الدرس الأول\nبَيْتٌ = a house' : '# 1 Lesson 1\nterm = meaning') + '"></textarea><button class="btn pri wide" id="bk-imp-go">' + esc(L(['Import course', 'استيراد المقرر'])) + '</button></div>', function (sh) {
       var fi = $('#bk-file', sh), ta = $('#bk-imp-t', sh);
       $('#bk-file-b', sh).onclick = function () { fi.click(); };
       fi.onchange = function () {
@@ -339,23 +339,28 @@
     var bk = books().filter(function (b) { return b.id === id; })[0]; if (!bk) return { redirect: 'parent/books' };
     var kind = kindOf(bk.kind), c = cover(bk), room = roomOf(bk), R = C.rooms[room], ar = room === 'arabic', uw = ar ? kind.unit : ['Lesson', 'الدرس'];
     var grid = bk.lessons.map(function (ls, i) { return '<button class="bk-cell' + (filled(ls) ? ' on' : '') + '" data-ls="' + i + '" aria-label="' + esc(L(uw) + ' ' + ls.n) + '"><b>' + A.num(ls.n) + '</b>' + (filled(ls) ? '<small>' + A.num(count(ls)) + '</small>' : '') + '</button>'; }).join('');
-    var kids = A.S.profiles.map(function (p) { var on = follows(p)[room] === bk.id; return '<button class="li" data-follow="' + esc(p.id) + '"><span class="grow"><b>' + esc(p.name) + '</b><small>' + esc(on ? L(['Their ', '']) + L(R.name) + L([' comes from this course', ' من هذا المقرر']) : L(['Not following it', 'لا يتّبعه'])) + '</small></span><span class="switch' + (on ? ' on' : '') + '"></span></button>'; }).join('');
+    var kids = A.S.profiles.map(function (p) { var on = follows(p)[room] === bk.id; return '<button class="li" role="switch" aria-checked="' + (on ? 'true' : 'false') + '" data-follow="' + esc(p.id) + '"><span class="grow"><b>' + esc(p.name) + '</b><small>' + esc(on ? L(['Their ', '']) + L(R.name) + L([' comes from this course', ' من هذا المقرر']) : L(['Not following it', 'لا يتّبعه'])) + '</small></span><span class="switch' + (on ? ' on' : '') + '"></span></button>'; }).join('');
     var y = bk.y != null ? +bk.y : 3, years = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13];
-    var yearSel = '<label class="bk-y"><span>' + esc(L(['Level', 'المستوى'])) + '</span><select class="input" id="bk-y">' + years.map(function (n) { return '<option value="' + n + '"' + (n === y ? ' selected' : '') + '>' + esc(L(C.yearName(n))) + '</option>'; }).join('') + '</select></label>';
+    var yearSel = '<label class="bk-y"><span>' + esc(L(['Level', 'المستوى'])) + '</span><select class="tin" id="bk-y" aria-label="' + esc(L(['Level', 'المستوى'])) + '">' + years.map(function (n) { return '<option value="' + n + '"' + (n === y ? ' selected' : '') + '>' + esc(L(C.yearName(n))) + '</option>'; }).join('') + '</select></label>';
     return {
-      html: bar('parent/books', L(R.name)) + '<div class="dwrap"><div class="card"><div class="bk-name"><input class="input" id="bk-name" dir="auto" value="' + esc(bk.name) + '" aria-label="' + esc(L(['Name', 'الاسم'])) + '">' + (ar ? '' : yearSel) + '</div><p class="bk-sum">' + A.num(c.f) + ' / ' + A.num(c.n) + ' ' + esc(L(['ready', 'جاهز'])) + (c.f < c.n ? ' · ' + esc(L(['dashed squares are still empty', 'المربعات المتقطّعة ما زالت فارغة'])) : '') + '</p><div class="bk-grid">' + grid + '</div>' +
+      html: bar('parent/books', L(R.name)) + '<div class="dwrap"><div class="card"><div class="bk-name"><input class="tin" id="bk-name" dir="auto" value="' + esc(bk.name) + '" aria-label="' + esc(L(['Name', 'الاسم'])) + '">' + (ar ? '' : yearSel) + '</div><p class="bk-sum">' + A.num(c.f) + ' / ' + A.num(c.n) + ' ' + esc(L(['ready', 'جاهز'])) + (c.f < c.n ? ' · ' + esc(L(['dashed squares are still empty', 'المربعات المتقطّعة ما زالت فارغة'])) : '') + '</p><div class="bk-grid">' + grid + '</div>' +
         '<div class="bk-acts"><button class="btn ghost sm" id="bk-add">' + esc(L(['Add a lesson', 'أضف درسًا'])) + '</button><button class="btn ghost sm" id="bk-paste">' + esc(L(['Paste a whole course', 'الصق مقررًا كاملًا'])) + '</button><button class="btn ghost sm" id="bk-copy">' + esc(L(['Copy to share', 'انسخه للمشاركة'])) + '</button><button class="btn ghost sm" id="bk-exp">' + esc(L(['Export file', 'تصدير ملف'])) + '</button></div></div>' +
-        '<div class="card"><h3>' + esc(L(['Who follows it', 'من يتّبعه'])) + '</h3><div class="lst">' + kids + '</div></div>' +
+        '<div class="card"><h3>' + esc(L(['Who follows it', 'من يتّبعه'])) + '</h3>' + (kids ? '<div class="lst">' + kids + '</div>' : '<p class="bk-help">' + esc(L(['Add a learner first to assign this course.', 'أضف متعلمًا أولًا ليتّبع هذا المقرر.'])) + '</p>') + '</div>' +
         '<button class="btn ghost sm bk-del" id="bk-del">' + esc(L(['Remove this course', 'احذف هذا المقرر'])) + '</button></div>',
       mount: function (v) {
         $$('[data-ls]', v).forEach(function (b) { b.onclick = function () { edit(bk, +b.dataset.ls); }; });
         $$('[data-follow]', v).forEach(function (b) { b.onclick = function () { var p = A.profile(b.dataset.follow), f = follows(p); f[room] = f[room] === bk.id ? null : bk.id; if (!f[room]) delete f[room]; A.D(p.id).path = null; A.saveNow();
-          var on = f[room] === bk.id, sw = $('.switch', b), sm = $('small', b); if (sw) sw.classList.toggle('on', on); if (sm) sm.textContent = on ? L(['Their ', '']) + L(R.name) + L([' comes from this course', ' من هذا المقرر']) : L(['Not following it', 'لا يتّبعه']); }; });
+          var on = f[room] === bk.id, sw = $('.switch', b), sm = $('small', b); b.setAttribute('aria-checked', on ? 'true' : 'false'); if (sw) sw.classList.toggle('on', on); if (sm) sm.textContent = on ? L(['Their ', '']) + L(R.name) + L([' comes from this course', ' من هذا المقرر']) : L(['Not following it', 'لا يتّبعه']); }; });
         var nm = $('#bk-name', v); nm.onchange = function () { var t = nm.value.trim(); if (t) { bk.name = t; bk.at = Date.now(); B.register(); A.saveNow(); } };
         var ys = $('#bk-y', v); if (ys) ys.onchange = function () { bk.y = +ys.value; bk.at = Date.now(); B.register(); A.saveNow(); A.toast(L(['Saved', 'حُفظ'])); };
         $('#bk-add', v).onclick = function () { bk.lessons.push(blank(nextLessonNum(bk))); A.saveNow(); A.rerender(); };
         $('#bk-paste', v).onclick = function () { paste(bk); };
-        $('#bk-copy', v).onclick = function () { var t = B.exportText(bk); if (!t) { A.toast(L(['Fill a lesson first', 'املأ درسًا أولًا'])); return; } try { navigator.clipboard.writeText(t).then(function () { A.toast(L(['Copied. Paste it for a friend, or on another device.', 'نُسخ. الصقه لصديق أو في جهاز آخر.'])); }); } catch (e) { } };
+        $('#bk-copy', v).onclick = function () {
+          var t = B.exportText(bk); if (!t) { A.toast(L(['Fill a lesson first', 'املأ درسًا أولًا'])); return; }
+          var fail = function () { A.toast(L(['Could not copy. Use Export file instead.', 'تعذّر النسخ. استعمل تصدير ملف بدلًا من ذلك.'])); };
+          if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(function () { A.toast(L(['Copied. Paste it for a friend, or on another device.', 'نُسخ. الصقه لصديق أو في جهاز آخر.'])); }).catch(fail);
+          else fail();
+        };
         $('#bk-exp', v).onclick = function () {
           var t = B.exportText(bk); if (!t) { A.toast(L(['Fill a lesson first', 'املأ درسًا أولًا'])); return; }
           var slug = String(bk.name || 'course').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'course';
@@ -363,7 +368,16 @@
           if (A.N.has()) A.N.call('exportFile', fname, t);
           else { var u = URL.createObjectURL(new Blob([t], { type: 'application/json;charset=utf-8' })), a = document.createElement('a'); a.href = u; a.download = fname; a.click(); setTimeout(function () { URL.revokeObjectURL(u); }, 60000); A.toast(L(['Course file ready', 'ملف المقرر جاهز'])); }
         };
-        var del = $('#bk-del', v); del.onclick = function () { if (del.dataset.arm !== '1') { del.dataset.arm = '1'; del.textContent = L(['Tap again to remove it', 'انقر مرة أخرى للحذف']); return; } A.S.books = books().filter(function (b) { return b !== bk; }); A.S.profiles.forEach(function (p) { var f = follows(p); if (f[room] === bk.id) delete f[room]; }); B.register(); A.saveNow(); A.go('parent/books'); };
+        var del = $('#bk-del', v), delT = null, delLabel = del.textContent;
+        del.onclick = function () {
+          if (del.dataset.arm !== '1') {
+            del.dataset.arm = '1'; del.classList.add('armed'); del.textContent = L(['Tap again to remove it', 'انقر مرة أخرى للحذف']);
+            clearTimeout(delT); delT = setTimeout(function () { del.dataset.arm = ''; del.classList.remove('armed'); del.textContent = delLabel; }, 3500);
+            return;
+          }
+          clearTimeout(delT);
+          A.S.books = books().filter(function (b) { return b !== bk; }); A.S.profiles.forEach(function (p) { var f = follows(p); if (f[room] === bk.id) delete f[room]; }); B.register(); A.saveNow(); A.go('parent/books');
+        };
       }
     };
   }
@@ -379,13 +393,13 @@
   function edit(bk, i) {
     var ls = bk.lessons[i], kind = kindOf(bk.kind), ar = roomOf(bk) === 'arabic';
     var cur = B.text([ls]).split('\n').slice(1).join('\n');
-    A.sheet(L(ar ? kind.unit : ['Lesson', 'الدرس']) + ' ' + A.num(ls.n), help(ar) + '<input class="input" id="bk-t" dir="auto" placeholder="' + esc(L(['Title (optional)', 'العنوان (اختياري)'])) + '" value="' + esc(ls.title || '') + '"><textarea class="input bk-ta" dir="auto" spellcheck="false" placeholder="' + esc(ar ? EX_AR : EX) + '">' + esc(cur) + '</textarea><button class="btn pri wide" id="bk-save">' + esc(L(['Save', 'احفظ'])) + '</button>', function (sh) {
+    A.sheet(L(ar ? kind.unit : ['Lesson', 'الدرس']) + ' ' + A.num(ls.n), help(ar) + '<input class="tin" id="bk-t" dir="auto" aria-label="' + esc(L(['Title', 'العنوان'])) + '" placeholder="' + esc(L(['Title (optional)', 'العنوان (اختياري)'])) + '" value="' + esc(ls.title || '') + '"><textarea class="tin bk-ta" dir="auto" spellcheck="false" aria-label="' + esc(L(['Lesson items', 'محتوى الدرس'])) + '" placeholder="' + esc(ar ? EX_AR : EX) + '">' + esc(cur) + '</textarea><button class="btn pri wide" id="bk-save">' + esc(L(['Save', 'احفظ'])) + '</button>', function (sh) {
       $('#bk-save', sh).onclick = function () { var got = B.parse('# ' + ls.n + '\n' + $('.bk-ta', sh).value)[0] || {}; ls.words = got.words || []; ls.grammar = got.grammar || []; ls.sents = got.sents || []; ls.qs = got.qs || []; ls.title = $('#bk-t', sh).value.trim(); bk.at = Date.now(); B.register(); A.saveNow(); A.closeSheet(); A.rerender(); };
     });
   }
   function paste(bk) {
     var ar = roomOf(bk) === 'arabic';
-    A.sheet(L(['Paste a whole course', 'الصق مقررًا كاملًا']), '<p class="bk-help">' + esc(L(['Each lesson starts with # and its number. Only the lessons in what you paste are changed.', 'كل درس يبدأ بـ # ورقمه. لا يتغيّر إلا ما في النص من دروس.'])) + '</p>' + help(ar) + '<textarea class="input bk-ta big" dir="auto" spellcheck="false" placeholder="' + esc('# 1 …\n' + (ar ? EX_AR : EX) + '\n\n# 2 …') + '"></textarea><button class="btn pri wide" id="bk-in">' + esc(L(['Bring it in', 'أدخله'])) + '</button>', function (sh) {
+    A.sheet(L(['Paste a whole course', 'الصق مقررًا كاملًا']), '<p class="bk-help">' + esc(L(['Each lesson starts with # and its number. Only the lessons in what you paste are changed.', 'كل درس يبدأ بـ # ورقمه. لا يتغيّر إلا ما في النص من دروس.'])) + '</p>' + help(ar) + '<textarea class="tin bk-ta big" dir="auto" spellcheck="false" aria-label="' + esc(L(['Course text', 'نص المقرر'])) + '" placeholder="' + esc('# 1 …\n' + (ar ? EX_AR : EX) + '\n\n# 2 …') + '"></textarea><button class="btn pri wide" id="bk-in">' + esc(L(['Bring it in', 'أدخله'])) + '</button>', function (sh) {
       $('#bk-in', sh).onclick = function () {
         var raw = $('.bk-ta', sh).value;
         if (raw.length > MAX_COURSE_BYTES) { A.toast(L(['That text is too large (max 2 MB)', 'هذا النص كبير جدًا (الحد ٢ ميغابايت)'])); return; }

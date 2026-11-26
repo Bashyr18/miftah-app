@@ -12,7 +12,19 @@
   function words(t) { return (t || '').trim().split(/\s+/).filter(Boolean).length; }
   function forgedIn(room) { var d = A.D(), out = []; C.rooms[room].units.forEach(function (u) { u.skills.forEach(function (s) { if (d.keys[s.id] && d.keys[s.id].forged && s.review) out.push(s); }); }); return out; }
   function flashDue() { var c = A.D().cards || [], t = A.now().getTime(); return c.filter(function (x) { return (x.next || 0) <= t; }); }
-  function twoTap(b, fn) { b.onclick = function () { if (b.dataset.arm !== '1') { b.dataset.arm = '1'; b.classList.add('armed'); setTimeout(function () { b.dataset.arm = ''; b.classList.remove('armed'); }, 2600); return; } fn(); }; }
+  function twoTap(b, fn) {
+    var orig = b.querySelector('span') ? b.querySelector('span').textContent : null, timer = 0;
+    b.onclick = function () {
+      if (b.dataset.arm !== '1') {
+        b.dataset.arm = '1'; b.classList.add('armed');
+        if (orig) b.querySelector('span').textContent = L(['Tap again', 'انقر مجددًا']);
+        clearTimeout(timer);
+        timer = setTimeout(function () { b.dataset.arm = ''; b.classList.remove('armed'); if (orig && b.querySelector('span')) b.querySelector('span').textContent = orig; }, 3500);
+        return;
+      }
+      clearTimeout(timer); fn();
+    };
+  }
 
   /* ---------- plain words from twelve up ---------- */
   var info0 = A.stopInfo;
@@ -24,11 +36,12 @@
     if (st.t === 'move') return Object.assign({}, r, { title: ['Step away', 'استراحة'], sub: ['A minute off the screen', 'دقيقة بعيدًا عن الشاشة'] });
     return r;
   };
-  /* ---------- today: parents move to the header ---------- */
+  /* ---------- today: parents and profile switcher move to the header ---------- */
   var home0 = A.V.home;
   A.V.home = function (a, r) {
     var v = home0(a, r); if (!teen() || !v || !v.html) return v;
-    v.html = v.html.replace(/<a class="btn ghost" style="margin-top:14px" href="#\/parent">[\s\S]*?<\/a>/, '').replace('</div></header>', '</div>' + A.dn() + '<a class="abtn" href="#/parent" aria-label="' + esc(L(['Parents', 'الوالدان'])) + '">' + A.icon('gear', 20) + '</a></header>');
+    var p = A.P(), whoBtn = A.S.profiles.length > 1 ? '<a class="abtn" href="#/who" aria-label="' + esc(L(['Change learner', 'تغيير المتعلم'])) + '" title="' + esc(L(['Change learner', 'تغيير المتعلم'])) + '"><span class="dv h-' + (p.hue || 'gold') + '" style="width:28px;height:28px;font-size:13px">' + esc(p.name.charAt(0).toUpperCase()) + '</span></a>' : '';
+    v.html = v.html.replace(/<a class="btn ghost" style="margin-top:14px" href="#\/parent">[\s\S]*?<\/a>/, '').replace('</div></header>', '</div>' + A.dn() + whoBtn + '<a class="abtn" href="#/parent" aria-label="' + esc(L(['Parents', 'الوالدان'])) + '">' + A.icon('gear', 20) + '</a></header>');
     return v;
   };
   /* ---------- study hub ---------- */
@@ -40,15 +53,19 @@
       var last = (d.papers || []).filter(function (x) { return x.r === r; }).slice(-1)[0];
       return '<a class="pap h-' + C.rooms[r].hue + '" href="#/paper/' + r + '"><b>' + esc(L(C.rooms[r].name)) + '</b><span>' + (last ? N(last.p) + '%' : N(20) + L([' min', ' د'])) + '</span></a>';
     }).join('');
-    var ex = exams.map(function (e, i) { var left = daysTo(e.date); return '<div class="row2"><span class="grow"><b>' + esc(e.title) + '</b><small>' + esc(fmtDay(e.date)) + '</small></span>' + (left >= 0 ? '<span class="cnt' + (left <= 14 ? ' hot' : '') + '">' + N(left) + L(['d', 'ي']) + '</span>' : '') + '<button class="ibtn" data-a="t-exam-del" data-i="' + i + '" aria-label="' + esc(L(['Remove', 'حذف'])) + '">' + A.icon('close', 16) + '</button></div>'; }).join('');
+    var ex = exams.map(function (e, i) { var left = daysTo(e.date); return '<div class="row2"><span class="grow"><b>' + esc(e.title) + '</b><small>' + esc(fmtDay(e.date)) + '</small></span>' + (left >= 0 ? '<span class="cnt' + (left <= 14 ? ' hot' : '') + '">' + N(left) + L(['d', 'ي']) + '</span>' : '') + '<button class="ibtn" data-ex-del="' + i + '" aria-label="' + esc(L(['Remove', 'حذف'])) + '">' + A.icon('close', 16) + '</button></div>'; }).join('');
     var bk = books.map(function (b, i) { var pc = b.of ? Math.min(100, Math.round((b.at || 0) / b.of * 100)) : 0; return '<button class="row2" data-a="b-edit" data-i="' + i + '"><span class="grow"><b>' + esc(b.title) + '</b><span class="tbar"><i style="width:' + pc + '%"></i></span></span><span class="cnt">' + N(b.at || 0) + '/' + N(b.of || 0) + '</span></button>'; }).join('');
-    var card = function (t, add, body) { return '<div class="card"><div class="chd"><h3>' + esc(L(t)) + '</h3>' + (add ? '<button class="ibtn on" data-a="' + add + '" aria-label="' + esc(L(['Add', 'إضافة'])) + '">' + PLUS + '</button>' : '') + '</div>' + body + '</div>'; };
+    var card = function (t, add, body, empty) { return '<div class="card"><div class="chd"><h3>' + esc(L(t)) + '</h3>' + (add ? '<button class="ibtn on" data-a="' + add + '" aria-label="' + esc(L(['Add', 'إضافة'])) + '">' + PLUS + '</button>' : '') + '</div>' + (body || (empty ? '<p style="color:var(--t3);font-size:13px;margin-top:6px">' + esc(L(empty)) + '</p>' : '')) + '</div>'; };
     return {
-      html: head(L(['Study', 'الدراسة'])) + '<div class="tw sw"><div class="st3s">' + tile('flash', 'keys', ['Cards', 'البطاقات'], flashDue().length, true) + tile('write', 'pen', ['Essays', 'المقالات'], (d.work || []).length) + tile('lab', 'sparkle', ['Lab', 'المختبر']) + '</div>' +
+      html: head(L(['Study', 'الدراسة']), '', A.stage() >= 3 ? null : ['home', ['Today', 'اليوم']]) + '<div class="tw sw"><div class="st3s">' + tile('flash', 'keys', ['Cards', 'البطاقات'], flashDue().length, true) + tile('write', 'pen', ['Essays', 'المقالات'], (d.work || []).length) + tile('lab', 'sparkle', ['Lab', 'المختبر']) + '</div>' +
         (papers ? '<div class="tsec">' + esc(L(['Timed papers', 'اختبارات موقوتة'])) + '</div><div class="paps">' + papers + '</div>' : '') +
-        card(['This week', 'هذا الأسبوع'], null, '<input class="tin" id="t-goal" maxlength="80" value="' + esc(wk.goal || '') + '" placeholder="' + esc(L(['One goal', 'هدف واحد'])) + '"><textarea class="tin" id="t-rev" rows="2" placeholder="' + esc(L(['Sunday review', 'مراجعة الأحد'])) + '">' + esc(wk.review || '') + '</textarea>') +
-        card(['Exams', 'الاختبارات'], 'x-add', ex) + card(['Books', 'الكتب'], 'b-add', bk) + '</div>' + (A.stage() >= 3 ? nav('study') : ''),
-      mount: function (v) { var save = function () { var dd = A.D(); dd.weekly = { goal: $('#t-goal', v).value.trim(), review: $('#t-rev', v).value.trim(), t: A.now().getTime() }; A.save(); }; $('#t-goal', v).oninput = save; $('#t-rev', v).oninput = save; }
+        card(['This week', 'هذا الأسبوع'], null, '<input class="tin" id="t-goal" maxlength="80" aria-label="' + esc(L(['One goal', 'هدف واحد'])) + '" value="' + esc(wk.goal || '') + '" placeholder="' + esc(L(['One goal', 'هدف واحد'])) + '"><textarea class="tin" id="t-rev" rows="2" aria-label="' + esc(L(['Weekly review', 'مراجعة الأسبوع'])) + '" placeholder="' + esc(L(['Weekly review', 'مراجعة الأسبوع'])) + '">' + esc(wk.review || '') + '</textarea>') +
+        card(['Exams', 'الاختبارات'], 'x-add', ex, ['Add upcoming exams so review steps up in time.', 'أضف الاختبارات القادمة لتتكثف المراجعة قبل موعدها.']) + card(['Books', 'الكتب'], 'b-add', bk, ['Track real books you are reading off screen.', 'تابع الكتب الحقيقية التي تقرؤها بعيدًا عن الشاشة.']) + '</div>' + (A.stage() >= 3 ? nav('study') : ''),
+      mount: function (v) {
+        var save = function () { var dd = A.D(); dd.weekly = { goal: $('#t-goal', v).value.trim(), review: $('#t-rev', v).value.trim(), t: A.now().getTime() }; A.save(); };
+        $('#t-goal', v).oninput = save; $('#t-rev', v).oninput = save;
+        $$('[data-ex-del]', v).forEach(function (b) { twoTap(b, function () { var p0 = A.P(), s0 = (p0.exams || []).slice().sort(function (x, y) { return x.date < y.date ? -1 : 1; }), ex0 = s0[+b.dataset.exDel]; p0.exams = (p0.exams || []).filter(function (x) { return x !== ex0; }); A.saveNow(); A.rerender(); }); });
+      }
     };
   };
   A.acts['x-add'] = function () {
@@ -63,7 +80,7 @@
   };
   A.acts['b-edit'] = function (t) {
     var i = +t.dataset.i, b = A.D().books[i]; if (!b) return;
-    A.sheet(b.title, '<div class="ed"><div class="stepr"><button class="ibtn big" id="b-m">−</button><input class="tin" id="b-at" type="number" inputmode="numeric" value="' + (b.at || 0) + '" aria-label="' + esc(L(['Page', 'الصفحة'])) + '"><button class="ibtn big" id="b-u">+</button></div><div class="trow"><button class="btn pri" id="b-s">' + esc(L(['Save', 'حفظ'])) + '</button><button class="btn sec" id="b-x">' + A.icon('trash', 18) + '<span>' + esc(L(['Delete', 'حذف'])) + '</span></button></div></div>', function (sh) {
+    A.sheet(b.title, '<div class="ed"><div class="stepr"><button class="ibtn big" id="b-m" aria-label="' + esc(L(['Back 10 pages', 'رجوع ١٠ صفحات'])) + '">−</button><input class="tin" id="b-at" type="number" inputmode="numeric" value="' + (b.at || 0) + '" aria-label="' + esc(L(['Page', 'الصفحة'])) + '"><button class="ibtn big" id="b-u" aria-label="' + esc(L(['Forward 10 pages', 'تقدم ١٠ صفحات'])) + '">+</button></div><div class="trow"><button class="btn pri" id="b-s">' + esc(L(['Save', 'حفظ'])) + '</button><button class="btn sec" id="b-x">' + A.icon('trash', 18) + '<span>' + esc(L(['Delete', 'حذف'])) + '</span></button></div></div>', function (sh) {
       var inp = $('#b-at', sh), bump = function (n) { inp.value = Math.max(0, Math.min(b.of || 1e6, (+inp.value || 0) + n)); };
       $('#b-m', sh).onclick = function () { bump(-10); }; $('#b-u', sh).onclick = function () { bump(10); };
       $('#b-s', sh).onclick = function () { b.at = Math.max(0, Math.min(b.of || 1e6, +inp.value || 0)); A.saveNow(); A.closeSheet(); A.rerender(); };
@@ -181,11 +198,12 @@
     return {
       html: head(L(['Cards', 'البطاقات']), '', ['study', ['Study', 'الدراسة']]) + '<div class="tw sw"><div class="fl-k"><span><b>' + N(due.length) + '</b>' + esc(L(['due', 'مستحقة'])) + '</span><span><b>' + N(cards.length) + '</b>' + esc(L(['in all', 'الكل'])) + '</span><button class="ibtn on" data-a="c-add" aria-label="' + esc(L(['New card', 'بطاقة جديدة'])) + '">' + PLUS + '</button></div>' +
         '<div class="fl-acts"><button class="btn ghost sm" data-a="c-imp">' + A.icon('download', 16) + '<span>' + esc(L(['Import deck', 'استيراد بطاقات'])) + '</span></button>' + (cards.length ? '<button class="btn ghost sm" data-a="c-exp">' + esc(L(['Export deck', 'تصدير البطاقات'])) + '</button>' : '') + '</div>' +
-        (c ? '<button class="tflash" data-a="t-flip" id="t-card"><small>' + esc(c.deck || '') + '</small><span>' + esc(c.f) + '</span></button><div class="grades" id="t-grade" hidden><button data-a="t-grade" data-g="0"><b>' + esc(L(['Again', 'أعد'])) + '</b><small>' + gapTxt(gp[0]) + '</small></button><button data-a="t-grade" data-g="1"><b>' + esc(L(['Hard', 'صعبة'])) + '</b><small>' + gapTxt(gp[1]) + '</small></button><button class="on" data-a="t-grade" data-g="2"><b>' + esc(L(['Knew it', 'عرفتها'])) + '</b><small>' + gapTxt(gp[2]) + '</small></button></div>' : (cards.length ? '<div class="tflash idle"><span>' + A.icon('check', 28) + '</span></div>' : '<button class="mempty" data-a="c-add"><span>' + PLUS + '</span><b>' + esc(L(['New card', 'بطاقة جديدة'])) + '</b></button>')) +
+        (c ? '<button class="tflash" data-a="t-flip" id="t-card"><small>' + esc(c.deck || '') + '</small><span>' + esc(c.f) + '</span><small style="opacity:.7">' + esc(L(['Tap to reveal', 'انقر لإظهار الجواب'])) + '</small></button><div class="grades" id="t-grade" hidden><button data-a="t-grade" data-g="0"><b>' + esc(L(['Again', 'أعد'])) + '</b><small>' + gapTxt(gp[0]) + '</small></button><button data-a="t-grade" data-g="1"><b>' + esc(L(['Hard', 'صعبة'])) + '</b><small>' + gapTxt(gp[1]) + '</small></button><button class="on" data-a="t-grade" data-g="2"><b>' + esc(L(['Knew it', 'عرفتها'])) + '</b><small>' + gapTxt(gp[2]) + '</small></button></div>' : (cards.length ? '<div class="tflash idle"><span>' + A.icon('check', 28) + '</span><small style="color:var(--t2)">' + esc(L(['All caught up for now.', 'أنجزت كل البطاقات المستحقة الآن.'])) + '</small><button class="btn sec sm" data-a="c-early">' + esc(L(['Review early', 'راجع مبكرًا'])) + '</button></div>' : '<button class="mempty" data-a="c-add"><span>' + PLUS + '</span><b>' + esc(L(['New card', 'بطاقة جديدة'])) + '</b></button>')) +
         (list ? '<div class="card" style="margin-top:12px">' + list + '</div>' : '') + '</div>',
       mount: function (v) { $$('[data-del]', v).forEach(function (b) { twoTap(b, function () { A.D().cards.splice(+b.dataset.del, 1); A.saveNow(); A.rerender(); }); }); }
     };
   };
+  A.acts['c-early'] = function () { (A.D().cards || []).forEach(function (c) { c.next = 0; }); A.saveNow(); A.rerender(); };
   A.acts['c-add'] = function () {
     A.sheet(L(['New card', 'بطاقة جديدة']), '<div class="ed"><textarea class="tin" id="t-f" rows="2" placeholder="' + esc(L(['Question', 'سؤال'])) + '"></textarea><textarea class="tin" id="t-b" rows="2" placeholder="' + esc(L(['Answer', 'جواب'])) + '"></textarea><input class="tin" id="t-dk" placeholder="' + esc(L(['Subject', 'المادة'])) + '"><button class="btn pri wide" id="c-go">' + esc(L(['Add', 'إضافة'])) + '</button></div>', function (sh) {
       var f = $('#t-f', sh), b = $('#t-b', sh); setTimeout(function () { f.focus(); }, 220);
