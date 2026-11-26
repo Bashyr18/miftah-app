@@ -48,7 +48,7 @@ body[data-view=parent] .pk{min-height:44px;padding:8px 12px;border-radius:var(--
 .fc-n b{display:block;font-size:17px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .fc-n small{color:var(--t2);font-size:13px}
 .dv{display:grid;place-items:center;flex:none;border-radius:50%;background:color-mix(in srgb,var(--h2) 26%,var(--s2));color:var(--t1);font-weight:700;font-size:18px}
-.fc-k{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--sp2);margin-top:var(--sp4);padding-top:var(--sp3);border-top:1px solid var(--line)}
+.fc-k{display:grid;grid-template-columns:repeat(auto-fit,minmax(0,1fr));gap:var(--sp2);margin-top:var(--sp4);padding-top:var(--sp3);border-top:1px solid var(--line)}
 .fc-k b{display:block;font-size:15px;line-height:1.2;white-space:nowrap}
 .fc-k small{display:block;color:var(--t3);font-size:12px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .fc-add{display:flex;align-items:center;justify-content:center;gap:var(--sp2);min-height:64px;border-style:dashed;background:transparent;color:var(--t2);font-weight:600}
@@ -121,8 +121,10 @@ body[data-view=parent] .pk{min-height:44px;padding:8px 12px;border-radius:var(--
   .li:has(>.li-acts){flex-wrap:wrap;row-gap:var(--sp2)}
   .li:has(>.li-acts)>.grow{flex-basis:calc(100% - 40px)}
   .li>.li-acts{width:100%}
-  .li:has(>svg)>.li-acts{padding-inline-start:32px}
+  .li:has(>svg)>.li-acts{padding-inline-start:0}
 }
+.rm-card-h{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:var(--sp2)}.rm-card-h h3{margin:0}
+.strand-h{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}.strand-r{display:inline-flex;align-items:center;gap:6px;flex:none}
 /* a printed sheet's state in the Print list: gold while it still waits for a grown-up */
 .sh-st{flex:none;font-size:12px;font-weight:700;padding:4px 12px;border-radius:99px;background:var(--s3);color:var(--t2);white-space:nowrap}
 .sh-st.on{background:var(--gold-soft);color:var(--t1)}
@@ -173,7 +175,7 @@ body[data-view=parent] .linkb.kn:active{background:var(--gold-soft);color:var(--
 .bk-acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
 .bk-del{display:block;margin:6px auto 0;color:var(--t3)}
 .bk-help{color:var(--t2);font-size:13.5px;line-height:1.5;margin-bottom:10px}
-.bk-ta{width:100%;min-height:200px;margin:10px 0 12px;font-size:16px;line-height:1.7;resize:vertical}.bk-ta.big{min-height:320px}
+.bk-ta{width:100%;min-height:180px;margin:10px 0 12px;font-size:15.5px;line-height:1.65;resize:vertical}.bk-ta.big{min-height:min(240px,36dvh)}
 
 /* the grown-up's card at the top of Family: who they are, then Settings and Updates, always in plain sight */
 .gp{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:stretch;margin-bottom:var(--sp3)}
@@ -186,13 +188,13 @@ body[data-view=parent] .linkb.kn:active{background:var(--gold-soft);color:var(--
 .gp-b>svg{color:var(--gold2)}.gp-b.new{border-color:color-mix(in srgb,var(--gold2) 55%,transparent);background:color-mix(in srgb,var(--gold2) 12%,var(--s1))}
 .gp-dot{position:absolute;top:8px;inset-inline-end:10px;width:9px;height:9px;border-radius:50%;background:var(--gold2);box-shadow:0 0 0 2px var(--s1)}
 @media (max-width:620px){.gp{grid-template-columns:1fr;gap:8px}.gp-acts .gp-b{flex:1;display:flex;justify-content:center;gap:8px;min-height:50px;font-size:14px}.gp-dot{top:50%;margin-top:-4.5px}}
-.tl-h{margin:var(--sp4,22px) 2px 8px;font-size:12.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--t3)}
+.tl-h{margin:var(--sp4,22px) 0 8px;font-size:12.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--t3)}
 .tl-h+.tl-grid{margin-top:0}
 .me-card{display:grid;gap:14px;justify-items:start}.me-card .fld,.me-card .btn{width:100%}
 .fld{display:grid;gap:6px}.fld>span{font-size:13px;font-weight:700;color:var(--t2)}
 
 /* courses in any subject */
-.bk-intro{color:var(--t2);font-size:14.5px;line-height:1.55;margin:2px 2px var(--sp3)}
+.bk-intro{color:var(--t2);font-size:14.5px;line-height:1.55;margin:2px 0 var(--sp3)}
 .bk-row .bk-ic{flex:none;width:44px;height:44px;display:grid;place-items:center;border-radius:12px;background:color-mix(in srgb,var(--h2,var(--gold2)) 16%,var(--s2))}
 .bk-subjs{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:8px}
 .bk-subj{display:grid;justify-items:center;gap:6px;padding:12px 6px;border-radius:var(--r3);background:color-mix(in srgb,var(--h2,var(--gold2)) 10%,var(--s1));border:1px solid color-mix(in srgb,var(--h2,var(--gold2)) 26%,transparent);color:var(--t1);font-size:13px;font-weight:700;text-align:center}

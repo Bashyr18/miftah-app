@@ -78,11 +78,11 @@ body[data-age="0"] .hf-tier,body[data-age="1"] .hf-tier{font-size:16px;font-weig
 .grp-b{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
 .grp h4{font-size:13px;color:var(--t2);margin:6px 0 4px}
 .grp-hint{display:block;color:var(--t3);font-size:13px;line-height:1.45}
-.grp-prev{display:grid;gap:12px}.grp-prev img{width:100%;max-width:360px;margin:0 auto;border-radius:16px;box-shadow:0 12px 30px -16px rgba(0,0,0,.6)}
+.grp-prev{display:grid;gap:12px}.grp-prev img{width:auto;max-width:min(360px,100%);max-height:44dvh;margin:0 auto;border-radius:16px;box-shadow:0 12px 30px -16px rgba(0,0,0,.6)}
 .grp-prev p{text-align:center;color:var(--t2);font-size:13.5px;margin:0}
 .grp-mk small,.grp-in small{display:block;font-weight:700;font-size:13px;color:var(--t2);margin:10px 0 6px}
 .grp-mk .chips{display:flex;flex-wrap:wrap;gap:6px}.grp-mk p{margin-top:12px}
-.grp-in b{display:block;font-size:19px;margin-bottom:6px}
+.grp-in>b{display:block;font-size:19px;margin-bottom:6px}
 .grp-opt{display:grid;gap:12px}
 
 /* the day and night switch: a slim pill, the knob slides to the sun or the moon; a faint ring when it follows the sun by itself */
@@ -102,7 +102,8 @@ body[data-age="0"] .hf-tier,body[data-age="1"] .hf-tier{font-size:16px;font-weig
 .dn.glass svg{width:18px;height:18px}
 .abar .dn{align-self:center}.th .dn{margin-top:1px}
 [data-motion=off] .dn i,[data-motion=off] .dn i span{transition:none}
-.topbtns~.hello,.hello{max-width:calc(100% - 230px)}
+.topbtns~.hello,.hello{max-width:calc(100% - 204px)}
+.hello .hello-d.dates>span{white-space:normal}
 
 /* the welcome: the carved door, and one clear way in */
 .wel-door{position:relative;height:min(38vh,320px);aspect-ratio:2/3;margin:6px auto 4px;cursor:pointer;filter:drop-shadow(0 24px 40px rgba(0,0,0,.55))}
@@ -303,11 +304,12 @@ body[data-age="0"] .opt.wrong,body[data-age="1"] .opt.wrong{animation:none!impor
 body[data-age="0"] .opt.right,body[data-age="1"] .opt.right{box-shadow:0 0 0 4px color-mix(in srgb,var(--ok,#2e9d6e) 30%,transparent)}
 /* the Next button is the one big thing at the end of a step */
 body[data-age="0"] .pl-next,body[data-age="1"] .pl-next{min-height:64px;padding-inline:30px;font-size:19px;border-radius:999px}
-/* grown-up tabs: each as wide as its name, so all five names show in full on a phone */
+/* grown-up tabs: compact flex on narrow phones, full inline row on wider screens */
 body[data-view=parent] .tabs{display:flex!important;justify-content:space-between;gap:2px}
 body[data-view=parent] .tabs .tab{flex:0 1 auto;padding:0 9px}
 body[data-view=parent] .tabs .tab-more{flex:0 0 auto}
 body[data-view=parent] .tab-more .tab-l{overflow:visible;text-overflow:clip}
+@media (min-width:760px){body[data-view=parent] .tabs{justify-content:flex-start;flex-wrap:wrap;gap:4px}body[data-view=parent] .tabs .tab{padding:0 12px}}
 /* a printable's actions: one line each, the main one across the full width */
 .pp-acts{display:flex;flex-wrap:wrap;gap:8px}
 .pp-acts .btn{flex:1 1 auto;white-space:nowrap}
@@ -390,3 +392,18 @@ body[data-view=parent] .linkb.kn{min-height:36px}
 .qa-note{color:var(--t3);font-size:12.5px;line-height:1.45}
 .qa-surah-st{font-size:13px;opacity:.85;margin-top:4px}
 .fl-acts{display:flex;flex-wrap:wrap;gap:8px;margin:-4px 0 10px}
+
+/* dedicated floating audio bar for the sūrah reader: always visible on phone, tablet and Windows desktop */
+.surah-bar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(14px + var(--sab));z-index:30;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 10px;width:min(calc(100% - 24px),440px);border-radius:999px;background:color-mix(in srgb,var(--s1) 97%,transparent);border:1px solid var(--line2);box-shadow:var(--shadow)}
+.surah-bar .btn.sm{padding:0 12px;font-size:13px;min-height:40px;white-space:nowrap}
+.surah-bar .round{flex:none}
+html.is-desk body.has-rail .surah-bar{left:calc(50% + var(--rail) / 2)}
+html[dir=rtl].is-desk body.has-rail .surah-bar{left:calc(50% - var(--rail) / 2)}
+@media (max-width:860px){html.is-desk body.has-rail .surah-bar{left:50%}}
+/* compact Qurʾān shelf rows on narrow phones */
+.kitem-ar{font-family:var(--f-ar);font-size:19px;color:var(--t2);flex:none}
+@media (max-width:420px){.kitem[data-qs]{gap:9px;padding:10px}.kitem[data-qs] .kbox{width:40px;height:40px}.kitem-ar{font-size:17px}}
+/* RTL directional icon flips across all remaining views */
+[dir=rtl] .ink-back svg,[dir=rtl] .ink-pg [data-pg] svg,[dir=rtl] .simback svg,[dir=rtl] #hf-next svg,[dir=rtl] .ink-hc>svg:last-child,[dir=rtl] .ink-all>svg:last-child,[dir=rtl] .bk-row>svg:last-child,[dir=rtl] .act>svg:last-child,[dir=rtl] .li>svg:last-child{transform:scaleX(-1)}
+/* pan/scroll mode on zoomed on-screen sheets */
+.ink.pan .ink-cv{touch-action:pan-x pan-y;cursor:grab}

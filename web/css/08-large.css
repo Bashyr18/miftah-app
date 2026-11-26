@@ -22,21 +22,21 @@ html.f-medium:not(.is-desk) .card > .lst > *,html.f-expanded:not(.is-desk) .card
 /* ---------- expanded: a tablet, a foldable's inner screen on its side ---------- */
 @media (min-width:840px){
   /* the learner's sections: a rail at the side instead of a bar along the bottom */
-  html:not(.is-desk) .view > .nav{left:auto;right:auto;inset-inline-start:calc(14px + env(safe-area-inset-left,0px));top:50%;bottom:auto;transform:translateY(-50%);grid-auto-flow:row;grid-auto-rows:auto;grid-auto-columns:auto;width:92px;padding:8px;gap:6px;border-radius:28px}
+  html:not(.is-desk) .view > .nav{left:auto;right:auto;inset-inline-start:calc(14px + var(--sal,env(safe-area-inset-left,0px)));top:50%;bottom:auto;transform:translateY(-50%);grid-auto-flow:row;grid-auto-rows:auto;grid-auto-columns:auto;width:92px;padding:8px;gap:6px;border-radius:28px}
   html:not(.is-desk) .view > .nav::before{display:none}
   html:not(.is-desk) .view > .nav a{flex-direction:column;height:auto;min-height:68px;padding:10px 4px 8px;gap:5px;font-size:12.5px;border-radius:20px;white-space:normal;text-align:center;line-height:1.15}
   html:not(.is-desk) .view > .nav a .ic{width:24px;height:24px}
   /* room for the rail: the content moves over, the sky and page headers still run edge to edge under the status bar */
-  html:not(.is-desk) body:has(.view > .nav) .view > :not(.nav):not(.sky):not(.ph):not(.th){margin-inline-start:118px}
-  html:not(.is-desk) body:has(.view > .nav) .view > .sky .hello,html:not(.is-desk) body:has(.view > .nav) .view > .ph > *{margin-inline-start:118px}
-  html:not(.is-desk) body:has(.view > .nav) .view > .th{padding-inline-start:118px}
+  html:not(.is-desk) body:has(.view > .nav) .view > :not(.nav):not(.sky):not(.ph):not(.th){margin-inline-start:calc(118px + var(--sal,0px))}
+  html:not(.is-desk) body:has(.view > .nav) .view > .sky .hello,html:not(.is-desk) body:has(.view > .nav) .view > .ph > *{margin-inline-start:calc(118px + var(--sal,0px))}
+  html:not(.is-desk) body:has(.view > .nav) .view > .th{padding-inline-start:calc(118px + var(--sal,0px))}
   html:not(.is-desk) body:has(.view > .nav) .view{padding-bottom:24px}
   /* today: the path and the next door side by side, centred, not stretched */
   html:not(.is-desk) .pathbox{max-width:1180px;margin-inline:auto;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:clamp(24px,3vw,44px)}
   html:not(.is-desk) .sky{height:clamp(220px,34vh,320px)}
   /* my keys: the numbers across the top, the lamps beside the keys */
   html:not(.is-desk) body[data-view=keys] .wrap{max-width:1180px;margin-inline:auto;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);gap:20px;align-items:start}
-  html:not(.is-desk) body[data-view=keys] .wrap > .kstats,html:not(.is-desk) body[data-view=keys] .wrap > .empty,html:not(.is-desk) body[data-view=keys] .wrap > .sec-h{grid-column:1/-1}
+  html:not(.is-desk) body[data-view=keys] .wrap > .kstats,html:not(.is-desk) body[data-view=keys] .wrap > .empty,html:not(.is-desk) body[data-view=keys] .wrap > .sec-h,html:not(.is-desk) body[data-view=keys] .wrap > .cert-card{grid-column:1/-1}
   html:not(.is-desk) body[data-view=keys] .wrap > .unit{grid-column:2}
   html:not(.is-desk) body[data-view=keys] .wrap > :has(.lamp-rows){grid-column:1;grid-row:2 / span 20;position:sticky;top:16px}
   /* grown-up pages: wider, the dashboard's two columns become three where it has them */
@@ -60,13 +60,14 @@ html.f-medium:not(.is-desk) .card > .lst > *,html.f-expanded:not(.is-desk) .card
 }
 
 /* ---------- a foldable half open like a book: never put anything across the hinge ---------- */
-html.fold-book:not(.is-desk) .pl{display:grid!important;grid-template-columns:calc(var(--hinge-a) - 20px) calc(var(--hinge-b) - var(--hinge-a) + 40px) minmax(0,1fr)!important;grid-template-rows:auto minmax(0,1fr) auto auto!important;column-gap:0!important}
+html.fold-book:not(.is-desk) body:has(.view > .nav) .view > :not(.nav):not(.sky):not(.ph):not(.th){margin-inline-start:0}
+html.fold-book:not(.is-desk) .pl{display:grid!important;direction:ltr;grid-template-columns:calc(var(--hinge-a) - 20px) calc(var(--hinge-b) - var(--hinge-a) + 40px) minmax(0,1fr)!important;grid-template-rows:auto minmax(0,1fr) auto auto!important;column-gap:0!important}
 html.fold-book:not(.is-desk) .pl-top{grid-column:1/-1}
-html.fold-book:not(.is-desk) .pl-head{grid-column:1;grid-row:2;align-self:center;padding-inline:20px}
-html.fold-book:not(.is-desk) .pl-msg{grid-column:1;grid-row:3;padding-inline:20px}
-html.fold-book:not(.is-desk) .pl-body{grid-column:3;grid-row:2 / span 2;align-self:center;padding-inline:16px calc(24px + env(safe-area-inset-right,0px))}
+html.fold-book:not(.is-desk) .pl-head{grid-column:1;grid-row:2;align-self:center;padding-inline:calc(20px + var(--sal,0px)) 20px}
+html.fold-book:not(.is-desk) .pl-msg{grid-column:1;grid-row:3;padding-inline:calc(20px + var(--sal,0px)) 20px}
+html.fold-book:not(.is-desk) .pl-body{grid-column:3;grid-row:2 / span 2;align-self:center;padding-inline:16px calc(24px + var(--sar,env(safe-area-inset-right,0px)))}
 html.fold-book:not(.is-desk) .pl-foot{grid-column:3;grid-row:4;max-width:none}
-html.fold-book:not(.is-desk) .pathbox{display:grid;grid-template-columns:calc(var(--hinge-a) - 40px) calc(var(--hinge-b) - var(--hinge-a) + 40px) minmax(0,1fr);gap:0;max-width:none;padding-inline:20px}
+html.fold-book:not(.is-desk) .pathbox{display:grid;direction:ltr;grid-template-columns:calc(var(--hinge-a) - 40px) calc(var(--hinge-b) - var(--hinge-a) + 40px) minmax(0,1fr);gap:0;max-width:none;padding-inline:20px}
 html.fold-book:not(.is-desk) .pathbox > .home-a{grid-column:1}
 html.fold-book:not(.is-desk) .pathbox > .home-b{grid-column:3}
 /* any page of cards: two columns, one on each side of the hinge */
@@ -74,10 +75,10 @@ html.fold-book:not(.is-desk) .wrap{columns:2;column-gap:calc(var(--hinge-b) - va
 html.fold-book:not(.is-desk) .wrap > *{break-inside:avoid}
 
 /* ---------- a foldable half open like a laptop: the question stands up, the work lies on the table ---------- */
-html.fold-table:not(.is-desk) .pl{display:grid!important;grid-template-rows:auto calc(var(--hinge-a) - 64px) calc(var(--hinge-b) - var(--hinge-a) + 12px) minmax(0,1fr) auto!important;grid-template-columns:minmax(0,1fr)!important;height:100dvh}
+html.fold-table:not(.is-desk) .pl{display:grid!important;grid-template-rows:auto minmax(0,calc(var(--hinge-a) - var(--sat,0px) - 56px)) calc(var(--hinge-b) - var(--hinge-a) + 12px) minmax(0,1fr) auto!important;grid-template-columns:minmax(0,1fr)!important;height:100dvh}
 html.fold-table:not(.is-desk) .pl-top{grid-row:1}
-html.fold-table:not(.is-desk) .pl-head{grid-row:2;align-self:center}
-html.fold-table:not(.is-desk) .pl-msg{grid-row:2;align-self:end}
+html.fold-table:not(.is-desk) .pl-head{grid-row:2;align-self:center;overflow:auto}
+html.fold-table:not(.is-desk) .pl-msg{grid-row:4;align-self:start}
 html.fold-table:not(.is-desk) .pl-body{grid-row:4;overflow:auto;align-self:start}
 html.fold-table:not(.is-desk) .pl-foot{grid-row:5}
 /* a video or a recitation on the upper half, its controls below */

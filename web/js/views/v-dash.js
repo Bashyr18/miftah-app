@@ -116,9 +116,8 @@
       esc(L(paused ? ['On school break', 'في عطلة دراسية'] : ['School break', 'عطلة دراسية'])) + '</button>';
     var breakDates = range && range.end >= A.day() ? '<small>' +
       esc(breakLabel(range.start) + ' – ' + breakLabel(range.end)) + '</small>' : '';
-    var day = '<div class="fday"><div class="fday-h"><b class="dates">' + Voice.dateLine() + '</b>' +
-      (paused ? '' : '<button class="chip2' + (allOff ? ' on' : '') + '" data-a="fam-off">' + esc(L(['Day off', 'يوم راحة'])) + '</button>') +
-      '</div><div class="fday-r">' + breakButton + breakDates + '</div>' +
+    var day = '<div class="fday"><div class="fday-h"><b class="dates">' + Voice.dateLine() + '</b></div>' +
+      '<div class="fday-r">' + (paused ? '' : '<button class="chip2' + (allOff ? ' on' : '') + '" data-a="fam-off">' + esc(L(['Day off', 'يوم راحة'])) + '</button>') + breakButton + breakDates + '</div>' +
       (ready.length && !allOff ? '<div class="fday-r"><small>' + esc(L(['Have ready', 'جهّز'])) + '</small>' +
         ready.slice(0, 5).map(function (m) { return '<span>' + esc(m) + '</span>'; }).join('') + '</div>' : '') + '</div>';
     var g = A.grown(), teach = g && g.role === 'teacher';
@@ -152,7 +151,7 @@
   A.tDash = function (p, parts) {
     var pid = p.id, s = stats(p), st = A.stage(p), mx = Math.max.apply(null, s.bars.concat([60000])), d = A.D(pid), pct = s.total ? Math.round(s.done / s.total * 100) : 0;
     var bars = '<span class="mb">' + s.bars.map(function (b, i) { return '<i class="' + (i === 6 ? 'now' : '') + '" style="height:' + Math.max(8, Math.round(b / mx * 100)) + '%"></i>'; }).join('') + '</span>';
-    var kpi = '<div class="kpis"><div class="kpi">' + ring(pct, 50, N(s.done) + '/' + N(s.total)) + '<small>' + esc(L(['Today', 'اليوم'])) + (Plan.round(pid) > 1 ? ' · ' + esc(L(['round ' + Plan.round(pid), 'الجولة ' + N(Plan.round(pid))])) : '') + '</small></div><div class="kpi">' + bars + '<div class="kpi-v"><b>' + mins(s.week) + '</b><small>' + esc(L(['7 days', '٧ أيام'])) + '</small></div></div>' + (st > 0 ? (s.recall == null ? '' : '<div class="kpi">' + ring(s.recall, 50, N(s.recall) + '%') + '<small>' + esc(L(['Remembered', 'محفوظ'])) + '</small></div>') + '<div class="kpi kpi-n"><b>' + N(s.keys) + '</b>' + (s.fresh ? '<span class="pl-up">+' + N(s.fresh) + '</span>' : '') + '<small>' + esc(L(['Mastered', 'أُتقن'])) + '</small></div>' : '') + '</div>';
+    var kpi = '<div class="kpis"><div class="kpi">' + ring(pct, 50, N(s.done) + '/' + N(s.total)) + '<small>' + esc(L(['Today', 'اليوم'])) + (Plan.round(pid) > 1 ? ' · ' + esc(L(['round ' + Plan.round(pid), 'الجولة ' + N(Plan.round(pid))])) : '') + '</small></div><div class="kpi">' + bars + '<div class="kpi-v"><b>' + mins(s.week) + '</b><small>' + esc(L(['7 days', '٧ أيام'])) + '</small></div></div>' + (st > 0 ? '<div class="kpi kpi-n"><b>' + N(s.keys) + '</b>' + (s.fresh ? '<span class="pl-up">+' + N(s.fresh) + '</span>' : '') + '<small>' + esc(L(['Mastered', 'أُتقن'])) + '</small></div>' + (s.recall == null ? '<div class="kpi kpi-n"><b>–</b><small>' + esc(L(['Remembered', 'محفوظ'])) + '</small></div>' : '<div class="kpi">' + ring(s.recall, 50, N(s.recall) + '%') + '<small>' + esc(L(['Remembered', 'محفوظ'])) + '</small></div>') : '') + '</div>';
     var stuck = st > 0 ? M.stuck(pid).map(function (x) { var sk = C.skill(x), rc = Flow.rootCause && Flow.rootCause(x, pid); return '<a class="act" href="#/parent/' + pid + '/log">' + A.icon('flag', 18) + '<span class="grow"><b>' + esc(L(sk.title)) + '</b><small>' + esc(rc ? '← ' + L(rc.skill.title) : L(C.rooms[sk.room].name)) + '</small></span>' + A.icon('next', 16) + '</a>'; }).join('') : '';
     var recs = 0; if (st > 0) { var hh = Hifz.state(pid); Object.keys(d.recs || {}).forEach(function (k) { var u = hh.u[k]; if (!u || !u.heard || u.heard < d.recs[k]) recs++; }); }
     var recA = recs ? '<a class="act" href="#/parent/' + pid + '/hear">' + A.icon('mic', 18) + '<span class="grow"><b>' + N(recs) + ' ' + esc(L(['to hear', 'للاستماع'])) + '</b></span>' + A.icon('next', 16) + '</a>' : '';

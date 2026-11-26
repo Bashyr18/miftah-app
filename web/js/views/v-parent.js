@@ -19,10 +19,15 @@
       v.innerHTML = '<div class="nur-child h-' + n.hue + '"><div id="nur-c" style="display:grid;place-items:center;gap:14px;width:100%"></div><button class="btn sec" id="nur-back" style="position:absolute;bottom:calc(var(--sab) + 20px);opacity:.75">' + A.icon('grown', 20) + '<span>' + esc(T('Grown-up: finish')) + '</span></button></div>';
       var c = $('#nur-c', v), speak = function () { if (ch.speakAr) Voice.say(ch.speakAr, { lang: 'ar' }); else if (ch.cue) Voice.say(L(ch.cue), { lang: A.ar() ? 'ar' : 'en' }); };
       if (ch.kind === 'recite') {
-        c.innerHTML = '<div class="nur-big">' + A.art('book', 260, 'float') + '</div>';
-        var su = window.QURAN.q[ch.s], a = 0, on = true;
-        (function go() { if (!on || a >= su.v.length) return; a++; Voice.ayah(ch.s, a).then(function (ok) { if (ok && on) setTimeout(go, 300); }); })();
-        cleanup = function () { on = false; Voice.stop(); };
+        c.innerHTML = '<button class="nur-big" id="nur-t" aria-label="' + esc(T('Listen')) + '">' + A.art('book', 260, 'float') + '</button>';
+        var su = window.QURAN.q[ch.s], a = 0, on = true, runId = 0;
+        var startRecite = function () {
+          runId++; var my = runId; a = 0; on = true; Voice.stop();
+          (function go() { if (!on || my !== runId || a >= su.v.length) return; a++; Voice.ayah(ch.s, a).then(function (ok) { if (ok && on && my === runId) setTimeout(go, 300); }); })();
+        };
+        $('#nur-t', c).onclick = startRecite;
+        startRecite();
+        cleanup = function () { on = false; runId++; Voice.stop(); };
       } else if (ch.kind === 'dua') {
         c.innerHTML = '<button class="nur-big" id="nur-t">' + A.art(ch.art, 260, 'float') + '</button>';
         var play = function () { Voice.dua(ch.id); }; $('#nur-t', c).onclick = play; setTimeout(play, 400);
@@ -40,7 +45,7 @@
         var cv = $('#nurc', c), g = cv.getContext('2d'), dpr = Math.min(devicePixelRatio || 1, 2); cv.width = cv.clientWidth * dpr; cv.height = cv.clientHeight * dpr; g.scale(dpr, dpr); g.lineCap = g.lineJoin = 'round'; g.lineWidth = 18; var dn = false, hue = 0;
         cv.onpointerdown = function (e) { dn = true; cv.setPointerCapture(e.pointerId); g.beginPath(); var r0 = cv.getBoundingClientRect(); g.moveTo(e.clientX - r0.left, e.clientY - r0.top); };
         cv.onpointermove = function (e) { if (!dn) return; var r0 = cv.getBoundingClientRect(); hue = (hue + 2) % 360; g.strokeStyle = 'hsl(' + (35 + Math.sin(hue / 30) * 30) + ',85%,60%)'; g.lineTo(e.clientX - r0.left, e.clientY - r0.top); g.stroke(); g.beginPath(); g.moveTo(e.clientX - r0.left, e.clientY - r0.top); };
-        cv.onpointerup = function () { dn = false; };
+        cv.onpointerup = cv.onpointercancel = function () { dn = false; };
         setTimeout(speak, 300);
       } else {
         c.innerHTML = '<button class="nur-big" id="nur-t">' + A.art(ch.art, 260, 'float') + '</button>';
@@ -110,7 +115,7 @@
       if (match && !record) next = await makePin(val);
     }
     var sheet = input.closest('.sheet');
-    if (!input.isConnected || (sheet && (!sheetEl || sheetEl[1] !== sheet)) || route !== A.route() || state !== A.S || state.pin !== stored) return null;
+    if (!input.isConnected || (sheet && !sheetStack.some(function (s) { return s[1] === sheet; })) || route !== A.route() || state !== A.S || state.pin !== stored) return null;
     if (match) {
       if (recovery || next) state.pin = next ? next.record : '';
       state.gate = { a: 0 }; A.saveNow();
@@ -236,7 +241,7 @@
     if (args[0]) return child(args[0], args[1] || 'today');
     return A.family();
   };
-  function head(title, sub, back, label) { return '<div class="ph h-gold"><a class="backp" href="#/' + back + '">' + A.icon('back', 18) + '<span>' + esc(label) + '</span></a><h1>' + esc(title) + '</h1>' + (sub ? '<p>' + esc(sub) + '</p>' : '') + '</div>'; }
+  function head(title, sub, back, label, right) { return '<div class="ph h-gold"><a class="backp" href="#/' + back + '">' + A.icon('back', 18) + '<span>' + esc(label) + '</span></a><h1>' + esc(title) + '</h1>' + (sub ? '<p>' + esc(sub) + '</p>' : '') + (right || '') + '</div>'; }
   function hrs(ms) { var m = Math.round(ms / 60000); if (m < 60) return A.num(m) + ' ' + T('min'); return A.num(Math.floor(m / 60)) + ' ' + T('h') + ' ' + A.num(m % 60) + ' ' + T('min'); }
   function week(pid) { var d = A.D(pid), out = [], now = A.now(); for (var i = 6; i >= 0; i--) { var x = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i), k = A.day(x); out.push({ k: k, ms: dayMs(d, k), l: x.toLocaleDateString(A.ar() ? 'ar-u-nu-arab' : 'en', { weekday: 'narrow' }) }); } return out; }
 
@@ -258,7 +263,7 @@
     var r = html(p);
     if (tab === 'today' && r.parts && A.tDash) r = { html: A.tDash(p, r.parts), mount: r.mount };
     return {
-      html: head(p.name, (A.stage(p) === 0 ? L(['Early years', 'الطفولة المبكرة']) : L(C.yearName(Flow.yearOf(p)))) + ' · ' + L(['age ', 'العمر ']) + A.num(A.age(p)), 'parent', T('Parents')) + '<div class="tabs" style="margin-top:10px">' + TABS.map(function (t) { return '<a class="tab ' + (t[0] === tab ? 'on' : '') + '" href="#/parent/' + pid + '/' + t[0] + '">' + esc(L(t[1])) + '</a>'; }).join('') + '</div><div class="wrap">' + r.html + '</div>',
+      html: head(p.name, (A.stage(p) === 0 ? L(['Early years', 'الطفولة المبكرة']) : L(C.yearName(Flow.yearOf(p)))) + ' · ' + L(['age ', 'العمر ']) + A.num(A.age(p)), 'parent', T('Parents'), tab === 'set' ? '' : '<a class="abtn" href="#/parent/' + pid + '/set" aria-label="' + esc(T('Setup')) + '" title="' + esc(T('Setup')) + '">' + A.icon('gear', 20) + '</a>') + '<div class="tabs" style="margin-top:10px">' + TABS.map(function (t) { return '<a class="tab ' + (t[0] === tab ? 'on' : '') + '" href="#/parent/' + pid + '/' + t[0] + '">' + esc(L(t[1])) + '</a>'; }).join('') + '</div><div class="wrap">' + r.html + '</div>',
       mount: r.mount
     };
   }
@@ -292,7 +297,7 @@
     var sheetsH = sheets.length ? '<div class="card pending"><h3>' + esc(L(['Sheets waiting for you', 'أوراق تنتظرك'])) + '</h3><div class="lst">' + sheets.map(function (x) {
       if (x.q) return '<a class="li" href="#/parent/' + p.id + '/mark/' + x.id + '">' + A.icon(x.scr ? 'pen' : 'print', 20) + '<span class="grow"><b>' + esc(Print.titleOf(x)) + '</b><small>' + esc(x.scr ? Print.status(x) : L(['To mark', 'للتصحيح'])) + ' · ' + esc(sday(x.t)) + codeOf(x) + '</small></span>' + A.icon('next', 20).replace('class="ic"', 'class="ic ic-flip"') + '</a>';
       if (x.scr && x.sub) return '<a class="li" href="#/parent/' + p.id + '/mark/' + x.id + '">' + A.icon('pen', 20) + '<span class="grow"><b>' + esc(Print.titleOf(x)) + '</b><small>' + esc(Print.status(x)) + ' · ' + esc(sday(x.sub)) + '</small></span>' + A.icon('next', 20).replace('class="ic"', 'class="ic ic-flip"') + '</a>';
-      return '<div class="li">' + A.icon('print', 20) + '<span class="grow"><b>' + esc(Print.titleOf(x)) + '</b><small>' + esc(sday(x.t)) + codeOf(x) + '</small></span><span class="li-acts"><button class="btn sm sec" data-sdone="' + x.id + '">' + esc(L(['Done', 'أُنجزت'])) + '</button><button class="btn sm ghost" data-sskip="' + x.id + '">' + esc(L(['Not used', 'لم تُستعمل'])) + '</button></span></div>';
+      return '<div class="li">' + A.icon('print', 20) + '<span class="grow"><b>' + esc(Print.titleOf(x)) + '</b><small>' + esc(sday(x.t)) + codeOf(x) + '</small></span><span class="li-acts"><button class="btn sm sec" data-sdone="' + x.id + '">' + esc(L(['Done', 'أُنجزت'])) + '</button><button class="btn sm sec" data-sskip="' + x.id + '">' + esc(L(['Not used', 'لم تُستعمل'])) + '</button></span></div>';
     }).join('') + '</div></div>' : '';
     var promH = promises.length ? '<div class="card pending"><h3>' + esc(T('A promise earned')) + '</h3><div class="lst">' + promises.map(function (x) { return '<div class="li"><span class="grow"><b>' + esc(x.what) + '</b></span><button class="btn sm sec" data-kept="' + x.id + '">' + esc(T('Kept it')) + '</button></div>'; }).join('') + '</div></div>' : '';
     var whyH = (pl.why || []).length ? '<p class="ref why">' + (pl.why || []).map(function (w) { return esc(L(w)); }).join(' ') + '</p>' : '';
@@ -460,10 +465,10 @@
       var r = C.rooms[rid]; if (!r.units.length) return;
       var ret = M.retention(p.id, 30, rid), nxt = C.next(rid, p.id);
       var f0 = rid !== 'quran' ? Flow.forecast(rid, p.id) : null;
-      h += '<div class="card h-' + r.hue + '"><h3 style="color:var(--h)">' + esc(L(r.name)) + '</h3>' + (rid !== 'quran' ? '<a class="btn sec sm" style="float:inline-end;margin-top:-34px" href="#/place/' + p.id + '/' + rid + '">' + esc(T('Find the level')) + '</a>' : '') + '<p class="rm-now">' + esc(T('Next')) + ': <b>' + esc(nxt ? L(nxt.title) : L(['Every lesson is open', 'كل الدروس متاحة'])) + '</b><br>' + esc(T('Remembered when it came back')) + ': <b>' + (ret.of ? A.num(ret.ok) + ' / ' + A.num(ret.of) : esc(T('No evidence yet'))) + '</b></p>';
+      h += '<div class="card h-' + r.hue + '"><div class="rm-card-h"><h3 style="color:var(--h)">' + esc(L(r.name)) + '</h3>' + (rid !== 'quran' ? '<a class="btn sec sm" href="#/place/' + p.id + '/' + rid + '">' + esc(T('Find the level')) + '</a>' : '') + '</div><p class="rm-now">' + esc(T('Next')) + ': <b>' + esc(nxt ? L(nxt.title) : L(['Every lesson is open', 'كل الدروس متاحة'])) + '</b><br>' + esc(T('Remembered when it came back')) + ': <b>' + (ret.of ? A.num(ret.ok) + ' / ' + A.num(ret.of) : esc(T('No evidence yet'))) + '</b></p>';
       r.units.filter(function (u) { return u.band <= st; }).forEach(function (u) {
         var met = 0; u.skills.forEach(function (s) { if (M.met(s.id, p.id)) met++; });
-        h += '<div class="strand"><div class="strand-h"><span>' + esc(L(u.title)) + '</span><small>' + A.num(met) + ' / ' + A.num(u.skills.length) + (met < u.skills.length ? ' <button class="linkb kn" data-unit-known="' + u.id + '" data-p="' + p.id + '">' + esc(T('Already knows these')) + '</button>' : '') + '</small></div><div class="kdots">' + u.skills.map(function (s) { var d = A.D(p.id); return '<button aria-label="' + esc(L(s.title)) + '" data-a="sk-sheet" data-p="' + p.id + '" data-s="' + s.id + '"><i class="' + (d.placed[s.id] && M.state(s.id, p.id) === 'new' ? 'forged' : M.state(s.id, p.id)) + '" style="' + (d.placed[s.id] && M.state(s.id, p.id) === 'new' ? 'opacity:.4' : '') + '"></i></button>'; }).join('') + '</div></div>';
+        h += '<div class="strand"><div class="strand-h"><span class="grow">' + esc(L(u.title)) + '</span><span class="strand-r"><small>' + A.num(met) + ' / ' + A.num(u.skills.length) + '</small>' + (met < u.skills.length ? '<button class="linkb kn" data-unit-known="' + u.id + '" data-p="' + p.id + '">' + esc(T('Already knows these')) + '</button>' : '') + '</span></div><div class="kdots">' + u.skills.map(function (s) { var d = A.D(p.id); return '<button aria-label="' + esc(L(s.title)) + '" data-a="sk-sheet" data-p="' + p.id + '" data-s="' + s.id + '"><i class="' + (d.placed[s.id] && M.state(s.id, p.id) === 'new' ? 'forged' : M.state(s.id, p.id)) + '" style="' + (d.placed[s.id] && M.state(s.id, p.id) === 'new' ? 'opacity:.4' : '') + '"></i></button>'; }).join('') + '</div></div>';
       });
       h += '</div>';
     });
@@ -536,7 +541,7 @@
   function tSet(p) {
     var st = A.stage(p), off = p.off || {};
     return {
-      html: '<div class="card"><div id="set-form" style="display:grid;gap:12px"></div></div><div class="card"><h3>' + esc(T('Stage')) + '</h3><div class="segs">' + A.STAGES.map(function (s) { return '<button class="seg ' + (s.id === st ? 'on' : '') + '" data-st="' + s.id + '">' + esc(L(s.name)) + '</button>'; }).join('') + '</div><p class="ref" style="margin-top:8px;text-align:start">' + esc(T('Stage changes how things look and how long they run. Each room still has its own level.')) + '</p></div><div class="card"><h3>' + esc(T('Screen time each day')) + '</h3><div class="segs">' + [10, 15, 20, 30, 40, 60].map(function (m) { var on = Plan.limit(p) === m; return '<button class="seg ' + (on ? 'on' : '') + '" data-lim="' + m + '">' + A.num(m) + '</button>'; }).join('') + '</div><p class="ref" style="margin-top:8px;text-align:start">' + esc(T('Minutes. The path is sized to fit, and a lesson is never cut off part-way.')) + '</p></div>' + (st > 0 ? setupPlan(p) : '') + '<div class="card"><h3>' + esc(L(['Subjects', 'المواد'])) + '</h3><div class="lst">' + C.order.map(function (r) { return '<button class="li" data-room="' + r + '"><span class="grow"><b>' + esc(L(C.rooms[r].name)) + '</b></span><span class="switch ' + (off[r] ? '' : 'on') + '"></span></button>'; }).join('') + '</div></div><button class="btn ghost wide" id="del-c" style="color:var(--bad);margin-top:8px">' + esc(T('Remove this child')) + '</button>',
+      html: '<div class="card"><div id="set-form" style="display:grid;gap:12px"></div></div><div class="card"><h3>' + esc(T('Stage')) + '</h3><div class="segs">' + A.STAGES.map(function (s) { return '<button class="seg ' + (s.id === st ? 'on' : '') + '" data-st="' + s.id + '">' + esc(L(s.name)) + '</button>'; }).join('') + '</div><p class="ref" style="margin-top:8px;text-align:start">' + esc(T('Stage changes how things look and how long they run. Each room still has its own level.')) + '</p></div><div class="card"><h3>' + esc(T('Screen time each day')) + '</h3><div class="segs">' + [10, 15, 20, 30, 40, 60].map(function (m) { var on = Plan.limit(p) === m; return '<button class="seg ' + (on ? 'on' : '') + '" data-lim="' + m + '">' + A.num(m) + '</button>'; }).join('') + '</div><p class="ref" style="margin-top:8px;text-align:start">' + esc(T('Minutes. The path is sized to fit, and a lesson is never cut off part-way.')) + '</p></div>' + (st > 0 ? setupPlan(p) : '') + '<div class="card" data-fold="1"><h3>' + esc(L(['Subjects', 'المواد'])) + '</h3><div class="lst">' + C.order.map(function (r) { return '<button class="li" data-room="' + r + '"><span class="grow"><b>' + esc(L(C.rooms[r].name)) + '</b></span><span class="switch ' + (off[r] ? '' : 'on') + '"></span></button>'; }).join('') + '</div></div><button class="btn ghost wide" id="del-c" style="color:var(--bad);margin-top:8px">' + esc(T('Remove this child')) + '</button>',
       mount: function (v) {
         A.V.__form($('#set-form', v), p, function () { A.saveNow(); A.toast(T('Saved')); A.rerender(); });
         $$('[data-st]', v).forEach(function (b) { b.onclick = function () { p.stage = +b.dataset.st; A.D(p.id).path = null; A.placeDefault(p); A.saveNow(); A.rerender(); }; });
@@ -557,8 +562,8 @@
     var days = p.days || Flow.WEEK, light = p.light == null ? 5 : p.light, pace = p.pace || 'steady', focus = p.focus || {};
     return '<div class="card"><h3>' + esc(T('School days')) + '</h3><div class="wk7">' + WD.map(function (i) { return '<button class="seg ' + (days.indexOf(i) >= 0 ? 'on' : '') + '" data-day="' + i + '">' + esc(wdName(i)) + '</button>'; }).join('') + '</div><p class="ref" style="margin:8px 0;text-align:start">' + esc(T('On other days: only the Qurʾān and something real.')) + '</p><h3 style="margin-top:10px">' + esc(T('The remembering day')) + '</h3><div class="wk7">' + WD.map(function (i) { return '<button class="seg ' + (light === i ? 'on' : '') + '" data-light="' + i + '">' + esc(wdName(i)) + '</button>'; }).join('') + '</div><p class="ref" style="margin-top:8px;text-align:start">' + esc(L(['No new lessons that day: review, making and movement. Strong learning needs one.', 'بلا دروس جديدة ذلك اليوم: مراجعة وصنع وحركة. يحتاجه التعلم القوي.'])) + '</p></div>' +
       '<div class="card"><h3>' + esc(T('Pace')) + '</h3><div class="segs">' + [['gentle', 'Gentle'], ['steady', 'Steady'], ['strong', 'Strong']].map(function (x) { return '<button class="seg ' + (pace === x[0] ? 'on' : '') + '" data-pace="' + x[0] + '">' + esc(T(x[1])) + '</button>'; }).join('') + '</div><p class="ref" style="margin-top:8px;text-align:start">' + esc(T('It also adjusts by itself, from how well they remember.')) + '</p></div>' +
-      '<div class="card"><h3>' + esc(T('More or less of a subject')) + '</h3><div class="lst">' + C.order.filter(function (r) { return r !== 'quran'; }).map(function (r) { var f = focus[r] || 1; return '<div class="li"><span class="grow"><b>' + esc(L(C.rooms[r].name)) + '</b></span><div class="segs mini">' + [[.5, 'Less'], [1, 'Normal'], [1.5, 'More']].map(function (x) { return '<button class="seg ' + (f === x[0] ? 'on' : '') + '" data-focus="' + r + '" data-v="' + x[0] + '">' + esc(T(x[1])) + '</button>'; }).join('') + '</div></div>'; }).join('') + '</div></div>' +
-      '<div class="card"><h3>' + esc(T('Family promises')) + '</h3><p style="color:var(--t2);line-height:1.45;font-size:14.500px;margin-bottom:8px">' + esc(T('A real reward from you, earned by real progress: a trip to the park, a new book. Never a score, never a streak.')) + '</p>' + ((p.promises || []).length ? '<div class="lst" style="margin-bottom:8px">' + p.promises.map(function (x) { var now = Math.min(Flow.progressOf(x.kind, p.id), x.n); return '<div class="li"><span class="grow"><b>' + esc(x.what) + '</b><small>' + A.num(now) + ' / ' + A.num(x.n) + ' ' + esc(T({ unit: 'lanterns', proven: 'proven keys', surah: 'sūrahs', forged: 'keys' }[x.kind])) + (x.kept ? ' · ' + esc(T('Kept it')) : x.fired ? ' · ' + esc(T('Earned')) : '') + '</small></span><button class="round off" style="width:40px;height:40px" data-pdel="' + x.id + '" aria-label="' + esc(T('Remove')) + '">' + A.icon('close', 18) + '</button></div>'; }).join('') + '</div>' : '') + '<div class="field" style="max-width:none"><label for="pr-w">' + esc(T('We will')) + '</label><input class="input" id="pr-w" maxlength="60" autocomplete="off" style="font-size:15px"></div><div style="display:grid;grid-template-columns:90px 1fr;gap:8px;margin-top:8px"><input class="input" id="pr-n" type="number" min="1" max="200" value="5" style="font-size:15px"><select class="input" id="pr-k" style="font-size:15px"><option value="forged">' + esc(L(['lessons mastered', 'درسًا أُتقن'])) + '</option><option value="proven">' + esc(L(['lessons remembered', 'درسًا ثبت'])) + '</option><option value="unit">' + esc(T('lanterns')) + '</option><option value="surah">' + esc(T('sūrahs')) + '</option></select></div><button class="btn sec wide" id="pr-add" style="margin-top:8px">' + esc(T('Add the promise')) + '</button></div>';
+      '<div class="card" data-fold="1"><h3>' + esc(T('More or less of a subject')) + '</h3><div class="lst">' + C.order.filter(function (r) { return r !== 'quran'; }).map(function (r) { var f = focus[r] || 1; return '<div class="li"><span class="grow"><b>' + esc(L(C.rooms[r].name)) + '</b></span><div class="segs mini">' + [[.5, 'Less'], [1, 'Normal'], [1.5, 'More']].map(function (x) { return '<button class="seg ' + (f === x[0] ? 'on' : '') + '" data-focus="' + r + '" data-v="' + x[0] + '">' + esc(T(x[1])) + '</button>'; }).join('') + '</div></div>'; }).join('') + '</div></div>' +
+      '<div class="card" data-fold="1"><h3>' + esc(T('Family promises')) + '</h3><p style="color:var(--t2);line-height:1.45;font-size:14.500px;margin-bottom:8px">' + esc(T('A real reward from you, earned by real progress: a trip to the park, a new book. Never a score, never a streak.')) + '</p>' + ((p.promises || []).length ? '<div class="lst" style="margin-bottom:8px">' + p.promises.map(function (x) { var now = Math.min(Flow.progressOf(x.kind, p.id), x.n); return '<div class="li"><span class="grow"><b>' + esc(x.what) + '</b><small>' + A.num(now) + ' / ' + A.num(x.n) + ' ' + esc(T({ unit: 'lanterns', proven: 'proven keys', surah: 'sūrahs', forged: 'keys' }[x.kind])) + (x.kept ? ' · ' + esc(T('Kept it')) : x.fired ? ' · ' + esc(T('Earned')) : '') + '</small></span><button class="round off" style="width:40px;height:40px" data-pdel="' + x.id + '" aria-label="' + esc(T('Remove')) + '">' + A.icon('close', 18) + '</button></div>'; }).join('') + '</div>' : '') + '<div class="field" style="max-width:none"><label for="pr-w">' + esc(T('We will')) + '</label><input class="input" id="pr-w" maxlength="60" autocomplete="off" style="font-size:15px"></div><div style="display:grid;grid-template-columns:90px 1fr;gap:8px;margin-top:8px"><input class="input" id="pr-n" type="number" min="1" max="200" value="5" style="font-size:15px"><select class="input" id="pr-k" style="font-size:15px"><option value="forged">' + esc(L(['lessons mastered', 'درسًا أُتقن'])) + '</option><option value="proven">' + esc(L(['lessons remembered', 'درسًا ثبت'])) + '</option><option value="unit">' + esc(T('lanterns')) + '</option><option value="surah">' + esc(T('sūrahs')) + '</option></select></div><button class="btn sec wide" id="pr-add" style="margin-top:8px">' + esc(T('Add the promise')) + '</button></div>';
   }
   function bindPlan(p, v) {
     var re = function () { A.D(p.id).path = null; A.saveNow(); A.rerender(); };
@@ -610,17 +615,22 @@
   }
 
   /* ===== settings ===== */
+  var pendingBackup = false;
   function settings() {
-    var S = A.S, seg = function (k, opts) { return '<div class="segs">' + opts.map(function (o) { return '<button class="seg ' + (S[k] === o[0] ? 'on' : '') + '" data-k="' + k + '" data-v="' + o[0] + '">' + esc(o[1]) + '</button>'; }).join('') + '</div>'; };
+    var S = A.S, isDesk = !!window.MIFTAH_DESKTOP, seg = function (k, opts) { return '<div class="segs">' + opts.map(function (o) { return '<button class="seg ' + (S[k] === o[0] ? 'on' : '') + '" data-k="' + k + '" data-v="' + o[0] + '">' + esc(o[1]) + '</button>'; }).join('') + '</div>'; };
     var au = A.N.has() && window.Voice && Voice.stats ? Voice.stats() : {};
     var auSize = au.bytes > 1048576 ? A.num(Math.round(au.bytes / 104857.6) / 10) + ' MB' : au.files ? A.num(Math.max(1, Math.round((au.bytes || 0) / 1024))) + ' KB' : '';
     return {
-      html: head(T('Settings'), '', 'parent', T('Parents')) + '<div class="wrap" style="margin-top:14px"><div class="card"><div class="lst"><a class="li" href="#/parent/me">' + A.grownAvatar(36) + '<span class="grow"><b>' + esc(A.grown() ? A.grown().name : L(['Your profile', 'ملفّك'])) + '</b><small>' + esc(A.grown() ? L(A.ROLES[A.grown().role] || A.ROLES.parent) : L(['Your name and role, parent or teacher', 'اسمك ودورك: وليّ أمر أو معلّم'])) + '</small></span>' + A.icon('next', 18) + '</a></div></div><div class="card"><h3>' + esc(T('Language')) + '</h3>' + seg('lang', [['en', 'English'], ['ar', 'العربية']]) + '</div><div class="card"><h3>' + esc(T('Look')) + '</h3>' + seg('theme', [['auto', T('Follows the sun')], ['light', T('Day')], ['dark', T('Night')]]) + '</div><div class="card"><h3>' + esc(T('Reciter for memorising')) + '</h3>' + seg('reciter', [['h', T('Al-Ḥuṣarī, teaching pace')], ['a', T('Al-ʿAfāsī, flowing')]]) + '</div>' +
-        '<div class="card"><div class="lst"><button class="li" id="s-sound"><span class="grow"><b>' + esc(T('Touch sounds')) + '</b><small>' + esc(T('Soft clicks only. Never music.')) + '</small></span><span class="switch ' + (S.sound ? 'on' : '') + '"></span></button><div class="li" style="display:none"><input type="range" id="s-rate"></div>' +
-        (A.N.has() ? '<button class="li" id="s-rem"><span class="grow"><b>' + esc(T('School-time reminder')) + '</b><small>' + esc(T(S.remind.on ? 'Quiet, once a day' : 'Off')) + '</small></span><span class="switch ' + (S.remind.on ? 'on' : '') + '"></span></button>' + (S.remind.on ? '<div class="li"><span class="grow"><b>' + esc(T('At')) + '</b></span><input type="time" id="s-time" class="input" style="width:130px;height:46px;font-size:16px" value="' + ('0' + S.remind.h).slice(-2) + ':' + ('0' + S.remind.m).slice(-2) + '"></div>' : '') + '<button class="li" id="s-wid"><span class="grow"><b>' + esc(T('Add to the home screen')) + '</b><small>' + esc(T('Today’s path as a widget')) + '</small></span></button>' : '') + '</div></div>' +
-        (window.Upd && Upd.can() ? Upd.card('settings') : '') +
-        (A.N.has() ? '<div class="card"><h3>' + esc(L(['Downloaded Qurʾān audio', 'صوت القرآن المحمّل'])) + '</h3><p style="color:var(--t2);font-size:13.5px;line-height:1.45;margin-bottom:8px">' + esc(au.files ? L(['Saved on this device: ', 'محفوظ على هذا الجهاز: ']) + auSize + ' (' + A.num(au.files) + ' ' + L(['files', 'ملف']) + '). ' + L(['Bundled sūrahs and family recordings are never removed.', 'لا تُحذف السور المدمجة ولا تسجيلات الأسرة أبدًا.']) : L(['Only built-in recordings are stored right now.', 'لا توجد تحميلات إضافية الآن.'])) + '</p>' + (au.files ? '<button class="btn ghost sm" id="s-au-clr">' + esc(L(['Clear downloaded audio', 'مسح الصوت المحمّل'])) + '</button>' : '') + '</div>' : '') +
-        '<div class="card"><h3>' + esc(T('Your family’s data')) + '</h3><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn sec sm" id="s-exp">' + esc(T('Back up')) + '</button><button class="btn sec sm" id="s-imp">' + esc(T('Restore')) + '</button></div></div></div>',
+      html: head(T('Settings'), '', 'parent', T('Parents')) + '<div class="wrap" style="margin-top:14px">' +
+        '<div class="card"><h3>' + esc(T('Language')) + '</h3>' + seg('lang', [['en', 'English'], ['ar', 'العربية']]) + '</div>' +
+        '<div class="card" id="set-look"><h3>' + esc(T('Look')) + '</h3>' + seg('theme', [['auto', T('Follows the sun')], ['light', T('Day')], ['dark', T('Night')]]) + '</div>' +
+        '<div class="card" data-fold="1"><h3>' + esc(T('Reciter for memorising')) + '</h3>' + seg('reciter', [['h', T('Al-Ḥuṣarī, teaching pace')], ['a', T('Al-ʿAfāsī, flowing')]]) + '</div>' +
+        '<div class="card"><div class="lst"><button class="li" id="s-sound"><span class="grow"><b>' + esc(T('Touch sounds')) + '</b><small>' + esc(T('Soft clicks only. Never music.')) + '</small></span><span class="switch ' + (S.sound ? 'on' : '') + '"></span></button>' +
+        (A.N.has() ? '<button class="li" id="s-rem"><span class="grow"><b>' + esc(T('School-time reminder')) + '</b><small>' + esc(T(S.remind.on ? 'Quiet, once a day' : 'Off')) + (isDesk && S.remind.on ? ' · ' + esc(L(['Keep Miftāḥ open or in the tray', 'أبقِ مفتاح مفتوحًا أو في شريط المهام'])) : '') + '</small></span><span class="switch ' + (S.remind.on ? 'on' : '') + '"></span></button>' + (S.remind.on ? '<div class="li"><span class="grow"><b>' + esc(T('At')) + '</b></span><input type="time" id="s-time" class="input" style="width:130px;height:46px;font-size:16px" value="' + ('0' + S.remind.h).slice(-2) + ':' + ('0' + S.remind.m).slice(-2) + '"></div>' : '') + (!isDesk ? '<button class="li" id="s-wid"><span class="grow"><b>' + esc(T('Add to the home screen')) + '</b><small>' + esc(T('Today’s path as a widget')) + '</small></span></button>' : '') : '') + '</div></div>' +
+        '<div class="card"><div class="lst"><a class="li" href="#/parent/me">' + A.grownAvatar(36) + '<span class="grow"><b>' + esc(A.grown() ? A.grown().name : L(['Your profile', 'ملفّك'])) + '</b><small>' + esc(A.grown() ? L(A.ROLES[A.grown().role] || A.ROLES.parent) : L(['Your name and role, parent or teacher', 'اسمك ودورك: وليّ أمر أو معلّم'])) + '</small></span>' + A.icon('next', 18) + '</a></div></div>' +
+        (A.N.has() ? '<div class="card" data-fold="1"><h3>' + esc(L(['Downloaded Qurʾān audio', 'صوت القرآن المحمّل'])) + '</h3><p style="color:var(--t2);font-size:13.5px;line-height:1.45;margin-bottom:8px">' + esc(au.files ? L(['Saved on this device: ', 'محفوظ على هذا الجهاز: ']) + auSize + ' (' + A.num(au.files) + ' ' + L(['files', 'ملف']) + '). ' + L(['Bundled sūrahs and family recordings are never removed.', 'لا تُحذف السور المدمجة ولا تسجيلات الأسرة أبدًا.']) : L(['Only built-in recordings are stored right now.', 'لا توجد تحميلات إضافية الآن.'])) + '</p>' + (au.files ? '<button class="btn ghost sm" id="s-au-clr">' + esc(L(['Clear downloaded audio', 'مسح الصوت المحمّل'])) + '</button>' : '') + '</div>' : '') +
+        '<div class="card" data-fold="1"><h3>' + esc(T('Your family’s data')) + '</h3><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn sec sm" id="s-exp">' + esc(T('Back up')) + '</button><button class="btn sec sm" id="s-imp">' + esc(T('Restore')) + '</button><button class="btn sec sm" data-a="s-sync">' + esc(L(['Devices', 'الأجهزة'])) + '</button>' + (isDesk ? '<a class="btn sec sm" href="#/desk/pc">' + esc(L(['This computer', 'هذا الحاسوب'])) + '</a>' : '') + '</div></div>' +
+        (window.Upd && Upd.can() ? Upd.card('settings') : '') + '</div>',
       mount: function (v) {
         /* a choice changes in place; only a new language redraws the page, since every word on it changes */
         $$('[data-k]', v).forEach(function (b) { b.onclick = function () {
@@ -638,11 +648,12 @@
         var wd = $('#s-wid', v); if (wd) wd.onclick = function () { if (!A.N.call('pinWidget')) A.toast(T('Add it from your home screen’s widget list')); };
         var ac = $('#s-au-clr', v); if (ac) ac.onclick = function () { if (ac.dataset.arm !== '1') { ac.dataset.arm = '1'; ac.textContent = L(['Tap again to clear', 'انقر مجددًا للمسح']); return; } Voice.clearAudio(); A.toast(L(['Cleared', 'تم المسح'])); A.rerender(); };
         $('#s-exp', v).onclick = function () {
-          A.S.lastBackup = A.now().getTime(); A.saveNow(); var json = JSON.stringify(A.Sync.recordOut()), name = 'miftah-backup-' + A.day() + '.json';
-          if (A.N.has()) A.N.call('exportFile', name, json);
-          else { var u = URL.createObjectURL(new Blob([json], { type: 'application/json' })), a = document.createElement('a'); a.href = u; a.download = name; a.click(); setTimeout(function () { URL.revokeObjectURL(u); }, 60000); }
+          var json = JSON.stringify(A.Sync.recordOut()), name = 'miftah-backup-' + A.day() + '.json';
+          if (A.N.has()) { pendingBackup = true; A.N.call('exportFile', name, json); }
+          else { A.S.lastBackup = A.now().getTime(); A.saveNow(); var u = URL.createObjectURL(new Blob([json], { type: 'application/json' })), a = document.createElement('a'); a.href = u; a.download = name; a.click(); setTimeout(function () { URL.revokeObjectURL(u); }, 60000); }
         };
         $('#s-imp', v).onclick = function () {
+          A.__syncIn = false;
           if (A.N.has()) { A.N.call('importFile'); return; }
           var f = document.createElement('input'); f.type = 'file'; f.accept = 'application/json'; f.onchange = function () { var r = new FileReader(); r.onload = function () { window.__native.onImport(r.result); }; r.readAsText(f.files[0]); }; f.click();
         };
@@ -653,7 +664,7 @@
     if (!A.grownOpen()) return;
     try { var o = A.Sync.parse(txt); if (!o || !Array.isArray(o.profiles)) throw 0; delete o.upd; o.pin = A.S.pin; o.gate = A.S.gate; A.S = A.shape(o); if (A.Books) A.Books.register(); A.saveNow(); A.toast(T('Restored')); A.go('parent'); A.rerender(); } catch (e) { A.toast(T('That file could not be read')); }
   };
-  window.__native.onExported = function (ok) { A.toast(T(ok ? 'Saved' : 'Not saved')); };
+  window.__native.onExported = function (ok) { if (ok && pendingBackup) { A.S.lastBackup = A.now().getTime(); A.saveNow(); } pendingBackup = false; A.toast(T(ok ? 'Saved' : 'Not saved')); };
 
   /* ===== your voice ===== */
   A.acts['voice-settings'] = function () { A.N.call('openVoiceSettings'); };
@@ -728,28 +739,25 @@
       ['The Qurʾān is handled differently', 'No games, no effects, no scrambled verses. Memorising runs on sabaq, sabqī and manzil. A person listens, or the child honestly checks. No machine ever marks recitation.'],
       ['Sources', 'Qurʾān text: Tanzil Uthmani 1.1. Translation: The Clear Quran. Hadith: authentic narrations with their references. Duʿāʾ: Ḥiṣn al-Muslim. Recitations: al-Ḥuṣarī and al-ʿAfāsī, with word recordings from Quran.com. Stories and adab scenes are our own telling, each with its reference, and should be read with a teacher.'],
       ['Private', 'No account, no ads and no tracking. Your records stay on this phone. The internet is used only for a video a grown-up added, and to download Qur’an recordings once.']];
-    return { html: head(T('How Miftāḥ teaches'), '', 'parent', T('Parents')) + '<div class="wrap" style="margin-top:14px">' + P.map(function (x) { return '<div class="card"><h3>' + esc(T(x[0])) + '</h3><p style="color:var(--t2);line-height:1.55;font-weight:500">' + esc(T(x[1])) + '</p></div>'; }).join('') + photoCredits() + '</div>' };
+    return { html: head(T('How Miftāḥ teaches'), '', 'parent', T('Parents')) + '<div class="wrap" style="margin-top:14px">' + P.map(function (x) {
+      var body = (x[0] === 'Private' && window.MIFTAH_DESKTOP)
+        ? L(['No account, no ads and no tracking. Your records stay on this computer. The internet is used only for a video a grown-up added, and to download Qurʾān recordings once.', 'بلا حساب ولا إعلانات ولا تتبع. سجلاتك تبقى على هذا الحاسوب. لا يُستخدم الإنترنت إلا لفيديو أضافه أحد الكبار أو لتنزيل تلاوات القرآن مرة واحدة.'])
+        : T(x[1]);
+      return '<div class="card"><h3>' + esc(T(x[0])) + '</h3><p style="color:var(--t2);line-height:1.55;font-weight:500">' + esc(body) + '</p></div>';
+    }).join('') + photoCredits() + '</div>' };
   }
 
-  /* sheet */
-  var sheetEl = null, sheetPrev = null, sheetKey = null;
+  /* sheet stack: pickers and confirmations layer cleanly above an open form sheet without discarding it */
+  var sheetStack = [], sheetKey = null, sheetSeq = 0;
   var FOCUSABLE = 'button:not([disabled]),a[href],input:not([disabled]):not([type="hidden"]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])';
   function sheetFocusables(sh) {
     return Array.prototype.slice.call(sh.querySelectorAll(FOCUSABLE)).filter(function (el) { return !el.hidden && el.offsetParent !== null; });
   }
-  A.sheet = function (title, html, mount) {
-    var prev = sheetEl ? sheetPrev : document.activeElement;
-    A.closeSheet();
-    sheetPrev = prev;
-    var bg = document.createElement('div'); bg.className = 'sheetbg'; var sh = document.createElement('div'); sh.className = 'sheet';
-    /* a header that stays, with a way to close; the content scrolls under it */
-    sh.setAttribute('role', 'dialog'); sh.setAttribute('aria-modal', 'true'); sh.setAttribute('aria-labelledby', 'sheet-title'); sh.tabIndex = -1;
-    sh.innerHTML = '<div class="sheet-h"><h2 id="sheet-title">' + esc(title) + '</h2><button class="sheet-x" type="button" aria-label="' + esc(A.L(['Close', 'إغلاق'])) + '">' + A.icon('close', 20) + '</button></div><div class="sheet-b">' + html + '</div>';
-    sh.querySelector('.sheet-x').onclick = function () { A.closeSheet(); };
-    document.body.appendChild(bg); document.body.appendChild(sh);
-    sheetEl = [bg, sh]; bg.onclick = A.closeSheet;
+  function bindSheetKey() {
+    if (sheetKey) return;
     sheetKey = function (e) {
-      if (!sheetEl) return;
+      if (!sheetStack.length) return;
+      var sh = sheetStack[sheetStack.length - 1][1];
       if (e.key === 'Escape') { e.preventDefault(); A.closeSheet(); return; }
       if (e.key !== 'Tab') return;
       var list = sheetFocusables(sh);
@@ -759,6 +767,24 @@
       else { if (document.activeElement === last || !sh.contains(document.activeElement)) { e.preventDefault(); first.focus(); } }
     };
     document.addEventListener('keydown', sheetKey);
+  }
+  A.sheet = function (title, html, mount, opts) {
+    var stack = !!(opts && opts.stack && sheetStack.length);
+    var prev = document.activeElement;
+    if (!stack && sheetStack.length) {
+      prev = sheetStack[0][2];
+      while (sheetStack.length) A.closeSheet();
+    }
+    var depth = sheetStack.length, tid = 'sheet-title-' + (++sheetSeq);
+    var bg = document.createElement('div'); bg.className = 'sheetbg'; bg.style.zIndex = String(50 + depth * 2);
+    var sh = document.createElement('div'); sh.className = 'sheet'; sh.style.zIndex = String(51 + depth * 2);
+    /* a header that stays, with a way to close; the content scrolls under it */
+    sh.setAttribute('role', 'dialog'); sh.setAttribute('aria-modal', 'true'); sh.setAttribute('aria-labelledby', tid); sh.tabIndex = -1;
+    sh.innerHTML = '<div class="sheet-h"><h2 id="' + tid + '">' + esc(title) + '</h2><button class="sheet-x" type="button" aria-label="' + esc(A.L(['Close', 'إغلاق'])) + '">' + A.icon('close', 20) + '</button></div><div class="sheet-b">' + html + '</div>';
+    sh.querySelector('.sheet-x').onclick = function () { A.closeSheet(); };
+    document.body.appendChild(bg); document.body.appendChild(sh);
+    sheetStack.push([bg, sh, prev]); bg.onclick = function () { A.closeSheet(); };
+    bindSheetKey();
     requestAnimationFrame(function () { bg.classList.add('on'); sh.classList.add('on'); });
     if (mount) mount(sh);
     var bodyEl = sh.querySelector('.sheet-b'), firstInBody = bodyEl && sheetFocusables(bodyEl)[0];
@@ -766,9 +792,9 @@
     try { target.focus({ preventScroll: true }); } catch (e) { try { target.focus(); } catch (e2) { } }
   };
   A.closeSheet = function () {
-    if (!sheetEl) return false;
-    var s = sheetEl, prev = sheetPrev; sheetEl = null; sheetPrev = null;
-    if (sheetKey) { document.removeEventListener('keydown', sheetKey); sheetKey = null; }
+    if (!sheetStack.length) return false;
+    var s = sheetStack.pop(), prev = s[2];
+    if (!sheetStack.length && sheetKey) { document.removeEventListener('keydown', sheetKey); sheetKey = null; }
     s[0].classList.remove('on'); s[1].classList.remove('on');
     setTimeout(function () { s[0].remove(); s[1].remove(); }, 300);
     if (prev && prev.isConnected && typeof prev.focus === 'function') { try { prev.focus({ preventScroll: true }); } catch (e) { try { prev.focus(); } catch (e2) { } } }

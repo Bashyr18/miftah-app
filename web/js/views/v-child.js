@@ -42,11 +42,12 @@
   /* the child form, shared with the parent area */
   A.V.__form = function (el, prof, done) {
     var thisYear = A.now().getFullYear(), p = prof || { name: '', by: thisYear - 6, bm: 1, g: 'm' };
-    el.innerHTML = '<h2 style="font-size:27px">' + esc(prof ? T('Edit child') : T('Who is learning?')) + '</h2>' +
+    var inCard = !!(el && el.closest && el.closest('.card'));
+    el.innerHTML = (inCard ? '<h3>' + esc(T('Edit child')) + '</h3>' : '<h2 class="form-h">' + esc(prof ? T('Edit child') : T('Who is learning?')) + '</h2>') +
       '<div class="field"><label for="f-n">' + esc(T('Name')) + '</label><input class="input" id="f-n" autocomplete="off" maxlength="24" value="' + esc(p.name) + '"></div>' +
       '<div class="field"><label>' + esc(T('Age')) + '</label><div class="segs" id="f-age" style="display:grid;grid-template-columns:repeat(5,1fr)">' + [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18].map(function (a) { return '<button class="seg" data-age="' + a + '">' + A.num(a) + '</button>'; }).join('') + '</div></div>' +
       '<div class="field"><label>' + esc(T('For the prayer pictures')) + '</label><div class="segs" id="f-g"><button class="seg" data-g="m">' + esc(T('Boy')) + '</button><button class="seg" data-g="f">' + esc(T('Girl')) + '</button></div></div>' +
-      '<div class="stagehint" style="min-height:22px;color:var(--gold2);font-size:14.5px"></div>' +
+      '<div class="stagehint" style="min-height:22px;color:var(--gold2);font-size:14px"></div>' +
       '<button class="btn pri big wide" id="f-go" style="max-width:400px">' + esc(prof ? T('Save') : T('Open the door')) + '</button>';
     var age = thisYear - p.by, g = p.g || 'm';
     function paint() {

@@ -16,7 +16,7 @@ body[data-age="3"] .nav a,body[data-age="4"] .nav a{border-radius:12px}
 .tres.ok small{color:var(--gold2)}.tres.no small{color:var(--t2)}
 .tres h2{font-size:26px;line-height:1.25}.tres p{color:var(--t2);line-height:1.5;margin-bottom:12px}
 .th{padding:calc(var(--sat,0px) + 18px) var(--g,18px) 20px;max-width:760px;margin:0 auto;display:flex;align-items:flex-start;gap:12px}
-.th h1{font-size:24px;line-height:1.2}.th p{color:var(--t2);font-size:14px;margin-top:2px;line-height:1.4}.th .grow{flex:1;min-width:0}
+.th h1{font-size:clamp(20px,5.4vw,24px);line-height:1.2}.th-kicker{display:block;font-size:13px;font-weight:600;color:var(--t2);margin-bottom:2px}.th p{color:var(--t2);font-size:13.5px;margin-top:3px;line-height:1.4}.th .grow{flex:1;min-width:0}
 .th .backp{margin:0 0 8px;display:inline-flex}
 .tw{max-width:760px;margin:0 auto;padding:0 var(--g,18px) calc(96px + var(--sab,0px))}
 .tsec{margin:18px 0 8px;font-size:13px;font-weight:700;color:var(--t2)}
@@ -37,7 +37,7 @@ body[data-age="3"] .nav a,body[data-age="4"] .nav a{border-radius:12px}
 .tflash small{font-size:13px;color:var(--t2)}
 .xkeys{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px;margin-top:10px}.xkeys button{min-height:48px;border-radius:10px;background:var(--s2);border:1px solid var(--line2);color:var(--t1);font-size:18px;font-weight:600}.xkeys button.w2{grid-column:span 2}.xkeys button.ok{background:var(--gold2);color:var(--on-gold);border:0}
 .xout{min-height:56px;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:700;background:var(--s1);border:1px solid var(--line2);border-radius:12px;direction:ltr;margin-top:10px}
-.wcheck{display:flex;gap:10px;align-items:flex-start;padding:10px 2px;text-align:start;width:100%;color:var(--t1);line-height:1.4}.wcheck i{flex:none;width:22px;height:22px;border:2px solid var(--line2);border-radius:6px;margin-top:1px}.wcheck.on i{background:var(--gold2);border-color:var(--gold2)}
+.wcheck{display:flex;gap:10px;align-items:flex-start;padding:10px 2px;text-align:start;width:100%;color:var(--t1);line-height:1.4}.wcheck i{flex:none;width:22px;height:22px;border:2px solid var(--line2);border-radius:6px;margin-top:1px;display:grid;place-items:center;color:var(--on-gold)}.wcheck.on i{background:var(--gold2);border-color:var(--gold2)}.wcheck.on i::after{content:'✓';font-size:13px;font-weight:800;font-style:normal;line-height:1}
 
 /* ---------- calm: everything simply appears. Only what carries meaning moves. ---------- */
 body[data-motion="calm"] *,body[data-motion="calm"] *::before,body[data-motion="calm"] *::after,body[data-motion="off"] *,body[data-motion="off"] *::before,body[data-motion="off"] *::after{animation-duration:.01s!important;animation-delay:0s!important;animation-iteration-count:1!important}
@@ -50,7 +50,7 @@ body[data-motion] .round.rec::after{animation-duration:1.6s!important;animation-
 /* the first card under a header band keeps clear of it */
 .ph+.wrap>:first-child,.wrap>.labl:first-child,.tw>.labl:first-child{margin-top:max(var(--sp4),var(--mt0,0px))}
 .labl b{display:block;font-weight:600;font-size:15px}.labl small{display:block;color:var(--t2);font-size:12.5px;line-height:1.35}.labl .grow{flex:1;min-width:0}
-details.logu{border-top:1px solid var(--line2)}details.logu summary{display:flex;gap:10px;align-items:center;min-height:44px;padding:6px 0;font-size:14px;cursor:pointer;list-style:none}details.logu summary .grow,.logr .grow{flex:1;min-width:0}
+details.logu{border-top:1px solid var(--line2)}details.logu summary{display:flex;gap:10px;align-items:center;min-height:44px;padding:6px 0;font-size:14px;cursor:pointer;list-style:none}details.logu summary::-webkit-details-marker{display:none}details.logu summary .pk-chev{transition:transform .15s}details.logu[open] summary .pk-chev{transform:rotate(180deg)}details.logu summary .grow,.logr .grow{flex:1;min-width:0}
 .logr{display:flex;gap:10px;align-items:center;padding:7px 0;border-top:1px dashed var(--line2)}.logr b{display:block;font-weight:600;font-size:14px}.logr small{display:block;color:var(--t2);font-size:12px}
 
 .simstage{position:fixed;inset:0;z-index:20;display:flex;flex-direction:column;background:var(--bg);padding-top:var(--sat,0px);padding-bottom:var(--sab,0px)}
@@ -68,15 +68,22 @@ details.logu{border-top:1px solid var(--line2)}details.logu summary{display:flex
 .pk-row{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;min-height:54px;padding:10px 14px;border-radius:12px;font-size:16px;font-weight:600;color:var(--t1);text-align:start}
 .pk-row:active{background:var(--s2)}.pk-row.on{background:color-mix(in srgb,var(--gold2) 18%,transparent);color:var(--t1)}.pk-row svg{color:var(--gold2);flex:none}
 .pk-g{padding:14px 14px 4px;font-size:12.5px;font-weight:700;color:var(--t3)}.pk-none{padding:24px;text-align:center;color:var(--t2)}
-.cal{padding:0 2px 8px}.cal-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}.cal-h b{font-size:17px}
-.cal-n{width:46px;height:46px;border-radius:12px;background:var(--s2);font-size:24px;line-height:1;color:var(--t1)}
-.cal-g{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center}.cal-g i{font-style:normal;font-size:12px;color:var(--t3);padding:4px 0}
-.cal-d{aspect-ratio:1;border-radius:50%;font-weight:600;color:var(--t1)}.cal-d.now{border:1.5px solid var(--gold2)}.cal-d.on{background:var(--gold2);color:var(--on-gold)}
+.dcal{display:block;max-width:none;padding:0 2px 8px}.cal-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}.cal-h b{font-size:17px}
+.cal-n{width:44px;height:44px;border-radius:12px;background:var(--s2);font-size:24px;line-height:1;color:var(--t1)}
+.cal-g{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center}.cal-g i{font-style:normal;font-size:12px;color:var(--t3);padding:4px 0;aspect-ratio:auto;background:none;border-radius:0}
+.cal-d{aspect-ratio:1;border-radius:50%;font-weight:600;color:var(--t1)}.cal-d.now{border:1.5px solid var(--gold2)}.cal-d.on{background:var(--gold2);color:var(--on-gold)}.cal-d[disabled]{opacity:.3;cursor:default}
+.tp-lbl{font-size:12px;font-weight:700;color:var(--t3);margin:8px 0 6px}.tp-lbl:first-child{margin-top:0}
 .tp-g{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}.tp-s{height:12px}.tp{min-height:44px;border-radius:10px;background:var(--s2);font-weight:600;color:var(--t1)}.tp.on{background:var(--gold2);color:var(--on-gold)}
-.info{display:inline-grid;place-items:center;width:22px;height:22px;margin-inline-start:8px;vertical-align:1px;border-radius:50%;border:1.5px solid var(--line2);font:700 12.5px/1 Georgia,serif;font-style:italic;color:var(--t2);position:relative}
-.info::after{content:'';position:absolute;inset:-12px}.info.on{background:var(--gold2);border-color:var(--gold2);color:var(--on-gold)}
-.card.acc>h3{display:flex;align-items:center;gap:8px;margin:0;min-height:30px;cursor:pointer}.card.acc>h3 .pk-chev{margin-inline-start:auto;transition:transform .15s}.card.acc:not(.shut)>h3{margin-bottom:12px}.card.acc:not(.shut)>h3 .pk-chev{transform:rotate(180deg)}
-.card.acc.shut>*:not(h3){display:none!important}
+.card-h{display:flex;align-items:center;gap:8px;margin-bottom:var(--sp3)}.card-h>h3{margin:0;flex:1;min-width:0}
+.info{display:inline-grid;place-items:center;width:34px;height:34px;flex:none;border-radius:50%;border:1px solid var(--line2);background:var(--s2);font:700 13px/1 Georgia,serif;font-style:italic;color:var(--t2);position:relative}
+.info.on{background:var(--gold2);border-color:var(--gold2);color:var(--on-gold)}
+.acc-t{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;min-height:36px;text-align:start;font:inherit;color:inherit}
+.acc-t .pk-chev{flex:none;transition:transform .15s}
+.card.acc.shut>.card-h{margin-bottom:0}.card.acc:not(.shut) .acc-t .pk-chev{transform:rotate(180deg)}
+.card.acc.shut>*:not(.card-h){display:none!important}
+.form-h{font-size:clamp(21px,5.5vw,25px);line-height:1.25}
+.segs.wrap-sm{flex-wrap:wrap}.segs.wrap-sm .seg{flex:1 1 54px;min-width:54px;min-height:44px;padding:6px 10px}
+.pin-row{display:flex;gap:8px;align-items:center}.pin-row .tin{flex:1;min-width:0}.pin-row .btn{flex:none}
 input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}input[type=number]{-moz-appearance:textfield}
 input,textarea{user-select:text;-webkit-user-select:text}
 .li small,.ti small{overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
@@ -86,7 +93,7 @@ input,textarea{user-select:text;-webkit-user-select:text}
 
 /* teen today: one clear first step */
 .tnext{display:flex;align-items:center;gap:12px;width:100%;margin:4px 0 12px;padding:16px;border-radius:16px;text-align:start;color:var(--t1);background:linear-gradient(135deg,color-mix(in srgb,var(--gold,#c79c52) 16%,var(--s1)),var(--s1));border:1px solid var(--gold-line,var(--line2));box-shadow:0 6px 18px -12px rgba(0,0,0,.35)}
-.tnext .grow{flex:1;min-width:0}.tnext small{display:block;color:var(--t2);font-size:12.5px;line-height:1.35}.tnext b{display:block;font-size:19px;font-weight:700;line-height:1.25;margin:3px 0 2px}
+.tnext .grow{flex:1;min-width:0}.tnext small{display:block;color:var(--t2);font-size:12.5px;line-height:1.35}.tnext b{display:block;font-size:clamp(17px,4.6vw,19px);font-weight:700;line-height:1.25;margin:3px 0 2px}
 .tnext .tgo{flex:none;display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 16px;border-radius:999px;font-weight:700;font-size:15px;color:#2a1d08;background:linear-gradient(180deg,#f3d9a0,#d9b06a)}
 [dir=rtl] .tnext .tgo svg{transform:scaleX(-1)}
 .ti .num{font-weight:600;font-size:12.5px}
