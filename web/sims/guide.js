@@ -510,7 +510,7 @@ var GUIDE = {};
   };
   G.lever = {
     idea: ['A lever balances when the moments match: force × distance from the pivot is the same on both sides.', 'تتوازن الرافعة حين يتساوى العزمان: القوة × البعد عن المحور متساويان على الجانبين.'],
-    real: ['Archimedes said: give me a place to stand and a long enough lever, and I will move the Earth. Crowbars, scissors and seesaws all use this.', 'قال أرخميدس: أعطني موضع قدم ورافعة طويلة أحرك الأرض. والعتلة والمقص والأرجوحة تعمل بهذا.'],
+    real: ['A lever trades distance for force. Crowbars, scissors and seesaws all use this.', 'تتيح الرافعة استخدام قوة أقل مقابل تحريكها مسافة أطول. وتعمل العتلة والمقص والأرجوحة بهذا المبدأ.'],
     steps: [
       { q: ['20 N sits 4 m to the left. Where must 10 N go on the right to balance?', '٢٠ نيوتن على بعد ٤ م يسارًا. أين يوضع ١٠ نيوتن يمينًا ليتوازن؟'], o: [['8 m', '٨ م'], ['4 m', '٤ م'], ['2 m', '٢ م']],
         go: ['Left: 20 N at 4 m. Right: 10 N. Balance it.', 'اليسار: ٢٠ نيوتن على ٤ م. اليمين: ١٠ نيوتن. وازنها.'], ok: function (s) { return s.v('left force') === 20 && s.v('left distance') === 4 && s.v('right force') === 10 && s.v('right distance') === 8; },
@@ -598,3 +598,55 @@ var GUIDE = {};
     ]
   };
 })(GUIDE);
+
+/* Guided investigation in the simulation workbench. */
+/* the guided investigation: the idea, then for each step a prediction, one thing to try (checked from ST), and why */
+window.mountGuide=function(id,box,ST,L,AR){var G=window.GUIDE[id];var i=0,pick=-1,timer=null,done=false,baseB={};
+  var snapB=function(){baseB={};Object.keys(ST.b).forEach(function(k){baseB[k]=ST.b[k]})};
+  var api={v:function(k){return ST.v[k]},t:function(k){return ST.o[k]||''},ns:function(k){return(String(ST.o[k]||'').replace(/\u2212/g,'-').match(/-?\d+(\.\d+)?/g)||[]).map(Number)},o:function(k){var n=api.ns(k);return n.length?n[0]:NaN},b:function(k){return Math.max(0,(ST.b[k]||0)-(baseB[k]||0))},seen:function(k,f){return(ST.h[k]||[]).some(f)}};
+  Object.defineProperty(api,'sel',{get:function(){return ST.sel}});
+  function esc(t){t=String(t).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]});return AR?t.replace(/[A-Za-zα-ωΑ-Ωθλπ√∫Σ(\[][A-Za-z0-9α-ωΑ-Ωθλπ√∫Σ²³⁰-⁹₀-₉ =+\-−×÷·.,/()\[\]'′]*[A-Za-z0-9α-ωΑ-Ωθλπ²³⁰-⁹₀-₉)\]]/g,function(m){return '<bdi dir="ltr">'+m+'</bdi>'}):t}
+  function order(n){var a=[];for(var k=0;k<n;k++)a.push(k);for(k=n-1;k>0;k--){var j=(id.length*7+i*13+k*5)%(k+1),t=a[k];a[k]=a[j];a[j]=t}return a}
+  box.setAttribute('aria-label',L(['Guided investigation','التجربة الموجّهة']));
+  box.innerHTML='<details class="gd-idea"><summary><small>'+esc(L(['The idea','الفكرة']))+'</small></summary><p>'+esc(L(G.idea))+'</p></details><div class="gd-card"></div>';
+  var card=box.querySelector('.gd-card');
+  function prog(){
+    return '<div class="gd-prog" role="progressbar" aria-label="'+esc(L(['Investigation progress','تقدّم التجربة']))+'" aria-valuemin="0" aria-valuenow="'+(i+(done&&i<G.steps.length?1:0))+'" aria-valuemax="'+G.steps.length+'">'+
+      G.steps.map(function(x,k){return '<i class="'+(k<i||(k===i&&done)?'on':'')+'"></i>'}).join('')+'</div>';
+  }
+  function draw(){
+    clearInterval(timer);
+    // Experiment controls keep focus even when a reading completes a test.
+    var moveFocus=card.contains(document.activeElement),target;
+    if(i>=G.steps.length){
+      card.innerHTML=prog()+'<div class="gd-q">'+esc(L(['You have found it all.','وجدتها كلها.']))+'</div><p class="gd-real">'+esc(L(G.real))+'</p><div class="gd-acts"><button id="gd-again">'+esc(L(['Again','من جديد']))+'</button></div>';
+      target=card.querySelector('#gd-again');
+      target.onclick=function(){i=0;pick=-1;done=false;snapB();draw()};
+      if(moveFocus)target.focus();
+      try{parent.postMessage({miftahLab:id,done:true},'*')}catch(e){}
+      return;
+    }
+    var st=G.steps[i],ord=order(st.o.length);
+    var h=prog()+'<span class="gd-n">'+esc(L(['Investigation ','تجربة ']))+(i+1)+' / '+G.steps.length+'</span><div class="gd-q">'+esc(L(st.q))+'</div>';
+    if(pick<0){
+      h+='<div class="gd-opts">'+ord.map(function(k){return '<button data-k="'+k+'">'+esc(L(st.o[k]))+'</button>'}).join('')+'</div><p class="gd-real">'+esc(L(['Predict first, then test it.','توقّع أولًا ثم اختبر.']))+'</p>';
+    }else{
+      h+='<div class="gd-opts"><button class="pick" disabled>'+esc(L(st.o[pick]))+'</button></div>';
+      h+=done?'<div class="gd-why" tabindex="-1"><b class="'+(pick===0?'':'miss')+'">'+esc(L(pick===0?['Your prediction was right.','توقّعك صحيح.']:['Not what you predicted: that is what experiments are for.','ليس كما توقعت: لهذا نجرّب.']))+'</b>'+esc(L(st.why))+'</div><div class="gd-acts"><button class="on" id="gd-next">'+esc(L(i+1<G.steps.length?['Next','التالي']:['Finish','إنهاء']))+'</button></div>'
+        :'<div class="gd-do" tabindex="-1"><span class="gd-dot"></span><span>'+esc(L(st.go))+'</span></div>';
+    }
+    card.innerHTML=h;
+    [].forEach.call(card.querySelectorAll('[data-k]'),function(b){
+      b.onclick=function(){pick=+b.dataset.k;snapB();draw()};
+    });
+    var nx=card.querySelector('#gd-next');
+    if(nx)nx.onclick=function(){i++;pick=-1;done=false;snapB();draw()};
+    target=card.querySelector('[data-k],.gd-do,.gd-why');
+    if(moveFocus&&target)target.focus();
+    if(pick>=0&&!done)timer=setInterval(function(){
+      var ok=false;try{ok=!!st.ok(api)}catch(e){}
+      if(ok){done=true;draw()}
+    },300);
+  }
+  draw();
+};

@@ -50,7 +50,7 @@
     var s = c.step, steps = s.s.map(st), opts = s.opts, shown = opts ? 0 : 1;
     var order = opts ? opts.map(function (o, i) { return i; }) : []; if (opts && c.rng && c.rng.shuffle) order = c.rng.shuffle(order);
     var optH = opts ? '<small class="wk-oh">' + esc(L(['Think about it first, then tap Show me.', 'فكّر أولًا، ثم انقر «أرني».'])) + '</small><div class="wk-o">' + order.map(function (i) { var o = opts[i]; return '<div class="wk-oi" data-o="' + i + '">' + esc(L(AD([o[0], o[1]]))) + '</div>'; }).join('') + '</div>' : '';
-    c.el.innerHTML = headHtml(s) + optH + '<div class="wls">' + steps.map(function (x, i) { return '<div data-i="' + i + '"' + (i >= shown ? ' hidden' : '') + '>' + rowHtml(x, '', math(full(x))) + '</div>'; }).join('') + '</div>';
+    c.el.innerHTML = '<div class="pl-worked-lead">' + headHtml(s) + optH + '</div><div class="wls">' + steps.map(function (x, i) { return '<div data-i="' + i + '"' + (i >= shown ? ' hidden' : '') + '>' + rowHtml(x, '', math(full(x))) + '</div>'; }).join('') + '</div>';
     if (!opts && steps.length < 2) { c.done(); return; }
     var b = document.createElement('button'); b.className = 'btn sec wkx-go'; b.textContent = L(opts ? ['Show me', 'أرني'] : ['Next step', 'الخطوة التالية']);
     c.foot.appendChild(b);

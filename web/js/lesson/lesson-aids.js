@@ -29,19 +29,87 @@
     var hint = s && !Aids.generic(s.hint) ? '<div class="lb-hint">' + esc(L(s.hint)) + '</div>' : '';
     A.sheet(L(['Look back', 'راجع الدرس']), '<div class="lb">' + hint + (pages.map(function (p) { return (p.k === 'work' ? '<p class="lb-q">' : '<p>') + esc(clean(p.p)) + '</p>' + (p.k === 'work' && p.show ? '<div class="pad-eq wl-eq" dir="ltr">' + Teach.math(p.show) + '</div>' : '') + (p.k === 'work' ? Teach.lines(p.s) : (p.dia || '')); }).join('') || '<p>' + esc(L(['There is no page to look back at for this one.', 'لا توجد صفحة لهذا السؤال.'])) + '</p>') + '</div>');
   }
-  /* a page for working, kept until the next question */
-  var ink = null;
+  /* Coordinates are relative to the paper, so both views can replay each stroke at their own size. */
+  function paperHtml(inline) {
+    var label = esc(L(['Working', 'مساحة الحل']));
+    return '<section class="' + (inline ? 'pl-work' : 'wk-sheet') + '" aria-label="' + label + '">' +
+      '<div class="wk-tools">' + (inline ? '<strong>' + label + '</strong>' : '') +
+      '<button type="button" class="btn sec sm" data-wk="undo">' + esc(L(['Undo', 'تراجع'])) + '</button>' +
+      '<button type="button" class="btn sec sm"' + (inline ? '' : ' id="wk-x"') + ' data-wk="clear">' + esc(L(['Clear', 'مسح'])) + '</button></div>' +
+      '<canvas class="wk-pad"' + (inline ? '' : ' id="wk-c"') + ' aria-label="' + label + '"></canvas></section>';
+  }
+  function bindPaper(run, host) {
+    var model = run.paper || (run.paper = { strokes: [], views: new Set() });
+    var c = $('.wk-pad', host), g = c.getContext('2d'), pointer = null, stroke = null, frame = 0;
+    var undo = $('[data-wk="undo"]', host), clear = $('[data-wk="clear"]', host);
+    function paint() {
+      frame = 0;
+      undo.disabled = clear.disabled = !model.strokes.length;
+      var w = c.clientWidth, h = c.clientHeight;
+      if (!w || !h) return;
+      var dpr = Math.min(3, window.devicePixelRatio || 1), bw = Math.round(w * dpr), bh = Math.round(h * dpr);
+      if (c.width !== bw || c.height !== bh) { c.width = bw; c.height = bh; }
+      g.setTransform(bw / w, 0, 0, bh / h, 0, 0);
+      g.clearRect(0, 0, w, h);
+      g.strokeStyle = g.fillStyle = getComputedStyle(c).color;
+      g.lineWidth = 2.4; g.lineCap = 'round'; g.lineJoin = 'round';
+      model.strokes.forEach(function (line) {
+        var x = line[0][0] * w, y = line[0][1] * h;
+        g.beginPath();
+        if (line.length === 1) { g.arc(x, y, 1.2, 0, Math.PI * 2); g.fill(); return; }
+        g.moveTo(x, y);
+        for (var i = 1; i < line.length; i++) g.lineTo(line[i][0] * w, line[i][1] * h);
+        g.stroke();
+      });
+    }
+    function queue() { if (!frame) frame = requestAnimationFrame(paint); }
+    function update() { model.views.forEach(function (view) { view.queue(); }); }
+    function at(e) {
+      var b = c.getBoundingClientRect();
+      return [Math.min(1, Math.max(0, (e.clientX - b.left) / b.width)), Math.min(1, Math.max(0, (e.clientY - b.top) / b.height))];
+    }
+    c.onpointerdown = function (e) {
+      if (e.button !== 0 || pointer !== null) return;
+      pointer = e.pointerId; c.setPointerCapture(pointer);
+      stroke = [at(e)]; model.strokes.push(stroke); update();
+    };
+    c.onpointermove = function (e) {
+      if (e.pointerId !== pointer || !stroke || !model.strokes.includes(stroke)) return;
+      stroke.push(at(e)); update();
+    };
+    c.onlostpointercapture = function () { pointer = null; stroke = null; };
+    undo.onclick = function () { model.strokes.pop(); update(); };
+    clear.onclick = function () { model.strokes.length = 0; update(); };
+    var view = { queue: queue, dispose: dispose };
+    var resize = window.ResizeObserver && new ResizeObserver(queue);
+    var changes = new MutationObserver(function () { if (c.isConnected) queue(); else dispose(); });
+    function dispose() {
+      model.views.delete(view);
+      if (resize) resize.disconnect();
+      changes.disconnect();
+      cancelAnimationFrame(frame);
+      c.onpointerdown = c.onpointermove = c.onlostpointercapture = undo.onclick = clear.onclick = null;
+      undo.disabled = clear.disabled = true;
+    }
+    model.views.add(view);
+    changes.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+    if ($('#wk-c', host)) changes.observe(document.body, { childList: true });
+    if (resize) resize.observe(c);
+    queue();
+  }
+  Aids.paper = function (run, host) {
+    host.insertAdjacentHTML('beforeend', paperHtml(true));
+    bindPaper(run, $('.pl-work', host));
+  };
+  Aids.release = function (run) {
+    if (Aids.run === run) Aids.run = null;
+    if (!run.paper) return;
+    run.paper.views.forEach(function (view) { view.dispose(); });
+    run.paper = null;
+  };
   function working() {
-    A.sheet(L(['Working', 'مساحة الحل']), '<canvas class="wk-pad" id="wk-c"></canvas><div class="trow" style="margin-top:8px"><button class="btn sec" id="wk-x">' + esc(L(['Clear', 'مسح'])) + '</button></div>', function (sh) {
-      var c = $('#wk-c', sh), r = c.getBoundingClientRect(), dpr = Math.min(2, window.devicePixelRatio || 1); c.width = r.width * dpr; c.height = r.height * dpr;
-      var g = c.getContext('2d'); g.scale(dpr, dpr); g.lineWidth = 2.4; g.lineCap = 'round'; g.lineJoin = 'round'; g.strokeStyle = getComputedStyle(document.body).color;
-      if (ink) { var im = new Image(); im.onload = function () { g.drawImage(im, 0, 0, r.width, r.height); }; im.src = ink; }
-      var on = false, at = function (e) { var b = c.getBoundingClientRect(); return [e.clientX - b.left, e.clientY - b.top]; };
-      c.onpointerdown = function (e) { on = true; c.setPointerCapture(e.pointerId); var q = at(e); g.beginPath(); g.moveTo(q[0], q[1]); e.preventDefault(); };
-      c.onpointermove = function (e) { if (!on) return; var q = at(e); g.lineTo(q[0], q[1]); g.stroke(); };
-      c.onpointerup = c.onpointercancel = function () { on = false; try { ink = c.toDataURL(); } catch (x) { } };
-      $('#wk-x', sh).onclick = function () { g.clearRect(0, 0, r.width, r.height); ink = null; };
-    });
+    var run = Aids.run;
+    if (run) A.sheet(L(['Working', 'مساحة الحل']), paperHtml(false), function (sh) { bindPaper(run, sh); });
   }
   /* a scientific calculator (trig in degrees, powers, roots) */
   function calc() {
@@ -84,7 +152,7 @@
   }
   /* the row of aids under a question, from eight years old */
   Aids.after = function (run, foot) {
-    Aids.run = run; ink = null;
+    Aids.run = run;
     var s = run.step, st = run.st;
     if (st < 2 || !s || s.k === 'say' || s.k === 'work' || s.k === 'sim' || s.k === 'mission' || s.k === 'body' || s.k === 'watch' || s.k === 'write') return;
     var tb = function (a, ic, t) { return '<button class="aid" data-a="' + a + '" aria-label="' + esc(L(t)) + '">' + ICON[ic] + '<span>' + esc(L(t)) + '</span></button>'; };

@@ -45,10 +45,28 @@
     var p = A.P(), yr = Flow.yearOf(p), groups = {}, mine = (C.SIMS || []).filter(function (s) { return yr + 2 >= s.y; });
     mine.forEach(function (s) { (groups[s.room] = groups[s.room] || []).push(s); });
     var ownH = Media.list().filter(function (m) { return m.kind === 'html' && Media.visible(m); });
-    var body = (ownH.length ? '<div class="tsec">' + esc(L(['From your family', 'من أسرتك'])) + '</div><div class="tl">' + ownH.map(function (m) { return '<a class="ti" href="#/lab/h-' + m.id + '"><span class="grow"><b>' + esc(m.title) + '</b></span></a>'; }).join('') + '</div>' : '') +
-      C.order.filter(function (r) { return groups[r]; }).map(function (r) { return '<div class="tsec">' + esc(L(C.rooms[r].name)) + '</div><div class="tl">' + groups[r].map(labRow).join('') + '</div>'; }).join('');
+    var rooms = C.order.filter(function (r) { return groups[r]; });
+    var family = ['From your family', 'من أسرتك'];
+    function section(id, title, cards) {
+      return '<section class="lab-group" data-lab-group="' + id + '" aria-labelledby="lab-' + id + '"><h2 id="lab-' + id + '">' + esc(L(title)) + '</h2><div class="lab-grid">' + cards + '</div></section>';
+    }
+    function chip(id, title) {
+      return '<button type="button" class="seg" data-a="lab-filter" data-lab-filter="' + id + '" aria-pressed="' + (id === 'all') + '">' + esc(L(title)) + '</button>';
+    }
+    var filters = rooms.map(function (r) { return chip(r, C.rooms[r].name); }).join('') + (ownH.length ? chip('family', family) : '');
+    var body = rooms.map(function (r) { return section(r, C.rooms[r].name, groups[r].map(labRow).join('')); }).join('') +
+      (ownH.length ? section('family', family, ownH.map(function (m) { return '<a class="ti" href="#/lab/h-' + m.id + '"><span class="grow"><b>' + esc(m.title) + '</b></span></a>'; }).join('')) : '');
+    var done = A.D().lab || {}, completed = mine.filter(function (s) { return done[s.id]; }).length;
     var backTo = A.stage(p) >= 3 ? '#/study' : '#/rooms', backLbl = A.stage(p) >= 3 ? ['Study', 'الدراسة'] : ['Rooms', 'الغرف'];
-    return { html: '<header class="th"><div class="grow"><a class="backp" href="' + backTo + '">' + A.icon('back', 18) + '<span>' + esc(L(backLbl)) + '</span></a><h1>' + esc(L(['The Lab', 'المختبر'])) + '</h1><p>' + esc(L(['Predict, then test it, then see why. Each simulation guides a few investigations; you can always just play.', 'توقّع ثم اختبر ثم افهم السبب. كل محاكاة تقودك في تجارب قليلة، ويمكنك دائمًا أن تلعب بحرية.'])) + '</p></div></header><div class="tw">' + (body || '<div class="card"><p style="color:var(--t2)">' + esc(L(['The lab opens as you grow.', 'يفتح المختبر كلما كبرت.'])) + '</p></div>') + '</div>' };
+    return { html: '<header class="th lab-head"><div class="grow"><a class="backp" href="' + backTo + '">' + A.icon('back', 18) + '<span>' + esc(L(backLbl)) + '</span></a><h1>' + esc(L(['The Lab', 'المختبر'])) + '</h1><p>' + esc(L(['Predict, test and see why, or explore at your own pace.', 'توقّع واختبر وافهم السبب، أو استكشف على وتيرتك.'])) + '</p></div>' +
+      (mine.length ? '<span class="lab-count">' + esc(L([N(completed) + ' of ' + N(mine.length) + ' completed', 'أُكمل ' + N(completed) + ' من ' + N(mine.length)])) + '</span>' : '') +
+      '</header><div class="tw lab-gallery">' + (filters ? '<div class="lab-filters" role="group" aria-label="' + esc(L(['Filter by subject', 'تصفية حسب المادة'])) + '">' + chip('all', ['All', 'الكل']) + filters + '</div>' : '') +
+      (body || '<div class="card"><p>' + esc(L(['The lab opens as you grow.', 'يفتح المختبر كلما كبرت.'])) + '</p></div>') + '</div>' };
+  };
+  A.acts['lab-filter'] = function (button) {
+    var gallery = button.closest('.lab-gallery'), id = button.dataset.labFilter;
+    A.$$('[data-lab-filter]', gallery).forEach(function (chip) { chip.setAttribute('aria-pressed', String(chip === button)); });
+    A.$$('[data-lab-group]', gallery).forEach(function (group) { group.hidden = id !== 'all' && id !== group.dataset.labGroup; });
   };
 
   /* ---------- cross-subject analysis ---------- */

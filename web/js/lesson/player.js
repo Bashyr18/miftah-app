@@ -111,6 +111,7 @@
 
   Player.start = function (host, o) {
     /* o: {steps, skill, mode, hue, title, onDone, onExit} */
+    if (run && window.Aids) Aids.release(run);
     var st = A.stage();
     var at = o.at && Number.isInteger(o.at.i) && o.at.i >= 0 && o.at.i <= o.steps.length ? o.at : null;
     run = { o: o, at: at, i: at ? at.i : 0, phases: stepKinds(o.steps), solo: at ? at.solo || 0 : 0, soloOk: at ? at.soloOk || 0 : 0, stN: at && at.stN, stOk: at && at.stOk, tries: 0, hinted: false, started: Date.now(), last: Date.now(), wrong: [], retried: false, retries: [] };
@@ -124,7 +125,7 @@
   /* the clock ran out: what was not reached counts as not done */
   Player.finishNow = function () { if (!run) return; var r = run, left = r.o.steps.length - r.i - (r.answered ? 1 : 0); r.solo += Math.max(0, left); finish(); };
   Player.cur = function () { return run && run.step; };
-  Player.stop = function () { if (run && run.cleanup) { try { run.cleanup(); } catch (e) { } } run = null; };
+  Player.stop = function () { if (run && window.Aids) Aids.release(run); if (run && run.cleanup) { try { run.cleanup(); } catch (e) { } } run = null; };
   A.acts['gu-show'] = function (t) { A.toast(t.dataset.w); };
   A.acts['pl-say'] = function () { if (run && run.step) sayStep(run.step); };
   A.acts['pl-exit'] = function () { if (!run) return; Voice.stop(); var o = run.o; Player.stop(); if (o.onExit) o.onExit(); };
@@ -147,9 +148,41 @@
     A.save();
   }
 
+  /* Compose eligible steps inside the player. CSS switches the layout at the viewport breakpoint. */
+  function workspace(r, inner, prompt) {
+    var answer = $(':scope > :is(.pad,.expr,.ch)', inner);
+    var context = $('.pl-worked-lead', inner);
+    var example = $('.wkx, .wk', inner);
+    var paper = (answer && answer.matches('.pad,.expr')) || (r.step.k === 'expr' && $('.xkeys', inner));
+    if (paper && window.Aids) {
+      var exercise = document.createElement('div'); exercise.className = 'pl-exercise';
+      while (inner.firstChild) exercise.appendChild(inner.firstChild);
+      inner.appendChild(exercise);
+      Aids.paper(r, inner);
+    } else if (answer && answer.matches('.ch')) {
+      if (!prompt.firstChild && inner.children.length === 1) return;
+      var question = document.createElement('div'); question.className = 'pl-choice-context';
+      Array.from(inner.children).forEach(function (el) { if (el !== answer) question.appendChild(el); });
+      inner.insertBefore(question, answer);
+      context = question;
+    } else if (!context && example && r.step.k === 'say') {
+      context = document.createElement('div'); context.className = 'pl-worked-lead';
+      inner.insertBefore(context, example);
+    } else if (!context) {
+      return;
+    }
+    if (context && prompt.firstChild) {
+      var lead = prompt.firstChild.cloneNode(true); lead.classList.add('pl-context-prompt');
+      context.insertBefore(lead, context.firstChild);
+    }
+    if (context && !context.children.length) return;
+    inner.classList.add('pl-split');
+  }
+
   function show() {
     var r = run, s = r.o.steps[r.i];
     if (!s) return finish();
+    if (window.Aids) Aids.release(r);
     s = r.o.steps[r.i] = Voice.adapt(s);
     r.step = s; r.tries = r.at ? r.at.tries || 0 : 0; r.hinted = !!(r.at && r.at.hinted); r.answered = false;
     r.at = null;
@@ -187,6 +220,7 @@
     ctx.onReveal = function (f) { r.reveal = f; };
     fn(ctx);
     if (A.arWrap) { A.arWrap(inner); A.arWrap(pr); }
+    workspace(r, inner, pr);
     if (s.gu) { var gub = document.createElement('button'); gub.className = 'gu'; gub.dataset.a = 'gu-show'; gub.dataset.w = s.gu; gub.textContent = L(['Grown-up: tap to see the word to say', 'للكبير: انقر لترى الكلمة']); /* under the answers, inside the step: placed in the lesson body it stood beside them as a tall empty panel */ box.appendChild(gub); }
     var spb = $('.pl-sp', r.host); if (spb) { var spT = s.speakAr || (s.speak ? L(s.speak) : L(s.p)); spb.style.visibility = Voice.can(spT, { key: s.vk }) ? 'visible' : 'hidden'; }
     if (window.Aids) Aids.after(r, foot);
@@ -285,6 +319,7 @@
   function finish() {
     var r = run, o = r.o, res = { solo: r.solo, soloOk: r.soloOk, passed: r.solo === 0 || r.soloOk / r.solo >= (r.st >= 2 ? .75 : .66), clean: r.solo > 0 && r.soloOk === r.solo, ms: Date.now() - r.started, stretch: r.stN || 0, stretchOk: r.stOk || 0 };
     if (r.cleanup) { try { r.cleanup(); } catch (e) { } }
+    if (window.Aids) Aids.release(r);
     var host = r.host; run = null;
     if (o.track) { A.D().resume = null; A.save(); }
     if (o.onDone) o.onDone(res, host);
