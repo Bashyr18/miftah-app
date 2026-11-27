@@ -2,6 +2,12 @@
 
 The version is set in `version.txt`.
 
+## 2.7.1 (code 13), November 2026
+
+- Refined mobile typography, touch targets, RTL icon flips, stacked date/time pickers inside form sheets, and quick access to Setup and Settings across phones, tablets, and Windows desktop.
+- Improved the Qurʾān Sūrah reader controls on tablets and desktop, worksheet ink pan/zoom, teen study & flashcards, and parent/desktop backup & LAN pairing screens.
+- Repaired missing curriculum icons and prerequisite links, fixed conceptual-error traps and Arabic formula glossaries, added degree-mode trig keys to the lesson calculator, and aligned Android safe-area insets and Windows tray reminders.
+
 ## 2.7.0 (code 12), November 2026
 
 - Plan a school break from the Family screen. The dates apply to the learners on this device, appear in the week ahead, and end automatically. Change or cancel a break from the same screen.
