@@ -24,9 +24,9 @@
   function sceneKey() {
     var el = $('#wc');
     var door = A.hasImg('door-frame') && A.hasImg('door-left') ? '<div class="wel-door" aria-hidden="true"><img class="wd-l" src="' + A.imgUrl('door-left') + '" alt="" draggable="false"><img class="wd-r" src="' + A.imgUrl('door-right') + '" alt="" draggable="false"><img class="wd-f" src="' + A.imgUrl('door-frame') + '" alt="" draggable="false"><i class="wd-glow"></i></div>' : '<div class="wel-plate">' + plateHtml() + '</div>';
-    el.innerHTML = '<div class="arname" lang="ar">مِفْتَاح</div><h1>Miftāḥ</h1><p>' + esc(L(['A homeschool for the whole family, from the Qurʾān to the stars.', 'مدرسة بيتية للعائلة كلها، من القرآن إلى النجوم.'])) + '</p>' + door +
+    el.innerHTML = '<div class="wel-split"><div class="wel-vis">' + door + '</div><div class="wel-copy"><div class="arname" lang="ar">مِفْتَاح</div><h1>Miftāḥ</h1><p>' + esc(L(['A homeschool for the whole family, from the Qurʾān to the stars.', 'مدرسة بيتية للعائلة كلها، من القرآن إلى النجوم.'])) + '</p>' +
       '<div class="segs wel-lang"><button class="seg ' + (A.S.lang === 'en' ? 'on' : '') + '" data-lang="en">English</button><button class="seg ' + (A.S.lang === 'ar' ? 'on' : '') + '" data-lang="ar">العربية</button></div>' +
-      '<button class="btn pri big wel-go" id="wel-go">' + esc(L(['Begin', 'ابدأ'])) + A.icon('next', 22) + '</button>';
+      '<button class="btn pri big wel-go" id="wel-go">' + esc(L(['Begin', 'ابدأ'])) + A.icon('next', 22) + '</button></div></div>';
     $$('[data-lang]', el).forEach(function (b) { b.onclick = function () { A.S.lang = b.dataset.lang; A.applyTheme(); A.saveNow(); sceneKey(); }; });
     var done = false, go = $('#wel-go', el), dv = $('.wel-door', el) || $('.wel-plate', el);
     var begin = function () {

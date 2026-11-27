@@ -128,9 +128,17 @@ body[data-view=parent] .pk{min-height:44px;padding:8px 12px;border-radius:var(--
 /* a printed sheet's state in the Print list: gold while it still waits for a grown-up */
 .sh-st{flex:none;font-size:12px;font-weight:700;padding:4px 12px;border-radius:99px;background:var(--s3);color:var(--t2);white-space:nowrap}
 .sh-st.on{background:var(--gold-soft);color:var(--t1)}
+.tl-groups{display:grid;gap:var(--sp3);margin-top:var(--sp3)}
+.tl-grp .tl-h{margin-top:0}
+@media (min-width:960px){
+  .tl-groups{grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:20px;align-items:start}
+}
 @media (min-width:760px){
   .kpis{grid-template-columns:repeat(4,minmax(0,1fr))}
   .dcols{grid-template-columns:minmax(0,1.15fr) minmax(0,1fr)}
+  .fday{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 16px;padding:12px 16px;border-radius:var(--r3);background:var(--s1);border:1px solid var(--line)}
+  .fday-h{min-height:0}
+  .fday-r{margin-top:0}
 }
 
 /* ---------- the media gallery ---------- */

@@ -482,6 +482,16 @@ html[lang=ar] .forge-txt small{letter-spacing:0;font-size:15px}
 .wel{--gold2:#f1d59e;--gold:#d9b26f;--t2:#cfc9bd;--bg:#07080d;position:fixed;inset:0;display:flex;flex-direction:column;background:radial-gradient(90% 60% at 50% 30%,#1a2146,#07080d);color:#f5f0e7;overflow:hidden;--keyhole:#0b0d14}
 .wel-stars{position:absolute;inset:0}
 .wel-c{position:relative;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:calc(var(--sat) + 20px) var(--g) calc(var(--sab) + 20px);gap:15px;text-align:center;overflow-y:auto}
+.wel-split{display:flex;flex-direction:column;align-items:center;gap:14px;width:100%}
+.wel-vis{display:grid;place-items:center;order:2}
+.wel-copy{display:flex;flex-direction:column;align-items:center;gap:14px;order:1}
+@media (min-width:840px){
+  .wel-split{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:center;gap:clamp(28px,5vw,64px);max-width:920px;text-align:start}
+  .wel-vis{order:1}
+  .wel-copy{order:2;align-items:flex-start}
+  .wel-copy .wel-lang{width:min(340px,100%)}
+  .wel-copy .wel-go{min-width:240px}
+}
 .wel h1{font-size:clamp(36px,11vw,58px);line-height:1;letter-spacing:.01em}
 .wel .arname{font-family:var(--f-ar);font-size:clamp(34px,10vw,52px);color:#f1d59e;line-height:1.3}
 .wel p{color:#cfc9bd;max-width:34ch;line-height:1.45;font-size:17px}
@@ -500,6 +510,7 @@ html[lang=ar] .forge-txt small{letter-spacing:0;font-size:15px}
 .wel .seg{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.22);color:#fff}
 .wel .seg.on{background:rgba(241,213,158,.2);border-color:#f1d59e;color:#f1d59e}
 .who-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:14px;width:100%;max-width:440px}
+@media (min-width:760px){.who-grid{grid-template-columns:repeat(auto-fit,minmax(156px,1fr));max-width:min(860px,92vw);gap:18px}}
 .who-c{position:relative;display:grid;justify-items:center;gap:8px;padding:18px 8px;border-radius:var(--r-lg);background:linear-gradient(180deg,rgba(38,44,82,.92),rgba(22,26,52,.92));-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.14);box-shadow:0 10px 24px -14px rgba(0,0,0,.7)}
 .who-c:active{transform:scale(.98)}
 .who-c .avatar{width:74px;height:74px;font-size:32px;border-radius:50%;display:grid;place-items:center}

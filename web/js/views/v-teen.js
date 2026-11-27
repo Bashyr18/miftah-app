@@ -33,13 +33,16 @@
     var ns = nx != null && nx >= 0 && pl.stops[nx], ni = ns && A.stopInfo(ns);
     var nextH = ns && !ns.done && !sk ? '<button class="tnext" data-a="go-stop" data-i="' + nx + '"><span class="grow"><small>' + esc(L(doneN ? ['Next', 'التالي'] : ['First today', 'أول اليوم'])) + ' · ' + mins(ns) + '</small><b>' + esc(L(ni.title)) + '</b><small>' + esc(L(ni.sub)) + '</small></span><span class="tgo">' + esc(L(['Start', 'ابدأ'])) + A.icon('next', 18) + '</span></button>' : '';
     var goal = (d.weekly && d.weekly.goal) || '';
-    return { html: head(p.name, { html: Voice.dateLine() + '<span class="dl-s">' + esc(L(A.STAGES[A.stage()].name)) + '</span>' }, null, L(['As-salāmu ʿalaykum', 'السلام عليكم'])) + '<div class="tw">' +
+    return { html: head(p.name, { html: Voice.dateLine() + '<span class="dl-s">' + esc(L(A.STAGES[A.stage()].name)) + '</span>' }, null, L(['As-salāmu ʿalaykum', 'السلام عليكم'])) + '<div class="tw teen-home">' +
       '<span class="upd-slot" style="margin-bottom:10px">' + (window.Upd ? Upd.chip() : '') + '</span>' +
       (window.Flow.inSchoolBreak() ? '<p class="card" style="margin-bottom:12px">' + esc(L(['School break today', 'اليوم عطلة دراسية'])) + '</p>' : '') +
-      (sk ? '<button class="tnext" data-a="go-resume"><span class="grow"><small>' + esc(L(['Carry on where you stopped', 'تابع من حيث توقفت'])) + '</small><b>' + esc(L(sk.title)) + '</b></span><span class="tgo">' + esc(L(['Carry on', 'تابع'])) + A.icon('next', 18) + '</span></button>' : nextH) +
-      (exams.length ? '<a class="tcard" style="min-height:0;margin-bottom:10px" href="#/study"><small>' + esc(L(['Next exam', 'الاختبار القادم'])) + '</small><b>' + esc(exams[0].title) + '</b><small>' + esc(L(['Days left: ', 'الأيام المتبقية: '])) + N(daysTo(exams[0].date)) + '</small></a>' : '') +
-      '<div class="tsec">' + esc(L(['Today', 'اليوم'])) + ' · ' + N(doneN) + ' / ' + N(pl.stops.length) + (Plan.left() ? ' · ' + esc(L(['about', 'نحو'])) + ' ' + N(Plan.left()) + ' ' + esc(L(['min', 'د'])) : '') + '</div><div class="tl">' + (rows || '<div class="ti"><span class="grow"><b>' + esc(L(['A clear day', 'يوم خالٍ'])) + '</b><small>' + esc(L(['Nothing is due. Read something you love.', 'لا شيء مطلوب. اقرأ ما تحب.'])) + '</small></span></div>') + '</div>' +
+      nextH +
+      '<div class="tsec teen-plan-title">' + esc(L(['Today’s plan', 'خطة اليوم'])) + ' · ' + N(doneN) + ' / ' + N(pl.stops.length) + (Plan.left() ? ' · ' + esc(L(['about', 'نحو'])) + ' ' + N(Plan.left()) + ' ' + esc(L(['min', 'د'])) : '') + '</div><div class="tl teen-plan">' + (rows || '<div class="ti"><span class="grow"><b>' + esc(L(['A clear day', 'يوم خالٍ'])) + '</b><small>' + esc(L(['Nothing is due. Read something you love.', 'لا شيء مطلوب. اقرأ ما تحب.'])) + '</small></span></div>') + '</div>' +
+      '<div class="teen-week">' +
+      (sk ? '<button class="tnext teen-resume" data-a="go-resume"><span class="grow"><small>' + esc(L(['Carry on where you stopped', 'تابع من حيث توقفت'])) + '</small><b>' + esc(L(sk.title)) + '</b></span><span class="tgo">' + esc(L(['Carry on', 'تابع'])) + A.icon('next', 18) + '</span></button>' : '') +
       '<div class="tsec">' + esc(L(['This week', 'هذا الأسبوع'])) + '</div><div class="tgrid"><a class="tcard" href="#/flash"><small>' + esc(L(['Due to review', 'للمراجعة'])) + '</small><b>' + N(due + flashDue().length) + '</b></a><a class="tcard" href="#/study"><small>' + esc(L(['My goal', 'هدفي'])) + '</small><b>' + esc(goal || L(['Set one', 'حدد هدفًا'])) + '</b></a></div>' +
+      (exams.length ? '<a class="tcard teen-exam" style="min-height:0;margin-bottom:10px" href="#/study"><small>' + esc(L(['Next exam', 'الاختبار القادم'])) + '</small><b>' + esc(exams[0].title) + '</b><small>' + esc(L(['Days left: ', 'الأيام المتبقية: '])) + N(daysTo(exams[0].date)) + '</small></a>' : '') +
+      '</div>' +
       '<a class="btn ghost" style="margin-top:14px" href="#/parent">' + A.icon('grown', 18) + '<span>' + esc(L(['Parents', 'الوالدان'])) + '</span></a></div>' + nav('home') };
   };
   /* ---------- subjects ---------- */
@@ -95,12 +98,6 @@
   };
   /* ---------- flashcards: the student's own, on a simple widening schedule ---------- */
   function flashDue() { var c = A.D().cards || [], t = A.now().getTime(); return c.filter(function (x) { return (x.next || 0) <= t; }); }
-  A.acts['t-flip'] = function () { var c = flashDue()[0]; if (!c) return; $('#t-card').innerHTML = '<small>' + esc(c.f) + '</small><span>' + esc(c.b) + '</span>'; $('#t-grade').hidden = false; };
-  A.acts['t-grade'] = function (t) {
-    var c = flashDue()[0], g = +t.dataset.g, now = A.now().getTime(); if (!c) return;
-    c.gap = g === 0 ? .01 : g === 1 ? Math.max(1, (c.gap || 1) * 1.2) : Math.min(180, Math.max(1, (c.gap || .5) * 2.4));
-    c.next = now + c.gap * DAY; A.saveNow(); A.rerender();
-  };
   /* ---------- essays: plan, draft, check, keep every version ---------- */
   A.V.write = function (args) {
     if (!A.P()) return { redirect: 'home' };
@@ -119,7 +116,9 @@
         saveTimer = setTimeout(flushDraft, 800);
       }
       bEl.oninput = pEl.oninput = queueDraft;
-    }, html: head(w.title, '', ['write', ['Essays', 'المقالات']]) + '<div class="tw"><textarea class="tin" id="t-w-p" aria-label="' + esc(L(['Plan', 'الخطة'])) + '" style="min-height:90px" placeholder="' + esc(L(['Plan: your main point, then three reasons.', 'الخطة: فكرتك الرئيسة ثم ثلاثة أسباب.'])) + '">' + esc(w.plan || '') + '</textarea><textarea class="tin" id="t-w-b" aria-label="' + esc(L(['Draft', 'المسودة'])) + '" style="margin-top:8px;min-height:280px" placeholder="' + esc(L(['Draft', 'المسودة'])) + '">' + esc(w.text || '') + '</textarea><p id="t-w-c" style="color:var(--t2);font-size:13px;margin-top:4px">' + N(words(w.text)) + ' ' + esc(L(['words', 'كلمة'])) + '</p><div class="tsec">' + esc(L(['Before you finish', 'قبل أن تنتهي'])) + '</div>' + CHECK.map(function (c, i) { return '<button class="wcheck ' + (ch[i] ? 'on' : '') + '" role="checkbox" aria-checked="' + (ch[i] ? 'true' : 'false') + '" data-a="t-w-check" data-i="' + i + '" data-w="' + id + '"><i></i><span>' + esc(L(c)) + '</span></button>'; }).join('') + '<button class="btn sec wide" style="margin-top:10px" data-a="t-w-share" data-w="' + id + '">' + esc(w.shared ? L(['Stop sharing with parents', 'أوقف المشاركة']) : L(['Share with parents for marking', 'شاركه مع الوالدين للتصحيح'])) + '</button>' + (w.mark ? '<div class="tsec">' + esc(L(['Feedback', 'الملاحظات'])) + '</div><p class="card" style="white-space:pre-wrap;line-height:1.55">' + esc(w.mark) + '</p>' : '') + '</div>' };
+      $('#t-w-save', v).onclick = function () { flushDraft(); A.saveNow(); A.toast(L(['Draft saved', 'حُفظت المسودة'])); };
+    }, html: head(w.title, '', ['write', ['Essays', 'المقالات']]) + '<div class="tw write-workspace"><div class="write-page"><textarea class="tin" id="t-w-p" dir="auto" aria-label="' + esc(L(['Plan', 'الخطة'])) + '" style="min-height:90px" placeholder="' + esc(L(['Plan: your main point, then three reasons.', 'الخطة: فكرتك الرئيسة ثم ثلاثة أسباب.'])) + '">' + esc(w.plan || '') + '</textarea><textarea class="tin" id="t-w-b" dir="auto" aria-label="' + esc(L(['Draft', 'المسودة'])) + '" style="margin-top:8px;min-height:280px" placeholder="' + esc(L(['Draft', 'المسودة'])) + '">' + esc(w.text || '') + '</textarea></div><aside class="write-tools"><p id="t-w-c" style="color:var(--t2);font-size:13px;margin-top:4px">' + N(words(w.text)) + ' ' + esc(L(['words', 'كلمة'])) + '</p><div class="tsec">' + esc(L(['Before you finish', 'قبل أن تنتهي'])) + '</div>' + CHECK.map(function (c, i) { return '<button class="wcheck ' + (ch[i] ? 'on' : '') + '" role="checkbox" aria-checked="' + (ch[i] ? 'true' : 'false') + '" data-a="t-w-check" data-i="' + i + '" data-w="' + id + '"><i></i><span>' + esc(L(c)) + '</span></button>'; }).join('') + '<button class="btn pri wide" id="t-w-save">' + esc(L(['Save draft', 'احفظ المسودة'])) +
+      '</button><button class="btn sec wide" style="margin-top:10px" data-a="t-w-share" data-w="' + id + '">' + esc(w.shared ? L(['Stop sharing with parents', 'أوقف المشاركة']) : L(['Share with parents for marking', 'شاركه مع الوالدين للتصحيح'])) + '</button>' + (w.mark ? '<div class="tsec">' + esc(L(['Feedback', 'الملاحظات'])) + '</div><p class="card" style="white-space:pre-wrap;line-height:1.55">' + esc(w.mark) + '</p>' : '') + '</aside></div>' };
   };
   var CHECK = [['I answered the actual question', 'أجبت عن السؤال نفسه'], ['Each paragraph has one main point', 'لكل فقرة فكرة رئيسة'], ['I gave evidence and examples', 'قدمت أدلة وأمثلة'], ['I was fair to the other side', 'أنصفت الرأي الآخر'], ['I read it aloud and fixed what sounded wrong', 'قرأته بصوت عالٍ وأصلحت ما بدا خطأ']];
   function words(t) { return (t || '').trim().split(/\s+/).filter(Boolean).length; }
@@ -178,12 +177,8 @@
       }
     };
   };
-})();
 
-/* ---------- parents: summaries, with work only when shared ---------- */
-(function () {
-  'use strict';
-  var A = window.A, $ = A.$, esc = A.esc, L = A.L, N = function (x) { return A.num(x); };
+  /* ---------- parents: summaries, with work only when shared ---------- */
   A.V.marking = function (args) {
     if (!A.grownOpen()) return A.grownGate();
     if (!A.P()) return { redirect: 'home' };
@@ -193,11 +188,15 @@
     ch.forEach(function (p) {
       var d = A.D(p.id), shared = (d.work || []).map(function (w, i) { return { w: w, i: i }; }).filter(function (x) { return x.w.shared; }), papers = (d.papers || []).slice(-3).reverse(), wk = d.weekly || {};
       html += '<div class="tsec">' + esc(p.name) + '</div><div class="tl"><div class="ti"><span class="grow"><b>' + esc(L(['Goal this week', 'هدف هذا الأسبوع'])) + '</b><small>' + esc(wk.goal || L(['None set', 'لم يُحدد'])) + '</small></span></div>' + (papers.length ? '<div class="ti"><span class="grow"><b>' + esc(L(['Recent practice papers', 'آخر الاختبارات'])) + '</b><small>' + papers.map(function (x) { return esc(L(window.C.rooms[x.r].name)) + ' ' + N(x.p) + '%'; }).join(' · ') + '</small></span></div>' : '') + (p.exams || []).map(function (e) { return '<div class="ti"><span class="grow"><b>' + esc(e.title) + '</b><small>' + esc(e.date) + '</small></span></div>'; }).join('') + '</div>' +
-        (shared.length ? shared.map(function (x) { var mk = esc(p.id) + ':' + x.i; return '<div class="card" style="margin-top:10px"><h3>' + esc(x.w.title) + '</h3><p style="white-space:pre-wrap;line-height:1.5;margin:8px 0">' + esc(x.w.text || '') + '</p><textarea class="tin" style="min-height:80px" data-mark="' + mk + '" aria-label="' + esc(L(['Your feedback', 'ملاحظاتك'])) + '" placeholder="' + esc(L(['Your feedback', 'ملاحظاتك'])) + '">' + esc(x.w.mark || '') + '</textarea><button class="btn sec sm" style="margin-top:8px" data-mark-save="' + mk + '">' + esc(L(['Save feedback', 'حفظ الملاحظات'])) + '</button></div>'; }).join('') : '<p style="color:var(--t2);font-size:13.5px;margin-top:8px">' + esc(L(['Written work appears here only when they share it.', 'تظهر الأعمال المكتوبة هنا فقط عند مشاركتها.'])) + '</p>');
+        (shared.length ? shared.map(function (x) { var mk = esc(p.id) + ':' + x.i; return '<div class="card mark-workspace"><div class="write-page"><h3>' + esc(x.w.title) + '</h3><p dir="auto" style="white-space:pre-wrap;line-height:1.5;margin:8px 0">' + esc(x.w.text || '') + '</p></div><aside class="write-tools"><p class="mark-count">' +
+          N(words(x.w.text)) + ' ' + esc(L(['words', 'كلمة'])) + '</p>' +
+          '<details class="mark-rubric" open><summary>' + esc(L(['Writing checklist', 'قائمة مراجعة الكتابة'])) + '</summary><ul>' +
+          CHECK.map(function (item, i) { var checked = (x.w.check || [])[i]; return '<li><span role="img" aria-label="' +
+            esc(checked ? L(['Checked', 'تم التحقق']) : L(['Unchecked', 'غير محدد'])) + '">' + (checked ? '✓' : '○') + '</span> ' + esc(L(item)) + '</li>'; }).join('') + '</ul></details><textarea class="tin" dir="auto" style="min-height:80px" data-mark="' + mk + '" aria-label="' + esc(L(['Your feedback', 'ملاحظاتك'])) + '" placeholder="' + esc(L(['Your feedback', 'ملاحظاتك'])) + '">' + esc(x.w.mark || '') + '</textarea><button class="btn sec sm" style="margin-top:8px" data-mark-save="' + mk + '">' + esc(L(['Save feedback', 'حفظ الملاحظات'])) + '</button></aside></div>'; }).join('') : '<p style="color:var(--t2);font-size:13.5px;margin-top:8px">' + esc(L(['Written work appears here only when they share it.', 'تظهر الأعمال المكتوبة هنا فقط عند مشاركتها.'])) + '</p>');
     });
     if (!html) html = '<div class="card"><p style="color:var(--t2)">' + esc(L(['Older students (12 and up) appear here once added.', 'يظهر الطلاب الأكبر (١٢ عامًا فأكثر) هنا عند إضافتهم.'])) + '</p></div>';
     var backHref = pid ? '#/parent/' + encodeURIComponent(pid) : '#/parent', backLbl = pid ? (A.profile(pid) ? A.profile(pid).name : L(['Back', 'رجوع'])) : L(['Parents', 'الوالدان']);
-    return { html: '<header class="th"><div class="grow"><a class="backp" href="' + backHref + '">' + A.icon('back', 18) + '<span>' + esc(backLbl) + '</span></a><h1>' + esc(L(['Older students', 'الطلاب الأكبر'])) + '</h1><p>' + esc(L(['A summary, as you agreed together.', 'ملخص كما اتفقتم.'])) + '</p></div></header><div class="tw">' + html + '</div>', mount: function (v) {
+    return { html: '<header class="th"><div class="grow"><a class="backp" href="' + backHref + '">' + A.icon('back', 18) + '<span>' + esc(backLbl) + '</span></a><h1>' + esc(L(['Older students', 'الطلاب الأكبر'])) + '</h1><p>' + esc(L(['A summary, as you agreed together.', 'ملخص كما اتفقتم.'])) + '</p></div></header><div class="tw marking-page">' + html + '</div>', mount: function (v) {
       function saveOne(t, notify) {
         if (!A.grownOpen()) { A.rerender(); return; }
         var key = t.dataset.mark, i = key.lastIndexOf(':'), work = (A.D(key.slice(0, i)).work || [])[+key.slice(i + 1)];

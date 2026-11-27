@@ -210,9 +210,11 @@
     var zb = $('[data-z]', host); if (zb) zb.onclick = function () { wideFit = Ink.wide = !wideFit; stage.scrollTop = 0; fit(); };
     var key = function (e) { var rtl = A.ar(); if ((e.ctrlKey || e.metaKey) && (e.key === 'z' || e.key === 'Z') && edit) { e.preventDefault(); var u = $('[data-t=undo]', host); if (u && !u.disabled) u.click(); } else if (e.key === 'PageDown' || (e.key === (rtl ? 'ArrowLeft' : 'ArrowRight') && !edit)) show(at + 1); else if (e.key === 'PageUp' || (e.key === (rtl ? 'ArrowRight' : 'ArrowLeft') && !edit)) show(at - 1); };
     var onR = function () { clearTimeout(fit._t); fit._t = setTimeout(fit, 80); };
+    var ro = window.ResizeObserver ? new ResizeObserver(onR) : null;
+    if (ro) ro.observe(stage);
     addEventListener('resize', onR); document.addEventListener('keydown', key);
     show(0);
-    return function () { removeEventListener('resize', onR); document.removeEventListener('keydown', key); A.saveNow(); };
+    return function () { if (ro) ro.disconnect(); removeEventListener('resize', onR); document.removeEventListener('keydown', key); A.saveNow(); };
   };
 
   /* ---------- the child's side ---------- */

@@ -14,7 +14,7 @@
   var A = window.A;
   var F = A.form = { w: 0, h: 0, fold: null, scale: 1, native: null };
   var root = document.documentElement, meta = document.querySelector('meta[name=viewport]'), meta0 = meta ? meta.getAttribute('content') : '';
-  var KEEP = { lesson: 1, exam: 1, paper: 1, sheet: 1, write: 1, challenge: 1, marking: 1, flash: 1, watch: 1, welcome: 1 };
+  var KEEP = { lesson: 1, stop: 1, exam: 1, paper: 1, sheet: 1, write: 1, challenge: 1, marking: 1, flash: 1, watch: 1, welcome: 1, lab: 1, hifz: 1, surah: 1, nursery: 1, place: 1, rest: 1, cards: 1 };
   var last = '';
 
   /* how much larger a tablet shows things: none on a phone or a foldable's cover screen, up to a third more on a big tablet */

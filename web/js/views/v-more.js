@@ -20,10 +20,10 @@
     function finish() {
       var d = A.D(pid); for (var i = 0; i < lo; i++) if (!M.met(list[i].id, pid)) d.placed[list[i].id] = 1; d.path = null; A.saveNow();
       var nx = list[lo], none = !list.length;
-      host.innerHTML = '<div class="forge h-' + r.hue + '"><div class="forge-key">' + A.art('key', Math.min(innerWidth, innerHeight) * .4) + '</div><div class="forge-txt"><small>' + esc(L(r.name)) + '</small><h2>' + esc(none ? L(['Nothing to place here yet', 'لا شيء لتحديد مستواه هنا بعد']) : nx ? T('Your door is ready') : T('You know all of this')) + '</h2><p>' + esc(none ? L(['This subject has no placement check at this stage.', 'ليس لهذه المادة فحص مستوى في هذه المرحلة.']) : nx ? L(nx.title) : T('Every door here is already open for you.')) + '</p><button class="btn pri big" id="fgo">' + esc(T('Continue')) + '</button></div></div>';
+      host.innerHTML = '<div class="forge place-finish h-' + r.hue + '"><div class="forge-key">' + A.art('key', Math.min(innerWidth, innerHeight) * .4) + '</div><div class="forge-txt"><small>' + esc(L(r.name)) + '</small><h2>' + esc(none ? L(['Nothing to place here yet', 'لا شيء لتحديد مستواه هنا بعد']) : nx ? T('Your door is ready') : T('You know all of this')) + '</h2><p>' + esc(none ? L(['This subject has no placement check at this stage.', 'ليس لهذه المادة فحص مستوى في هذه المرحلة.']) : nx ? L(nx.title) : T('Every door here is already open for you.')) + '</p><button class="btn pri big" id="fgo">' + esc(T('Continue')) + '</button></div></div>';
       $('#fgo', host).onclick = function () { A.go('parent/' + pid + '/rooms'); };
     }
-    return { bare: true, hue: r.hue, html: '<div id="plh"></div>', mount: function (v) { host = $('#plh', v); probe(); }, unmount: function () { Player.stop(); Voice.stop(); }, onBack: function () { Player.stop(); A.go('parent/' + pid + '/rooms'); return 'handled'; } };
+    return { bare: true, hue: r.hue, html: '<div id="plh" class="place-workspace"></div>', mount: function (v) { host = $('#plh', v); probe(); }, unmount: function () { Player.stop(); Voice.stop(); }, onBack: function () { Player.stop(); A.go('parent/' + pid + '/rooms'); return 'handled'; } };
   };
 
   /* Flash cards on the screen: the same cards as on paper. Tap to hear, swipe or tap on for the next. Shuffled, no marks. */
@@ -37,9 +37,18 @@
     var pid = args[0], kind = args[1], p = A.profile(pid);
     if (!p || (kind !== 'cards-ar' && kind !== 'cards-en')) return { redirect: 'parent' };
     var list = cardsFor(kind, pid), i = 0, sayT = null;
+    function keys(e) {
+      if (list.length < 2 || (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') || e.defaultPrevented ||
+          e.ctrlKey || e.altKey || e.metaKey || e.shiftKey || e.isComposing || $('.sheet.on, .dk-pal') ||
+          e.target.closest && e.target.closest('a, input, textarea, select, [contenteditable]')) return;
+      var forward = (e.key === 'ArrowRight') !== A.ar(), onCard = document.activeElement === $('#fc');
+      e.preventDefault(); e.stopPropagation();
+      $(forward ? '#cd-next' : '#cd-prev').click();
+      if (onCard) $('#fc').focus({ preventScroll: true });
+    }
     return {
       bare: true, hue: 'gold',
-      html: '<div class="pl h-gold"><div class="pl-top"><a class="pl-x" href="#/parent/' + esc(pid) + '/sheet/' + esc(kind) + '" aria-label="' + esc(T('Leave')) + '">' + A.icon('close', 24) + '</a><div class="pl-bar" id="cd-n" style="text-align:center;color:var(--t2)"></div><div style="width:48px"></div></div><div class="pl-body"><div class="step" id="cd"></div></div><div class="pl-foot"><button class="btn sec big" id="cd-prev" aria-label="' + esc(L(['Previous', 'السابق'])) + '">' + A.icon('back', 24).replace('class="ic"', 'class="ic ic-flip"') + '</button><button class="btn pri big" id="cd-next" style="margin-inline-start:auto"><span>' + esc(T('Next')) + '</span>' + A.icon('next', 24).replace('class="ic"', 'class="ic ic-flip"') + '</button></div></div>',
+      html: '<div class="pl h-gold cards-screen"><div class="pl-top"><a class="pl-x" href="#/parent/' + esc(pid) + '/sheet/' + esc(kind) + '" aria-label="' + esc(T('Leave')) + '">' + A.icon('close', 24) + '</a><div class="pl-bar" id="cd-n" role="status" style="text-align:center;color:var(--t2)"></div><div style="width:48px"></div></div><div class="pl-body"><div class="step" id="cd"></div></div><div class="pl-foot"><button class="btn sec big" id="cd-prev" aria-label="' + esc(L(['Previous', 'السابق'])) + '">' + A.icon('back', 24).replace('class="ic"', 'class="ic ic-flip"') + '</button><button class="btn pri big" id="cd-next" style="margin-inline-start:auto"><span>' + esc(T('Next')) + '</span>' + A.icon('next', 24).replace('class="ic"', 'class="ic ic-flip"') + '</button></div></div>',
       mount: function (v) {
         function show() {
           clearTimeout(sayT);
@@ -54,8 +63,9 @@
         $('#cd-prev', v).onclick = function () { i = (i - 1 + Math.max(1, list.length)) % Math.max(1, list.length); Fx.tap(); show(); };
         $('#cd-next', v).onclick = function () { i = (i + 1) % Math.max(1, list.length); Fx.tap(); show(); };
         show();
+        document.addEventListener('keydown', keys, true);
       },
-      unmount: function () { clearTimeout(sayT); Voice.stop(); }
+      unmount: function () { document.removeEventListener('keydown', keys, true); clearTimeout(sayT); Voice.stop(); }
     };
   };
 })();

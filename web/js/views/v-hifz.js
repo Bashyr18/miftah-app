@@ -36,12 +36,18 @@
   A.V.hifz = function (args) {
     if (!A.P()) return { redirect: 'home' };
     var stopI = args && args[0] != null ? +args[0] : null;
-    var cleanup = null;
+    function keys(e) {
+      if (recOn || e.defaultPrevented || e.repeat || e.ctrlKey || e.altKey || e.metaKey || e.shiftKey || e.isComposing || $('.sheet.on, .dk-pal') ||
+          e.target.closest && e.target.closest('button, a, input, select, textarea, [contenteditable], [role="button"]')) return;
+      var button = e.key === ' ' ? $('#hf-play') :
+        e.key === 'ArrowRight' || e.key === 'Enter' ? ($('#hf-next') || $('#hf-rev') || $('#hf-done')) : null;
+      if (button && !button.disabled) { e.preventDefault(); e.stopPropagation(); button.click(); }
+    }
     return {
       bare: true, hue: 'emerald',
       html: '<div class="pl h-emerald quiet" id="hf"><div class="pl-top"><a class="pl-x" href="#/home" aria-label="' + esc(T('Leave')) + '">' + A.icon('close', 24) + '</a><div class="pl-bar"><div class="hf-tier" id="hf-tier"></div><div class="ayahs" id="hf-dots" style="margin-top:6px"></div></div><div style="width:48px"></div></div><div class="pl-body" id="hf-body"></div><div class="pl-foot" id="hf-foot"></div></div>',
-      mount: function () { alive = true; var h0 = Hifz.state(), s0 = Q.order[h0.i]; if (s0 && window.Voice && Voice.keep && !Voice.skipAutoKeep) Voice.keep(s0); startSession(stopI); },
-      unmount: function () { alive = false; clearTimers(); Voice.stop(); stopRec(); }
+      mount: function () { alive = true; var h0 = Hifz.state(), s0 = Q.order[h0.i]; if (s0 && window.Voice && Voice.keep && !Voice.skipAutoKeep) Voice.keep(s0); startSession(stopI); document.addEventListener('keydown', keys, true); },
+      unmount: function () { document.removeEventListener('keydown', keys, true); alive = false; clearTimers(); Voice.stop(); stopRec(); }
     };
   };
 
@@ -167,8 +173,10 @@
     if (!A.P()) return { redirect: 'home' };
     var order = Q.order, unsubKeep = null;
     var h = Hifz.state(), curS = order[h.i], st = A.N.has() && Voice.stats ? Voice.stats() : {};
+    var finished = 0;
     var list = order.map(function (s) {
-      var k = Hifz.known(s), su = Q.q[s], isCur = s === curS, full = k.n >= k.of && k.of;
+      var k = Hifz.known(s), su = Q.q[s], isCur = s === curS, full = (h.finished || []).indexOf(s) >= 0 || (k.n >= k.of && k.of);
+      if (full) finished++;
       return '<a class="kitem h-emerald' + (isCur ? ' now' : '') + '" href="#/surah/' + s + '" data-qs="' + s + '"><span class="kbox" style="font-family:var(--f-ar);font-size:16px;color:var(--h)" lang="ar">' + AN(s) + '</span><span class="grow"><b>' + esc(SN(s)) + '</b><small>' + (isCur ? esc(T('Learning now')) + ' · ' : '') + A.num(k.n) + ' / ' + A.num(k.of) + '</small></span><span class="qa-slot">' + shelfTag(s, st) + '</span>' + (A.ar() ? '' : '<span class="kitem-ar" lang="ar">' + su.ar.replace(/^سُورَةُ\s*/, '') + '</span>') + (full ? A.icon('check', 20) : '') + '</a>';
     }).join('');
     var teen = A.stage() >= 3;
@@ -177,7 +185,7 @@
       : '<nav class="nav" aria-label="' + esc(T('Sections')) + '"><a href="#/home">' + A.icon('path', 22) + '<span>' + esc(T('Today')) + '</span></a><a href="#/rooms" class="on">' + A.icon('rooms', 22) + '<span>' + esc(T('Rooms')) + '</span></a><a href="#/keys">' + A.icon('keys', 22) + '<span>' + esc(T('My keys')) + '</span></a></nav>';
     return {
       hue: 'emerald',
-      html: '<div class="ph h-emerald">' + (A.hasImg('portal-quran') ? '<span class="ph-portal">' + A.portalImg('quran', true) + '</span>' : '<svg class="girih" viewBox="0 0 100 100">' + A.girih(null, .55) + '</svg>') + '<a class="backp" href="#/rooms">' + A.icon('back', 18) + '<span>' + esc(teen ? L(['Subjects', 'المواد']) : T('Rooms')) + '</span></a><h1>' + esc(T('Qurʾān')) + '</h1><p>' + esc(T('Listen, repeat, and keep it in your heart')) + '</p></div><div class="wrap"><button class="btn pri big wide" data-a="hf-now" style="margin:16px 0 4px">' + esc(T('Today’s portion')) + '</button>' + (A.N.has() ? '<div class="qa-row">' + (curS ? '<button class="btn ghost" data-a="hf-keep" data-s="' + curS + '">' + A.icon('download', 18) + '<span>' + esc(L(['Download ' + SN(curS), 'تنزيل تلاوة ' + SN(curS)])) + '</span></button>' : '') + '<button class="btn ghost" data-a="hf-offline">' + A.icon('speak', 18) + '<span>' + esc(L(['Offline audio', 'التلاوة دون إنترنت'])) + '</span></button></div>' : '') + '<div class="unit"><div class="kl">' + list + '</div></div></div>' + navH,
+      html: '<div class="ph h-emerald">' + (A.hasImg('portal-quran') ? '<span class="ph-portal">' + A.portalImg('quran', true) + '</span>' : '<svg class="girih" viewBox="0 0 100 100">' + A.girih(null, .55) + '</svg>') + '<a class="backp" href="#/rooms">' + A.icon('back', 18) + '<span>' + esc(teen ? L(['Subjects', 'المواد']) : T('Rooms')) + '</span></a><h1>' + esc(T('Qurʾān')) + '</h1><p>' + esc(T('Listen, repeat, and keep it in your heart')) + '</p></div><div class="wrap quran-room"><div class="quran-summary card"><div><small>' + esc(L(['Current sūrah', 'السورة الحالية'])) + '</small><h2>' + esc(curS ? SN(curS) : L(['Review', 'المراجعة'])) + '</h2><p>' + A.num(finished) + ' ' + esc(L(['sūrahs finished', 'سورة مكتملة'])) + '</p></div><button class="btn pri big" data-a="hf-now">' + esc(T('Today’s portion')) + '</button></div>' + (A.N.has() ? '<div class="qa-row">' + (curS ? '<button class="btn ghost" data-a="hf-keep" data-s="' + curS + '">' + A.icon('download', 18) + '<span>' + esc(L(['Download ' + SN(curS), 'تنزيل تلاوة ' + SN(curS)])) + '</span></button>' : '') + '<button class="btn ghost" data-a="hf-offline">' + A.icon('speak', 18) + '<span>' + esc(L(['Offline audio', 'التلاوة دون إنترنت'])) + '</span></button></div>' : '') + '<div class="unit"><div class="kl quran-library">' + list + '</div></div></div>' + navH,
       mount: function (v) {
         if (curS && window.Voice && Voice.keep) Voice.keep(curS);
         if (A.N.has() && Voice.onKeep) {
@@ -241,16 +249,85 @@
   A.V.surah = function (args) {
     if (!A.P()) return { redirect: 'home' };
     var s = +args[0], su = Q.q[s]; if (!su) return { redirect: 'room/quran' };
-    var cur = 0, playing = false, unsubKeep = null;
-    var rows = su.v.map(function (v, i) {
+    var cur = 0, playing = false, playRun = 0, unsubKeep = null, wide, removeWide;
+    var rows = su.v.map(function (v) {
       return '<div class="tx-v" data-a2="' + v[0] + '" style="padding:10px 0;border-bottom:1px solid var(--line)"><div class="quran" lang="ar" dir="rtl" style="font-size:clamp(25px,7vw,34px)">' + ayahWords(s, v[0]) + '</div>' + trans(s, v[0]) + '</div>';
     }).join('');
+    var searchLabel = L(['Find a sūrah', 'ابحث عن سورة']);
+    var jump = su.v.length > 12 ? '<div class="surah-jump"><label for="surah-jump">' + esc(L(['Jump to an āyah', 'انتقل إلى آية'])) +
+      '</label><select class="tin" id="surah-jump"><option value="">' + esc(L(['Choose an āyah', 'اختر آية'])) + '</option>' +
+      su.v.map(function (v) { return '<option value="' + v[0] + '">' + A.num(v[0]) + '</option>'; }).join('') + '</select></div>' : '';
+    function indexRows() {
+      var finished = Hifz.state().finished || [];
+      return Object.keys(Q.q).map(Number).sort(function (a, b) { return a - b; }).map(function (n) {
+        var verseCount = Q.q[n].v.length, known = Hifz.known(n), done = finished.indexOf(n) >= 0 || (known.of && known.n >= known.of);
+        return '<a class="surah-index-link" href="#/surah/' + n + '"' + (n === s ? ' aria-current="page"' : '') +
+          ' data-surah="' + n + '"><span class="surah-index-num">' + A.num(n) + '</span><span class="grow"><b>' + esc(SN(n)) +
+          '</b><small>' + A.num(verseCount) + ' ' + esc(L(['āyāt', 'آيات'])) + '</small></span>' +
+          (done ? '<span aria-label="' + esc(L(['Finished', 'مكتملة'])) + '">' + A.icon('check', 18) + '</span>' : '') + '</a>';
+      }).join('');
+    }
+    function searchKey(value) {
+      return value.toLowerCase().normalize('NFD').replace(/\p{M}/gu, '').replace(/[ʾʿ’'\-\sـ]/g, '')
+        .replace(/[٠-٩]/g, function (d) { return '٠١٢٣٤٥٦٧٨٩'.indexOf(d); });
+    }
     function stText() { return A.N.has() && Voice.surahCoverage ? coverageLabel(Voice.surahCoverage(s, Voice.stats())) : ''; }
     return {
       hue: 'emerald',
-      html: '<div class="ph h-emerald"><a class="backp" href="#/room/quran">' + A.icon('back', 18) + '<span>' + esc(T('Qurʾān')) + '</span></a><h1>' + esc(SN(s)) + '</h1>' + (A.ar() ? '' : '<p lang="ar" style="font-family:var(--f-ar);font-size:24px">' + su.ar + '</p>') + (A.N.has() ? '<p class="qa-surah-st" id="qa-surah-st" role="status" aria-live="polite">' + esc(stText()) + '</p>' : '') + '</div><div class="wrap">' + (s !== 1 && s !== 9 ? '<div class="bsm" style="margin:12px 0">' + Q.bsm + '</div>' : '') + rows + '<div style="height:90px"></div></div><div class="surah-bar"><button class="btn sm sec" id="s-rec">' + esc(A.S.reciter === 'h' ? T('Teaching pace') : T('Flowing')) + '</button><button class="round" id="s-play" style="width:48px;height:48px" aria-label="' + esc(T('Listen')) + '">' + A.icon('play', 24) + '</button>' + (A.N.has() ? '<button class="btn sm ghost" data-a="hf-keep" data-s="' + s + '">' + A.icon('download', 16) + '<span>' + esc(L(['Download', 'تنزيل'])) + '</span></button>' : '<span style="width:48px"></span>') + '</div>',
+      html: '<div class="surah-ws h-emerald"><aside class="surah-index card"><label for="surah-search">' + esc(searchLabel) +
+        '</label><input class="tin" type="search" id="surah-search"><nav class="surah-index-list" aria-label="' + esc(L(['Sūrah index', 'فهرس السور'])) +
+        '">' + indexRows() + '</nav><small class="surah-empty" hidden>' + esc(L(['No sūrahs found.', 'لم يُعثر على سور.'])) + '</small></aside><div class="surah-reader"><div class="ph h-emerald"><a class="backp" href="#/room/quran">' + A.icon('back', 18) + '<span>' + esc(T('Qurʾān')) + '</span></a><h1>' + esc(SN(s)) + '</h1>' + (A.ar() ? '' : '<p lang="ar" style="font-family:var(--f-ar);font-size:24px">' + su.ar + '</p>') + (A.N.has() ? '<p class="qa-surah-st" id="qa-surah-st" role="status" aria-live="polite">' + esc(stText()) + '</p>' : '') + '</div>' + jump + '<div class="surah-reading">' + (s !== 1 && s !== 9 ? '<div class="bsm" style="margin:12px 0">' + Q.bsm + '</div>' : '') + rows + '</div><div class="surah-bar"><button class="btn sm sec" id="s-rec">' + esc(A.S.reciter === 'h' ? T('Teaching pace') : T('Flowing')) + '</button><button class="round" id="s-play" style="width:48px;height:48px" aria-label="' + esc(T('Listen')) + '">' + A.icon('play', 24) + '</button>' + (A.N.has() ? '<button class="btn sm ghost" data-a="hf-keep" data-s="' + s + '">' + A.icon('download', 16) + '<span>' + esc(L(['Download', 'تنزيل'])) + '</span></button>' : '<span style="width:48px"></span>') + '</div></div></div>',
       mount: function (v) {
         $$('.tx-v', v).forEach(function (row) { bindWords(row, s, +row.dataset.a2); });
+        var search = $('#surah-search', v), index = $('.surah-index-list', v);
+        function filter() {
+          var query = searchKey(search.value), isNumber = /^\d+$/.test(query), hasMatch = false;
+          $$('[data-surah]', index).forEach(function (link) {
+            var n = link.dataset.surah, q = Q.q[n];
+            link.hidden = query !== '' && (isNumber ? +n !== +query :
+              !searchKey(q.name).includes(query) && !searchKey(q.ar).includes(query));
+            if (!link.hidden) hasMatch = true;
+          });
+          $('.surah-empty', v).hidden = hasMatch;
+        }
+        function centerActive() {
+          var current = $('[aria-current="page"]', index);
+          if (!search.value && current) index.scrollTop = current.offsetTop - index.offsetTop - (index.clientHeight - current.offsetHeight) / 2;
+        }
+        var loading = false;
+        function prepareIndex() {
+          if (!wide.matches) return;
+          centerActive();
+          if (Q.all || loading) return;
+          loading = true;
+          A.quranAll(function () {
+            loading = false;
+            if (!v.isConnected) return;
+            index.innerHTML = indexRows();
+            filter(); centerActive();
+          });
+        }
+        search.oninput = filter;
+        if (window.matchMedia) {
+          wide = matchMedia('(min-width: 960px)');
+          if (wide.addEventListener) {
+            wide.addEventListener('change', prepareIndex);
+            removeWide = function () { wide.removeEventListener('change', prepareIndex); };
+          }
+          prepareIndex();
+        }
+        var jumpTo = $('#surah-jump', v);
+        if (jumpTo) jumpTo.onchange = function () {
+          if (!jumpTo.value) return;
+          var ayah = +jumpTo.value;
+          jumpTo.value = '';
+          var i = su.v.findIndex(function (verse) { return verse[0] === ayah; });
+          if (i < 0) return;
+          cur = i;
+          if (playing) { Voice.stop(); go(); return; }
+          var row = $('.tx-v[data-a2="' + ayah + '"]', v);
+          if (row && row.scrollIntoView) row.scrollIntoView({ block: 'start', behavior: A.reduced() ? 'auto' : 'smooth' });
+        };
         var pb = $('#s-play', v), stEl = $('#qa-surah-st', v);
         function refreshSt(msg) { if (stEl) stEl.textContent = msg || stText(); }
         if (A.N.has() && Voice.onKeep) {
@@ -265,12 +342,13 @@
         function go() {
           if (cur >= su.v.length) { playing = false; cur = 0; setPlayUi(false); mark(-1); return; }
           mark(cur);
-          Voice.ayah(s, su.v[cur][0]).then(function (ok) { if (!playing) return; if (ok) { cur++; go(); } else { playing = false; setPlayUi(false); } });
+          var run = ++playRun;
+          Voice.ayah(s, su.v[cur][0]).then(function (ok) { if (!playing || run !== playRun) return; if (ok) { cur++; go(); } else { playing = false; setPlayUi(false); } });
         }
         pb.onclick = function () { playing = !playing; setPlayUi(playing); if (playing) go(); else Voice.stop(); };
         $('#s-rec', v).onclick = function () { A.S.reciter = A.S.reciter === 'h' ? 'a' : 'h'; A.save(); this.textContent = A.S.reciter === 'h' ? T('Teaching pace') : T('Flowing'); refreshSt(); if (playing) { Voice.stop(); playing = true; go(); } };
       },
-      unmount: function () { playing = false; Voice.stop(); if (unsubKeep) { unsubKeep(); unsubKeep = null; } }
+      unmount: function () { playing = false; if (removeWide) removeWide(); Voice.stop(); if (unsubKeep) { unsubKeep(); unsubKeep = null; } }
     };
   };
 })();

@@ -112,20 +112,19 @@ html.is-desk [data-kbd]::after{content:attr(data-kbd);position:absolute;top:6px;
 html.is-desk .numopt.sm[data-kbd]::after{display:none}
 @media (hover:none){ html.is-desk [data-kbd]::after{display:none} }
 
-/* ---------- lessons on a big screen: two equal halves, the question and its answer, centred and in proportion ---------- */
-@media (min-width:1150px) and (min-height:660px){
-  html.is-desk :is(body[data-view=lesson],body[data-view=stop],body[data-view=exam],body[data-view=paper],body[data-view=place]) :is(.pl-head,.pl-msg,.pl-foot,.step){max-width:1080px}
-  html.is-desk :is(body[data-view=lesson],body[data-view=stop],body[data-view=exam],body[data-view=paper],body[data-view=place]) .pl-prompt{font-size:clamp(21px,1.5vw,26px)}
-  html.is-desk :is(body[data-view=lesson],body[data-view=stop],body[data-view=exam],body[data-view=paper],body[data-view=place]) .step-in.dk-2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:center;position:relative;min-height:min(52vh,460px)}
-  /* a quiet line down the middle, so the two halves read as one page */
-  html.is-desk :is(body[data-view=lesson],body[data-view=stop],body[data-view=exam],body[data-view=paper],body[data-view=place]) .step-in.dk-2::after{content:'';position:absolute;left:50%;top:4%;bottom:4%;width:1px;background:var(--line2)}
-  html.is-desk :is(body[data-view=lesson],body[data-view=stop],body[data-view=exam],body[data-view=paper],body[data-view=place]) .dk-lq{grid-column:1;display:grid;gap:14px;justify-items:center;align-content:center;padding:0 36px;min-width:0}
-  html.is-desk :is(body[data-view=lesson],body[data-view=stop],body[data-view=exam],body[data-view=paper],body[data-view=place]) .dk-lq>*{max-width:100%}
-  html.is-desk :is(body[data-view=lesson],body[data-view=stop],body[data-view=exam],body[data-view=paper],body[data-view=place]) .step-in.dk-2>:is(.pad,.ch,.expr){grid-column:2;justify-self:center;width:calc(100% - 72px);max-width:440px}
-  html.is-desk :is(body[data-view=lesson],body[data-view=stop],body[data-view=exam],body[data-view=paper],body[data-view=place]) .pad-eq{font-size:clamp(34px,2.8vw,48px)}
-  html.is-desk :is(body[data-view=lesson],body[data-view=stop],body[data-view=exam],body[data-view=paper],body[data-view=place]) .pad button{min-height:64px;font-size:26px}
-  html.is-desk :is(body[data-view=lesson],body[data-view=stop],body[data-view=exam],body[data-view=paper],body[data-view=place]) .ch .opt{min-height:76px}
-  html.is-desk :is(body[data-view=lesson],body[data-view=stop],body[data-view=exam],body[data-view=paper],body[data-view=place]) :is(.dia,.pad-v svg){max-height:50vh}
+/* ---------- lessons on a big screen: spacious proportion and clear title above the player ---------- */
+@media (min-width:1040px) and (min-height:620px){
+  html.is-desk :is(body[data-view=lesson],body[data-view=stop],body[data-view=exam],body[data-view=paper],body[data-view=place]) :is(.pl-head,.pl-msg,.pl-foot,.step){max-width:1120px}
+  html.is-desk :is(body[data-view=lesson],body[data-view=stop],body[data-view=exam],body[data-view=paper],body[data-view=place]) .pl-prompt{font-size:clamp(20px,1.5vw,25px)}
+  html.is-desk :is(body[data-view=lesson],body[data-view=stop],body[data-view=exam],body[data-view=paper],body[data-view=place]) .pad-eq{font-size:clamp(32px,2.6vw,44px)}
+  html.is-desk :is(body[data-view=lesson],body[data-view=stop],body[data-view=exam],body[data-view=paper],body[data-view=place]) :is(.dia,.pad-v svg){max-height:48vh}
+}
+/* desktop child tab strip: clean horizontal bar with subtle hover and active gold accent */
+@media (min-width:960px){
+  html.is-desk .tabs{border-bottom:1px solid var(--line);padding-bottom:10px;margin-bottom:16px;gap:6px}
+  html.is-desk .tabs .tab{border-radius:10px;transition:background .15s,color .15s,border-color .15s}
+  html.is-desk .tabs .tab:hover:not(.on){background:var(--s2);color:var(--t1)}
+  html.is-desk .tabs .tab.on{background:var(--gold-soft);color:var(--t1);border-color:var(--gold-line)}
 }
 
 /* ---------- full screen, focus, files being dropped ---------- */
@@ -256,7 +255,10 @@ html[dir=rtl] .dk-tile{padding:14px 44px 14px 14px}
 .dk-tick{position:absolute;top:14px;inset-inline-start:14px;width:20px;height:20px;border-radius:6px;display:grid;place-items:center;border:1.5px solid var(--line2);color:transparent;background:var(--bg);transition:background .15s,border-color .15s}
 .dk-tile.on .dk-tick{background:var(--gold);border-color:var(--gold);color:#1a1206}
 .dk-tray{position:sticky;top:20px;display:grid;gap:10px;padding:18px;border-radius:20px;background:var(--s1);border:1px solid var(--line2);box-shadow:var(--shadow)}
-.dk-tray h3{font-size:15px}
+.dk-tray-h{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.dk-tray h3{font-size:15px;margin:0}
+.dk-tray-n{min-width:26px;height:24px;padding:0 8px;border-radius:99px;display:inline-grid;place-items:center;background:var(--gold-soft);border:1px solid var(--gold-line);color:var(--gold);font-size:12px;font-weight:700;font-variant-numeric:tabular-nums}
+.dk-tray-q{display:flex;gap:8px;flex-wrap:wrap}
 .dk-tray ol{margin:0;padding-inline-start:20px;display:grid;gap:4px;font-size:14px;color:var(--t2)}
 .dk-tray ol li::marker{color:var(--gold);font-weight:700}
 .dk-tray .btn{gap:8px}
@@ -271,22 +273,43 @@ html.is-desk body.has-rail .topbtns .dn,html.is-desk body.has-rail .th .dn,html.
 
 /* ================= the whole window, used ================= */
 /* every page grows with the window instead of sitting in a phone-wide column */
-@media (min-width:1100px){
-  html.is-desk body.has-rail .wrap,html.is-desk body.has-rail .dwrap,html.is-desk body.has-rail .tabs{max-width:min(1600px,100%);padding-inline:clamp(20px,2.4vw,40px)}
-  html.is-desk body.has-rail .th,html.is-desk body.has-rail .tw{max-width:min(1500px,100%);padding-inline:clamp(20px,2.4vw,40px)}
-  html.is-desk body.has-rail .ph{padding-inline:clamp(20px,2.4vw,40px)}
+@media (min-width:1040px){
+  html.is-desk body.has-rail .wrap,html.is-desk body.has-rail .dwrap,html.is-desk body.has-rail .tabs{max-width:min(1560px,100%);padding-inline:clamp(22px,2.6vw,44px)}
+  html.is-desk body.has-rail .th,html.is-desk body.has-rail .tw{max-width:min(1480px,100%);padding-inline:clamp(22px,2.6vw,44px)}
+  html.is-desk body.has-rail .ph{padding-inline:clamp(22px,2.6vw,44px)}
   html.is-desk body.has-rail .home-a,html.is-desk body.has-rail .home-b{max-width:none}
-  html.is-desk body.has-rail .rooms{grid-template-columns:repeat(auto-fill,minmax(176px,1fr));gap:30px 22px}
-  html.is-desk body.has-rail .tl-grid{max-width:none;grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
+  html.is-desk body.has-rail .rooms{grid-template-columns:repeat(auto-fill,minmax(184px,1fr));gap:26px 22px}
+  html.is-desk body.has-rail .tl-grid{max-width:none;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
   html.is-desk body.has-rail .lamp-rows{grid-template-columns:repeat(auto-fill,minmax(420px,1fr));column-gap:28px}
   html.is-desk body.has-rail .tgrid{grid-template-columns:repeat(auto-fill,minmax(220px,1fr))}
+  /* parent card pages (settings, child setup, log, rooms, record, plan, hear, voices): crisp 2-column grid instead of 1200px stretched single column */
+  html.is-desk body[data-view=parent] .wrap:has(> .card + .card):not(:has(> .dcols)){display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;align-items:start}
+  html.is-desk body[data-view=parent] .wrap:has(> .card + .card):not(:has(> .dcols)) > .card{margin:0}
+  html.is-desk body[data-view=parent] .wrap:has(> .card + .card):not(:has(> .dcols)) > :is(.card-wide,.pending,#del-c,.legend,p.ref,.bkp){grid-column:1/-1}
+  /* keys & record: balanced 2-column mastery overview on desktop */
+  html.is-desk body[data-view=keys] .wrap{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);gap:20px;align-items:start}
+  html.is-desk body[data-view=keys] .wrap > :is(.kstats,.empty,.sec-h,.cert-card){grid-column:1/-1}
+  html.is-desk body[data-view=keys] .wrap > .unit{grid-column:2}
+  html.is-desk body[data-view=keys] .wrap > :has(.lamp-rows){grid-column:1;grid-row:2 / span 24;position:sticky;top:20px}
   /* a teenager's day: the plan on the left, the week beside it */
   html.is-desk body.has-rail .tw.dk2{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(300px,1fr);column-gap:28px;align-items:start}
   html.is-desk body.has-rail .tw.dk2>.tnext{grid-column:1/-1}
   html.is-desk body.has-rail .tw.dk2 .dk-side .tgrid{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
-/* the parent's dashboard spreads into three columns (desk.js deals the cards out by height) */
-.dcols.dk3{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+/* subtle desktop interactive polish */
+@media (hover:hover){
+  html.is-desk .fc{transition:border-color .16s,transform .16s,box-shadow .16s}
+  html.is-desk .fc:hover{border-color:var(--gold-line);box-shadow:0 14px 32px -24px rgba(0,0,0,.55)}
+  html.is-desk .tl-b,html.is-desk .gp-b,html.is-desk .gp-me{transition:border-color .16s,background .16s,transform .16s}
+  html.is-desk .tl-b:hover,html.is-desk .gp-b:hover,html.is-desk .gp-me:hover{border-color:var(--gold-line);background:var(--s2);transform:translateY(-1px)}
+  html.is-desk .pstop{transition:border-color .16s,background .16s,transform .16s}
+  html.is-desk .pstop:hover{border-color:var(--gold-line);transform:translateY(-1px)}
+  html.is-desk .portal{transition:transform .18s var(--out)}
+  html.is-desk .portal:hover{transform:translateY(-3px)}
+}
+/* the parent's dashboard: deterministic reading order in 2 columns */
+.dk-units-h{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
+.dk-units-h h3{margin:0}
 
 /* a subject's path, with every unit and lesson beside it */
 .dk-room{display:grid;grid-template-columns:minmax(420px,1fr) minmax(320px,440px);gap:32px;align-items:start}
@@ -339,9 +362,11 @@ html.is-desk .rl-i:focus-visible,html.is-desk .dk-pal-i:focus-visible,html.is-de
 .rl-prog em{display:block;height:100%;border-radius:4px;background:linear-gradient(90deg,#f6dda5,var(--gold))}
 
 /* ================= a child's home on a big screen ================= */
+@media (min-width:861px){
+  html.is-desk body.has-rail[data-view=home] .sky{margin:16px clamp(18px,2vw,32px) 0;border-radius:26px;height:clamp(195px,27vh,270px);box-shadow:0 26px 52px -34px rgba(0,0,0,.6)}
+}
 @media (min-width:1100px){
-  html.is-desk body.has-rail[data-view=home] .sky{margin:18px clamp(18px,2vw,32px) 0;border-radius:28px;height:clamp(260px,40vh,400px);box-shadow:0 30px 60px -40px rgba(0,0,0,.6)}
-  html.is-desk body.has-rail[data-view=home] .pathbox{margin-top:0;border-radius:0;background:none;box-shadow:none;padding:24px clamp(18px,2vw,32px) 32px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:28px;align-items:start}
+  html.is-desk body.has-rail[data-view=home] .pathbox{margin-top:0;border-radius:0;background:none;box-shadow:none;padding:20px clamp(18px,2vw,32px) 32px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:24px;align-items:start}
   html.is-desk body.has-rail[data-view=home] .pathbox::before,html.is-desk body.has-rail[data-view=home] .pathbox::after{display:none}
   html.is-desk body.has-rail[data-view=home] .dk-hx{grid-column:1}
 }
@@ -392,17 +417,8 @@ img.rl-mark{padding:0;background:none;box-shadow:0 8px 18px -10px rgba(0,0,0,.6)
 html.is-desk body.has-rail .simstage{inset-inline-start:var(--rail)}
 @media (max-width:860px){ html.is-desk body.has-rail .simstage{inset-inline-start:0} }
 
-/* a lesson on a computer: its name above, squared working paper under the sum, the answer opposite */
+/* a lesson on a computer: quiet subject and skill label above the prompt */
 .dk-lt{font-size:13px;font-weight:700;color:var(--t3);text-align:center;margin-bottom:6px;letter-spacing:.01em}
-html.is-desk :is(body[data-view=lesson],body[data-view=stop],body[data-view=exam],body[data-view=paper],body[data-view=place]) .dk-lq{align-self:stretch;align-content:start;padding-top:8px}
-.dk-work{width:100%;max-width:460px;display:flex;flex-direction:column;border-radius:16px;border:1px solid var(--line2);background:var(--s1);color:var(--t1);overflow:hidden;box-shadow:var(--hi)}
-.dk-work-h{display:flex;align-items:center;justify-content:space-between;padding:8px 10px 8px 14px;border-bottom:1px solid var(--line);font-size:12.5px;font-weight:700;color:var(--t3)}
-.dk-work-h button{height:30px;padding:0 12px;border-radius:99px;border:1px solid var(--line2);font-size:12.5px;font-weight:700;color:var(--t2);background:var(--bg)}
-.dk-work-h button:hover{border-color:var(--gold-line);color:var(--t1)}
-.dk-work canvas{display:block;width:100%;height:clamp(150px,26vh,260px);touch-action:none;cursor:crosshair;
-  background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);background-size:22px 22px;background-position:-1px -1px}
-/* the aid button for working is not needed when the paper is already open */
-html.is-desk :is(body[data-view=lesson],body[data-view=stop],body[data-view=exam],body[data-view=paper],body[data-view=place]):has(.dk-work) [data-a=aid-work]{display:none}
 /* the command bar's field is the whole bar: no ring of its own */
 html.is-desk .dk-pal-in input:focus-visible,html.is-desk .dk-pal-in input:focus{box-shadow:none;outline:0;border:0}
 /* the command bar's field sits inside its strip with room above and below: the app's own input style (border, full height) never reaches the panel's edge */

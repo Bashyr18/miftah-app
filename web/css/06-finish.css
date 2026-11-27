@@ -406,4 +406,13 @@ html[dir=rtl].is-desk body.has-rail .surah-bar{left:calc(50% - var(--rail) / 2)}
 /* RTL directional icon flips across all remaining views */
 [dir=rtl] .ink-back svg,[dir=rtl] .ink-pg [data-pg] svg,[dir=rtl] .simback svg,[dir=rtl] #hf-next svg,[dir=rtl] .ink-hc>svg:last-child,[dir=rtl] .ink-all>svg:last-child,[dir=rtl] .bk-row>svg:last-child,[dir=rtl] .act>svg:last-child,[dir=rtl] .li>svg:last-child{transform:scaleX(-1)}
 /* pan/scroll mode on zoomed on-screen sheets */
+/* wide screens (desktop and landscape tablets): dock the ink toolbar on the side so the page fills vertical space cleanly */
+@media (min-width:960px){
+  .ink{flex-direction:row}
+  .ink-stage{padding:18px 24px}
+  .ink-bar{flex-direction:column;justify-content:flex-start;width:104px;padding:14px 10px;border-top:0;border-inline-start:1px solid var(--line);gap:12px;overflow-y:auto}
+  .ink-tools,.ink-pg{flex-direction:column;border-radius:20px;padding:6px;gap:6px;width:100%;justify-content:center}
+  .ink-sep{width:28px;height:1px;margin:2px 0}
+  .ink-bar>.btn{width:100%;padding:0 8px;font-size:12.5px;min-height:44px;text-align:center;line-height:1.2}
+}
 .ink.pan .ink-cv{touch-action:pan-x pan-y;cursor:grab}

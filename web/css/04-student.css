@@ -49,3 +49,147 @@ body[data-age="3"] .pl-body,body[data-age="4"] .pl-body{align-items:stretch}
 .pad-given+.pad-eq,.pad-code+.pad-eq{margin-top:0}
 body[data-age="3"] .pl-msg,body[data-age="4"] .pl-msg{min-height:44px}
 
+
+
+/* Lab gallery */
+.view > .th.lab-head,.view > .tw.lab-gallery{max-width:1280px}
+.lab-head{flex-wrap:wrap}
+.lab-count{align-self:flex-end;padding:6px 12px;border:1px solid var(--line2);border-radius:999px;background:var(--s1);color:var(--t2);font-size:13px;font-weight:650;font-variant-numeric:tabular-nums}
+.lab-filters{display:flex;flex-wrap:wrap;gap:8px;margin-block-end:22px}
+.lab-filters .seg{min-height:40px;padding-inline:14px;border:1px solid var(--line2);border-radius:999px;background:var(--s1)}
+.lab-filters .seg[aria-pressed=true]{background:var(--gold2);border-color:var(--gold2);color:var(--on-gold)}
+.lab-group{margin-block-end:24px}
+.lab-group h2{font-size:clamp(17px,2vw,21px);margin-block-end:9px}
+.lab-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,246px),1fr));gap:12px}
+.lab-grid .ti{display:flex;align-items:flex-start;gap:12px;min-width:0;min-height:100%;padding:15px;border:1px solid var(--line2);border-radius:var(--r2);background:var(--s1);text-decoration:none}
+.lab-grid .ti:hover,.lab-filters .seg:hover{border-color:var(--gold2)}
+.lab-grid .ti:focus-visible,.lab-filters .seg:focus-visible{outline:2px solid var(--gold2);outline-offset:3px}
+.lab-grid .lab-i .grow{min-width:0;overflow-wrap:anywhere}
+.lab-grid .lab-i small{line-height:1.45}
+.surah-index,.surah-jump,.course-editor{display:none}
+.surah-reading{max-width:780px;margin-inline:auto;padding-inline:var(--g);padding-block-end:calc(116px + var(--sab,0px))}
+.surah-reading .tx-v{scroll-margin-block-start:20px}
+.quran-summary{display:grid;gap:12px;margin-block:16px 8px}
+.quran-summary small,.quran-summary p{color:var(--t2)}
+.quran-summary h2{font-size:clamp(20px,2.4vw,28px);overflow-wrap:anywhere}
+.quran-library .kitem{min-width:0}
+.quran-library .kitem b{overflow-wrap:anywhere}
+.study-grid,.flash-studio{display:grid;gap:16px;margin-block-start:16px}
+.study-grid>.card{margin:0}
+.study-grid>section>.card{height:100%}
+.study-grid>section{scroll-margin-block-start:16px}
+.study-tools,.challenge-actions{display:flex;flex-wrap:wrap;gap:8px;margin-block-start:8px}
+.study-hub .st3{align-content:start;padding-inline:8px}
+.study-hub .st3 small,.flash-keys,.flash-progress{color:var(--t2);font-size:13px;overflow-wrap:anywhere}
+.flash-status .fl-k{gap:12px;margin-block-end:8px}
+.flash-progress{display:grid;gap:6px;margin-block-end:12px}
+.flash-progress progress{width:100%;height:8px;accent-color:var(--gold)}
+.flash-status .grades{margin-block:12px}
+.flash-keys{margin-block:12px}
+.flash-stage .tflash span{white-space:pre-wrap;overflow-wrap:anywhere}
+.write-page .tin,.write-tools .tin{width:100%}
+.write-page,.write-tools,.study-grid>*{min-width:0;overflow-wrap:anywhere}
+.mark-workspace{margin-block-start:12px}
+.mark-count{color:var(--t2);font-size:13px}
+.mark-rubric{margin-block:10px}
+.mark-rubric summary{cursor:pointer;font-weight:700}
+.mark-rubric ul{padding-inline-start:16px;color:var(--t2);font-size:13px}
+.mark-rubric li{margin-block:4px}
+.challenge-result-body h2{margin-block:4px 8px}
+.challenge-actions>*{flex:1 1 145px}
+
+@media (min-width:840px){
+  .view .wrap.quran-room{max-width:1240px}
+  .quran-summary{grid-template-columns:minmax(0,1fr) auto;align-items:center;padding:clamp(16px,2.3vw,32px)}
+  .quran-library{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .quran-library .kitem-ar{display:none}
+  body[data-view=home] .view .tw.teen-home:not(.dk2){
+    display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);
+    grid-template-areas:"update update" "break break" "next next" "title week" "plan week" "parents parents";
+    grid-template-rows:auto auto auto auto 1fr auto;column-gap:24px;align-items:start
+  }
+  body[data-view=home] .view .teen-home:not(.dk2) .upd-slot{grid-area:update}
+  .teen-home .upd-slot:empty{display:none}
+  body[data-view=home] .view .teen-home:not(.dk2)>p.card{grid-area:break}
+  body[data-view=home] .view .teen-home:not(.dk2)>.tnext{grid-area:next}
+  body[data-view=home] .view .teen-home:not(.dk2)>.teen-plan-title{grid-area:title}
+  body[data-view=home] .view .teen-home:not(.dk2)>.teen-plan{grid-area:plan}
+  body[data-view=home] .view .teen-home:not(.dk2)>.teen-week{grid-area:week}
+  body[data-view=home] .view .teen-home:not(.dk2)>.btn{grid-area:parents;justify-self:start}
+  .teen-home.dk2 .teen-week>.tsec:first-child{margin-block-start:0}
+  .teen-home .teen-week .tgrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .teen-exam{margin-block-start:12px}
+  .study-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .study-hub .st3{justify-items:start;text-align:start;padding:16px}
+  .study-hub .st3 b{font-size:16px}
+  html:not(.fold-book):not(.fold-table) .view #hf,
+  html:not(.fold-book):not(.fold-table) .view .pl.cards-screen{display:flex}
+  .view #hf-body .step,.view #hf-foot,.view #hf .pl-top,
+  .view .cards-screen .pl-top,.view .cards-screen .pl-foot,.view .cards-screen .step{
+    width:100%;max-width:740px;margin-inline:auto
+  }
+  .view #hf .pl-body,.view .cards-screen .pl-body{align-self:stretch;align-items:safe center}
+  .view #hf-body .step .quran{font-size:clamp(30px,3.7vw,48px);line-height:1.9}
+  .view .cards-screen .fcard{width:min(620px,100%);min-height:min(340px,52dvh);margin-inline:auto;border-radius:var(--r3)}
+  .view .place-finish{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-content:center;align-items:center;gap:24px;padding:24px max(var(--g),8vw);overflow:auto}
+  .place-finish .forge-key,.place-finish .forge-txt{position:static;inset:auto;animation:none;transform:none}
+  .place-finish .forge-key .art{margin-inline:auto;max-width:100%;max-height:56dvh}
+  .place-finish .forge-txt{text-align:start;justify-items:start;padding:0}
+  .challenge-result{display:grid;grid-template-columns:minmax(180px,.75fr) minmax(0,1.25fr);align-content:center;align-items:center;gap:24px;max-width:840px}
+  .challenge-result .tres-top{justify-content:center;padding:24px 12px;border-radius:var(--r3);background:var(--s1);border:1px solid var(--line2)}
+  html body .sheet:has(.grp-with-history){width:min(720px,calc(100vw - 48px));max-width:none}
+  .grp-with-history{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;align-items:start}
+}
+
+@media (min-width:861px){
+  html.is-desk body.has-rail .sheet:has(.grp-with-history){width:min(720px,calc(100vw - var(--rail) - 48px))}
+}
+
+@media (min-width:960px){
+  .surah-ws{display:grid;grid-template-columns:260px minmax(0,1fr);gap:clamp(14px,2.4vw,32px);align-items:start;
+    width:100%;max-width:1220px;margin-inline:auto;padding:16px var(--g) 0}
+  .surah-index{display:grid;gap:8px;position:sticky;inset-block-start:16px;padding:12px;min-width:0;max-height:calc(100dvh - 32px)}
+  .surah-index label{font-weight:700;font-size:14px}
+  .surah-index-list{display:grid;align-content:start;gap:2px;overflow:auto;overscroll-behavior:contain}
+  .surah-index-link{min-height:44px;display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:var(--r2);color:var(--t1)}
+  .surah-index-link b,.surah-index-link small{display:block}
+  .surah-index-link small,.surah-index-num,.surah-empty{color:var(--t2);font-size:12px}
+  .surah-index-num{min-width:27px}
+  .surah-index-link:hover{background:var(--s2)}
+  .surah-index-link[aria-current]{background:var(--s3);box-shadow:inset 0 0 0 1px var(--line2)}
+  .surah-index-link>span:last-child:not(.grow){color:var(--ok)}
+  .surah-reader{min-width:0}
+  .surah-reader .ph{max-width:780px;margin-inline:auto;border-radius:var(--r3)}
+  .surah-jump{display:flex;align-items:center;flex-wrap:wrap;gap:8px 12px;max-width:780px;margin:12px auto 0;
+    padding:8px var(--g);background:var(--s1);border:1px solid var(--line);border-radius:var(--r2);color:var(--t2)}
+  .surah-jump select{width:auto;min-height:38px}
+  .view .tw.flash-workspace{max-width:1060px}
+  .flash-studio{grid-template-columns:minmax(0,1.8fr) minmax(270px,1fr);align-items:start}
+  .flash-stage{width:100%;max-width:620px;margin-inline:auto}
+  .flash-stage .tflash{min-height:300px;box-shadow:var(--hi),var(--shadow)}
+  .flash-stage .tflash span{font-size:clamp(22px,3vw,36px)}
+  .flash-stage .tflash[aria-pressed=true]{background:var(--s2)}
+  .write-workspace,.mark-workspace{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(300px,.85fr);gap:20px;align-items:start}
+  .write-workspace .write-tools,.mark-workspace .write-tools{position:sticky;inset-block-start:16px;max-height:calc(100dvh - 32px);overflow:auto}
+  .write-workspace .write-tools,.mark-workspace .write-page{padding:16px;background:var(--s1);border:1px solid var(--line);border-radius:var(--r3)}
+  .mark-workspace .write-page{background:var(--bg)}
+}
+
+@media (min-width:1040px){
+  .view .dwrap.course-workspace{display:grid;grid-template-columns:minmax(0,1fr) minmax(340px,1.1fr);gap:20px;align-items:start;max-width:1280px}
+  .course-editor{display:block;position:sticky;inset-block-start:16px;max-height:calc(100dvh - 32px);overflow:auto;scrollbar-gutter:stable}
+  .course-editor:empty{display:none}
+  .course-form,.course-form label,.course-fields{display:grid;gap:8px;min-width:0}
+  .course-form{gap:12px;margin-block-start:12px}
+  .course-fields{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .course-form label span{font-size:13px;font-weight:700;color:var(--t2)}
+  .course-form textarea{min-height:64px;resize:vertical}
+  .course-preview{padding:12px;border-radius:var(--r2);background:var(--s2)}
+  .course-preview>div{max-height:160px;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;color:var(--t2);font-size:14px}
+  .course-error{color:var(--bad);margin:0}
+  .course-master .bk-cell[aria-current]{border-color:var(--gold);box-shadow:inset 0 0 0 1px var(--gold)}
+}
+
+@media (min-width:1280px){
+  .quran-library{grid-template-columns:repeat(3,minmax(0,1fr))}
+}

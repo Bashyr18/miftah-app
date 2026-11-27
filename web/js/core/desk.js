@@ -124,22 +124,6 @@
   /* ---------- the wide window, filled ---------- */
   function wide() {
     var view = document.body.dataset.view, big = document.body.classList.contains('has-rail') && innerWidth >= 1100;
-    /* the parent's dashboard: its cards dealt into three columns, each to the shortest */
-    var dc = $('.view .dcols');
-    if (dc) {
-      var want = big && innerWidth >= 1480 ? 3 : 2, cols = $$('.dcol', dc);
-      if (want !== cols.length && cols.length) {
-        var cards = []; cols.forEach(function (c) { Array.prototype.slice.call(c.children).forEach(function (x) { cards.push(x); }); });
-        cards.forEach(function (x, i) { if (x.dataset.dk == null) x.dataset.dk = i; });
-        cards.sort(function (a, b) { return (+a.dataset.dk) - (+b.dataset.dk); });
-        var made = []; for (var i = 0; i < want; i++) { var c = document.createElement('div'); c.className = 'dcol'; made.push(c); }
-        cols.forEach(function (c) { dc.removeChild(c); });
-        made.forEach(function (c) { dc.appendChild(c); });
-        var hs = made.map(function () { return 0; });
-        cards.forEach(function (x) { var j = hs.indexOf(Math.min.apply(null, hs)); made[j].appendChild(x); hs[j] += x.getBoundingClientRect().height || 200; });
-        dc.classList.toggle('dk3', want === 3);
-      }
-    }
     if (view === 'room' && big && !$('.dk-room')) roomIndex();
     if (view === 'parent' && A.route() === 'parent' && big && !$('.dk-fam')) familyWeek();
     if (view === 'home' && big && $('.view .tw>.tl') && !$('.dk-subj')) teenSubjects();
@@ -184,7 +168,7 @@
   }
   /* the family page: a week of real minutes for every child, side by side */
   function familyWeek() {
-    var at = $('.view .tl-grid') || $('.view .fgrid'); if (!at) return;
+    var at = $('.view .tl-groups') || $('.view .tl-grid') || $('.view .fgrid'); if (!at) return;
     var kids = A.S.profiles || [], days = [], now = A.now();
     for (var i = 6; i >= 0; i--) { var d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i); days.push(d); }
     var mins = kids.map(function (k) { var d = A.D(k.id); return days.map(function (x) { var key = A.day(x); return Math.round(Math.max((d.time || {})[key] || 0, (d.screen || {})[key] || 0) / 60000); }); });
@@ -221,21 +205,33 @@
     tw.appendChild(main); tw.appendChild(side); tw.classList.add('dk2');
   }
   function roomIndex() {
-    var rid = A.route().split('/')[1], room = C.rooms[rid], p = A.P(), map = $('.view .rmap');
+    var parts = A.route().split('/'), rid = parts[1], room = C.rooms[rid], p = A.P(), map = $('.view .rmap');
     if (!room || !p || !map) return;
-    var st = A.stage(p), next = null;
-    var units = room.units.filter(function (u) { return (u.band == null || u.band <= Math.max(st, 0)) && u.skills.length; });
-    var html = '<aside class="dk-units h-' + esc(room.hue || 'gold') + '"><h3>' + esc(L(['Every lesson here', 'كل دروس الغرفة'])) + '</h3>' + units.map(function (u) {
-      var met = u.skills.filter(function (s) { return M.met(s.id, p.id); }).length;
-      return '<div class="dk-u"><div class="dk-u-h">' + esc(L(u.title)) + '<small>' + A.num(met) + ' / ' + A.num(u.skills.length) + '</small></div>' + u.skills.map(function (s) {
-        var m = M.met(s.id, p.id), o = !m && C.open(s, p.id), isNext = o && !next; if (isNext) next = s.id;
-        return '<button class="dk-l' + (m ? ' met' : o ? ' open' : '') + (isNext ? ' next' : '') + '" data-l="' + esc(s.id) + '"' + (m || o ? '' : ' disabled') + '><span class="st">' + (m ? A.icon('check', 13) : o ? A.icon('play', 11) : A.icon('lock', 12)) + '</span><span class="grow">' + esc(L(s.title)) + '</span></button>';
-      }).join('') + '</div>';
-    }).join('') + '</aside>';
+    var st = A.stage(p), next = null, onYear = $('.view .ryear.on');
+    var selY = parts[2] && /^y\d+$/.test(parts[2]) ? +parts[2].slice(1) : (onYear ? +onYear.dataset.y : null);
+    var allUnits = room.units.filter(function (u) { return (u.band == null || u.band <= Math.max(st, 0)) && u.skills.length; });
+    var scoped = selY != null ? allUnits.filter(function (u) { return u.y === selY; }) : allUnits;
+    var showAll = false;
     var box = document.createElement('div'); box.className = 'dk-room';
-    map.parentNode.insertBefore(box, map); box.appendChild(map); box.insertAdjacentHTML('beforeend', html);
-    $$('.dk-l', box).forEach(function (b) { b.onclick = function () { if (!b.disabled) A.go('lesson/' + b.dataset.l); }; });
-    var n = $('.dk-l.next', box), list = $('.dk-units', box); if (n && list) list.scrollTop = n.offsetTop - list.clientHeight / 2;
+    map.parentNode.insertBefore(box, map); box.appendChild(map);
+    var aside = document.createElement('aside'); aside.className = 'dk-units h-' + esc(room.hue || 'gold');
+    box.appendChild(aside);
+    function renderUnits() {
+      next = null;
+      var units = showAll || !scoped.length ? allUnits : scoped;
+      var yrTitle = selY != null && !showAll ? L(C.yearName(selY)) : L(['Every lesson here', 'كل دروس الغرفة']);
+      aside.innerHTML = '<div class="dk-units-h"><h3>' + esc(yrTitle) + '</h3>' + (scoped.length && scoped.length < allUnits.length ? '<button type="button" class="btn ghost sm" id="dk-u-all">' + esc(showAll ? L(C.yearName(selY)) : L(['All years', 'كل السنوات'])) + '</button>' : '') + '</div>' + units.map(function (u) {
+        var met = u.skills.filter(function (s) { return M.met(s.id, p.id); }).length;
+        return '<div class="dk-u"><div class="dk-u-h">' + esc(L(u.title)) + '<small>' + A.num(met) + ' / ' + A.num(u.skills.length) + '</small></div>' + u.skills.map(function (s) {
+          var m = M.met(s.id, p.id), o = !m && C.open(s, p.id), isNext = o && !next; if (isNext) next = s.id;
+          return '<button class="dk-l' + (m ? ' met' : o ? ' open' : '') + (isNext ? ' next' : '') + '" data-l="' + esc(s.id) + '"' + (m || o ? '' : ' disabled') + '><span class="st">' + (m ? A.icon('check', 13) : o ? A.icon('play', 11) : A.icon('lock', 12)) + '</span><span class="grow">' + esc(L(s.title)) + '</span></button>';
+        }).join('') + '</div>';
+      }).join('');
+      var allBtn = $('#dk-u-all', aside); if (allBtn) allBtn.onclick = function () { showAll = !showAll; renderUnits(); };
+      $$('.dk-l', aside).forEach(function (b) { b.onclick = function () { if (!b.disabled) A.go('lesson/' + b.dataset.l); }; });
+      var n = $('.dk-l.next', aside); if (n) aside.scrollTop = Math.max(0, n.offsetTop - aside.clientHeight / 2);
+    }
+    renderUnits();
   }
   /* every new screen replaces #app's child: that is the moment to redraw the rail and name the window */
   var screens = new MutationObserver(function () { after(); });
@@ -264,48 +260,15 @@
   /* ================= the keyboard ================= */
   /* small key labels on the choices of a lesson, so a child can see which key is which */
   var PLAY_VIEWS = { lesson: 1, stop: 1, exam: 1, paper: 1, place: 1 };
-  /* a wide lesson: what to work on becomes one block, so it centres against the answer beside it */
+  /* a wide lesson: show the room and lesson name quietly above the prompt so a parent glancing across knows what is being learned */
   function pair() {
-    if (innerWidth < 1150 || innerHeight < 660) return;
-    $$('.step-in').forEach(function (si) {
-      if (si.classList.contains('dk-2')) return;
-      var ans = $$(':scope>.pad, :scope>.ch, :scope>.expr', si)[0], rest = Array.prototype.slice.call(si.children).filter(function (c) { return c !== ans; });
-      if (!ans || !rest.length) return;
-      var q = document.createElement('div'); q.className = 'dk-lq';
-      si.insertBefore(q, si.firstChild); rest.forEach(function (c) { q.appendChild(c); });
-      si.classList.add('dk-2');
-      /* a sum gets squared paper beside it, always open: working out is part of the work, not a hint */
-      if (ans.classList.contains('pad') || ans.classList.contains('expr')) workPaper(q);
-    });
-    /* the lesson's name over the step, so a parent glancing across knows what is being learned */
+    if (innerWidth < 1040 || innerHeight < 620) return;
     var head = $('.pl-head'), parts = A.route().split('/'), sk = parts[0] === 'lesson' ? C.skill(parts[1]) : null;
     if (!sk && parts[0] === 'stop' && window.Plan && Plan.today) {
       var stp = (Plan.today().stops || [])[+parts[1]];
       if (stp && stp.s) sk = C.skill(stp.s);
     }
     if (head && sk && !$('.dk-lt', head)) head.insertAdjacentHTML('afterbegin', '<div class="dk-lt">' + esc(L(C.rooms[sk.room].name)) + ' · ' + esc(L(sk.title)) + '</div>');
-  }
-  function workPaper(host) {
-    var w = document.createElement('div'); w.className = 'dk-work';
-    w.innerHTML = '<div class="dk-work-h"><span>' + esc(L(['Working', 'مساحة الحل'])) + '</span><button type="button">' + esc(L(['Clear', 'امسح'])) + '</button></div><canvas></canvas>';
-    host.appendChild(w);
-    var c = $('canvas', w), g = c.getContext('2d'), on = false;
-    var size = function () {
-      var r = c.getBoundingClientRect(), dpr = Math.min(2, devicePixelRatio || 1); if (!r.width || !r.height) return;
-      var nw = Math.round(r.width * dpr), nh = Math.round(r.height * dpr);
-      if (c.width === nw && c.height === nh) return;
-      var snap = null;
-      if (c.width && c.height) { snap = document.createElement('canvas'); snap.width = c.width; snap.height = c.height; snap.getContext('2d').drawImage(c, 0, 0); }
-      c.width = nw; c.height = nh; g.setTransform(dpr, 0, 0, dpr, 0, 0); g.lineWidth = 2.4; g.lineCap = 'round'; g.lineJoin = 'round'; g.strokeStyle = getComputedStyle(w).color;
-      if (snap) { g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.drawImage(snap, 0, 0); g.restore(); }
-    };
-    requestAnimationFrame(size);
-    if (window.ResizeObserver) { var ro = new ResizeObserver(size); ro.observe(c); }
-    var at = function (e) { var r = c.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; };
-    c.onpointerdown = function (e) { size(); g.strokeStyle = getComputedStyle(w).color; on = true; try { c.setPointerCapture(e.pointerId); } catch (x) { } var q = at(e); g.beginPath(); g.moveTo(q[0], q[1]); e.preventDefault(); };
-    c.onpointermove = function (e) { if (!on) return; var q = at(e); g.lineTo(q[0], q[1]); g.stroke(); };
-    c.onpointerup = c.onpointercancel = function () { on = false; };
-    $('button', w).onclick = function () { g.clearRect(0, 0, c.width, c.height); };
   }
   function hints() {
     if (!PLAY_VIEWS[document.body.dataset.view]) return;
@@ -686,17 +649,30 @@
         var on = !!picked[pid][k.id], s = sug.indexOf(k.id) >= 0;
         return '<button class="dk-tile' + (on ? ' on' : '') + '" data-k="' + esc(k.id) + '" aria-pressed="' + on + '"><span class="dk-tick">' + A.icon('check', 14) + '</span><b>' + esc(L(k.title)) + '</b><small>' + esc(L(k.desc || '')) + '</small>' + (s ? '<em>' + esc(L(['Suggested today', 'مقترح اليوم'])) + '</em>' : '') + '</button>';
       }).join('') + '</div></section>';
-    }).join('') + '</div><aside class="dk-tray"><h3>' + esc(L(['To print', 'للطباعة'])) + '</h3>' +
-      (chosen.length ? '<ol>' + chosen.map(function (k) { return '<li>' + esc(L(k.title)) + '</li>'; }).join('') + '</ol>' : '<p class="dk-empty">' + esc(L(['Tick the sheets you want. Today’s suggestions are ticked for you.', 'اختر الأوراق التي تريدها. اقتراحات اليوم مختارة لك.'])) + '</p>') +
+    }).join('') + '</div><aside class="dk-tray"><div class="dk-tray-h"><h3>' + esc(L(['To print', 'للطباعة'])) + '</h3><span class="dk-tray-n" id="ps-n">' + A.num(chosen.length) + '</span></div>' +
+      '<div class="dk-tray-q"><button type="button" class="btn ghost sm" id="ps-sug">' + esc(L(['Suggested', 'المقترح'])) + '</button><button type="button" class="btn ghost sm" id="ps-clr">' + esc(L(['Clear', 'مسح'])) + '</button></div>' +
+      '<div id="ps-list">' + (chosen.length ? '<ol>' + chosen.map(function (k) { return '<li>' + esc(L(k.title)) + '</li>'; }).join('') + '</ol>' : '<p class="dk-empty">' + esc(L(['Tick the sheets you want. Today’s suggestions are ticked for you.', 'اختر الأوراق التي تريدها. اقتراحات اليوم مختارة لك.'])) + '</p>') + '</div>' +
       '<p class="dk-note">' + esc(L(['Every sheet is made fresh for', 'كل ورقة تُصنع من جديد لـ']) + ' ' + p.name + L([', from what they know today. Each is logged, so practice can be marked later.', ' مما يعرفه اليوم، وتُسجَّل كل ورقة لتصحيح التدريب لاحقًا.'])) + '</p>' +
       '<button class="btn pri wide" id="ps-print"' + (chosen.length ? '' : ' disabled') + '>' + A.icon('print', 18) + '<span>' + esc(L(['Print', 'اطبع'])) + '</span></button><button class="btn ghost wide" id="ps-pdf"' + (chosen.length ? '' : ' disabled') + '>' + ic('pdf', 18) + '<span>' + esc(L(['Save as one PDF', 'احفظ PDF واحدًا'])) + '</span></button><button class="btn ghost sm wide" id="ps-dir">' + ic('folder', 16) + '<span>' + esc(L(['Printables folder', 'مجلد المطبوعات'])) + '</span></button></aside></div>';
     return {
       cls: 'dkv', html: page(L(['Print Studio', 'استوديو الطباعة']), L(['A week of paper in one go', 'أوراق الأسبوع دفعة واحدة']), body, A.icon('print', 26)),
       mount: function (v) {
-        $$('.dk-tile', v).forEach(function (b) { b.onclick = function () { var k = b.dataset.k; if (picked[pid][k]) delete picked[pid][k]; else picked[pid][k] = 1; A.rerender(); }; });
+        function syncTray() {
+          var ch = list.filter(function (k) { return picked[pid][k.id]; });
+          $$('.dk-tile', v).forEach(function (b) { var on = !!picked[pid][b.dataset.k]; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on ? 'true' : 'false'); });
+          var nEl = $('#ps-n', v); if (nEl) nEl.textContent = A.num(ch.length);
+          var lEl = $('#ps-list', v);
+          if (lEl) lEl.innerHTML = ch.length ? '<ol>' + ch.map(function (k) { return '<li>' + esc(L(k.title)) + '</li>'; }).join('') + '</ol>' : '<p class="dk-empty">' + esc(L(['Tick the sheets you want. Today’s suggestions are ticked for you.', 'اختر الأوراق التي تريدها. اقتراحات اليوم مختارة لك.'])) + '</p>';
+          $('#ps-print', v).disabled = !ch.length;
+          $('#ps-pdf', v).disabled = !ch.length;
+          return ch;
+        }
+        $$('.dk-tile', v).forEach(function (b) { b.onclick = function () { var k = b.dataset.k; if (picked[pid][k]) delete picked[pid][k]; else picked[pid][k] = 1; syncTray(); }; });
+        $('#ps-sug', v).onclick = function () { picked[pid] = {}; sug.forEach(function (k) { picked[pid][k] = 1; }); syncTray(); };
+        $('#ps-clr', v).onclick = function () { picked[pid] = {}; syncTray(); };
         var make = function (pdf) {
-          var html = '', made = 0, seed = A.seed();
-          chosen.forEach(function (k, i) { var r = Print.make(k.id, pid, seed + i * 7919); if (!r) return; Print.keep(r, pid); html += r.html; made++; });
+          var ch = list.filter(function (k) { return picked[pid][k.id]; }), html = '', made = 0, seed = A.seed();
+          ch.forEach(function (k, i) { var r = Print.make(k.id, pid, seed + i * 7919); if (!r) return; Print.keep(r, pid); html += r.html; made++; });
           if (!made) { A.toast(L(['Nothing to print yet', 'لا شيء للطباعة بعد'])); return; }
           Desk._pdf = !!pdf;
           Print.send(html, 'Miftah ' + p.name + ' ' + A.day());

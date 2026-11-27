@@ -45,7 +45,10 @@
     return v;
   };
   /* ---------- study hub ---------- */
-  var tile = function (href, ic, t, n, hot) { return '<a class="st3" href="#/' + href + '">' + A.icon(ic, 24) + '<b>' + esc(L(t)) + '</b>' + (n ? '<span class="st3-n' + (hot ? ' hot' : '') + '">' + N(n) + '</span>' : '') + '</a>'; };
+  var tile = function (href, ic, title, summary) {
+    return '<a class="st3" href="' + href + '">' + A.icon(ic, 24) + '<b>' + esc(L(title)) +
+      '</b><small>' + esc(summary) + '</small></a>';
+  };
   A.V.study = function () {
     if (!A.P()) return { redirect: 'home' };
     var p = A.P(), d = A.D(), wk = d.weekly || {}, exams = (p.exams || []).slice().sort(function (x, y) { return x.date < y.date ? -1 : 1; }), books = d.books || [];
@@ -56,13 +59,31 @@
     var ex = exams.map(function (e, i) { var left = daysTo(e.date); return '<div class="row2"><span class="grow"><b>' + esc(e.title) + '</b><small>' + esc(fmtDay(e.date)) + '</small></span>' + (left >= 0 ? '<span class="cnt' + (left <= 14 ? ' hot' : '') + '">' + N(left) + L(['d', 'ي']) + '</span>' : '') + '<button class="ibtn" data-ex-del="' + i + '" aria-label="' + esc(L(['Remove', 'حذف'])) + '">' + A.icon('close', 16) + '</button></div>'; }).join('');
     var bk = books.map(function (b, i) { var pc = b.of ? Math.min(100, Math.round((b.at || 0) / b.of * 100)) : 0; return '<button class="row2" data-a="b-edit" data-i="' + i + '"><span class="grow"><b>' + esc(b.title) + '</b><span class="tbar"><i style="width:' + pc + '%"></i></span></span><span class="cnt">' + N(b.at || 0) + '/' + N(b.of || 0) + '</span></button>'; }).join('');
     var card = function (t, add, body, empty) { return '<div class="card"><div class="chd"><h3>' + esc(L(t)) + '</h3>' + (add ? '<button class="ibtn on" data-a="' + add + '" aria-label="' + esc(L(['Add', 'إضافة'])) + '">' + PLUS + '</button>' : '') + '</div>' + (body || (empty ? '<p style="color:var(--t3);font-size:13px;margin-top:6px">' + esc(L(empty)) + '</p>' : '')) + '</div>'; };
+    var due = flashDue().length, nextExam = exams.find(function (e) { return daysTo(e.date) >= 0; });
     return {
-      html: head(L(['Study', 'الدراسة']), '', A.stage() >= 3 ? null : ['home', ['Today', 'اليوم']]) + '<div class="tw sw"><div class="st3s">' + tile('flash', 'keys', ['Cards', 'البطاقات'], flashDue().length, true) + tile('write', 'pen', ['Essays', 'المقالات'], (d.work || []).length) + tile('lab', 'sparkle', ['Lab', 'المختبر']) + '</div>' +
-        (papers ? '<div class="tsec">' + esc(L(['Timed papers', 'اختبارات موقوتة'])) + '</div><div class="paps">' + papers + '</div>' : '') +
-        card(['This week', 'هذا الأسبوع'], null, '<input class="tin" id="t-goal" maxlength="80" aria-label="' + esc(L(['One goal', 'هدف واحد'])) + '" value="' + esc(wk.goal || '') + '" placeholder="' + esc(L(['One goal', 'هدف واحد'])) + '"><textarea class="tin" id="t-rev" rows="2" aria-label="' + esc(L(['Weekly review', 'مراجعة الأسبوع'])) + '" placeholder="' + esc(L(['Weekly review', 'مراجعة الأسبوع'])) + '">' + esc(wk.review || '') + '</textarea>') +
-        card(['Exams', 'الاختبارات'], 'x-add', ex, ['Add upcoming exams so review steps up in time.', 'أضف الاختبارات القادمة لتتكثف المراجعة قبل موعدها.']) + card(['Books', 'الكتب'], 'b-add', bk, ['Track real books you are reading off screen.', 'تابع الكتب الحقيقية التي تقرؤها بعيدًا عن الشاشة.']) + '</div>' + (A.stage() >= 3 ? nav('study') : ''),
+      html: head(L(['Study', 'الدراسة']), '', A.stage() >= 3 ? null : ['home', ['Today', 'اليوم']]) +
+        '<div class="tw sw study-hub"><div class="st3s">' +
+        tile('#/flash', 'keys', ['Flashcards', 'البطاقات التعليمية'], N(due) + ' ' + L(['due', 'مستحقة'])) +
+        tile('#study-exams', 'target', ['Upcoming exams', 'الاختبارات القادمة'], nextExam ? nextExam.title : L(['None scheduled', 'لا اختبارات مجدولة'])) +
+        tile('#study-notes', 'book', ['Reading & goal', 'القراءة والهدف'], wk.goal || N(books.length) + ' ' + L(['books', 'كتب'])) +
+        '</div><div class="study-grid">' +
+        '<section id="study-exams">' + card(['Exams', 'الاختبارات'], 'x-add', ex, ['Add upcoming exams so review steps up in time.', 'أضف الاختبارات القادمة لتتكثف المراجعة قبل موعدها.']) + '</section>' +
+        card(['Books', 'الكتب'], 'b-add', bk, ['Track real books you are reading off screen.', 'تابع الكتب الحقيقية التي تقرؤها بعيدًا عن الشاشة.']) +
+        '<section id="study-notes">' + card(['Weekly notes', 'ملاحظات الأسبوع'], null, '<input class="tin" id="t-goal" maxlength="80" aria-label="' + esc(L(['One goal', 'هدف واحد'])) + '" value="' + esc(wk.goal || '') + '" placeholder="' + esc(L(['One goal', 'هدف واحد'])) + '"><textarea class="tin" id="t-rev" rows="2" aria-label="' + esc(L(['Weekly review', 'مراجعة الأسبوع'])) + '" placeholder="' + esc(L(['Weekly review', 'مراجعة الأسبوع'])) + '">' + esc(wk.review || '') + '</textarea>') + '</section>' +
+        card(['Study tools', 'أدوات الدراسة'], null, '<div class="study-tools"><a class="btn sec" href="#/write">' + A.icon('pen', 18) + esc(L(['Essays', 'المقالات'])) +
+          '</a><a class="btn sec" href="#/lab">' + A.icon('sparkle', 18) + esc(L(['Lab', 'المختبر'])) + '</a></div>' +
+          (papers ? '<div class="tsec">' + esc(L(['Timed papers', 'اختبارات موقوتة'])) + '</div><div class="paps">' + papers + '</div>' : '')) +
+        '</div></div>' + (A.stage() >= 3 ? nav('study') : ''),
       mount: function (v) {
         var save = function () { var dd = A.D(); dd.weekly = { goal: $('#t-goal', v).value.trim(), review: $('#t-rev', v).value.trim(), t: A.now().getTime() }; A.save(); };
+        $$('.st3[href^="#study-"]', v).forEach(function (link) {
+          link.onclick = function (e) {
+            e.preventDefault();
+            var target = $(link.getAttribute('href'), v), control = $('button, input', target);
+            target.scrollIntoView && target.scrollIntoView({ block: 'nearest' });
+            if (control) control.focus({ preventScroll: true });
+          };
+        });
         $('#t-goal', v).oninput = save; $('#t-rev', v).oninput = save;
         $$('[data-ex-del]', v).forEach(function (b) { twoTap(b, function () { var p0 = A.P(), s0 = (p0.exams || []).slice().sort(function (x, y) { return x.date < y.date ? -1 : 1; }), ex0 = s0[+b.dataset.exDel]; p0.exams = (p0.exams || []).filter(function (x) { return x !== ex0; }); A.saveNow(); A.rerender(); }); });
       }
@@ -191,19 +212,71 @@
   };
   function gaps(c) { return [.01, Math.max(1, (c.gap || 1) * 1.2), Math.min(180, Math.max(1, (c.gap || .5) * 2.4))]; }
   function gapTxt(g) { return g < 1 ? N(15) + L([' min', ' د']) : N(Math.round(g)) + L(['d', 'ي']); }
+  var flashSession;
   A.V.flash = function () {
     if (!A.P()) return { redirect: 'home' };
-    var cards = A.D().cards || [], due = flashDue(), c = due[0], gp = c && gaps(c);
+    var pid = A.P().id, cards = A.D().cards || [], due = flashDue();
+    if (!flashSession || flashSession.pid !== pid) flashSession = { pid: pid, reviewed: new Set() };
+    var session = flashSession;
+    var queue = (session.early ? cards : due).filter(function (card) { return !session.reviewed.has(card); });
+    var c = session.card = queue[0], gp = c && gaps(c), reviewed = session.reviewed.size;
+    var total = reviewed + queue.length;
     var list = cards.map(function (x, i) { var left = Math.ceil(((x.next || 0) - A.now().getTime()) / DAY); return '<div class="row2"><span class="grow"><b>' + esc(x.f) + '</b><small>' + esc(x.deck || '') + '</small></span><span class="cnt' + (left <= 0 ? ' hot' : '') + '">' + (left <= 0 ? esc(L(['due', 'الآن'])) : N(left) + L(['d', 'ي'])) + '</span><button class="ibtn" data-del="' + i + '" aria-label="' + esc(L(['Delete', 'حذف'])) + '">' + A.icon('close', 16) + '</button></div>'; }).join('');
+    var stage = c ? '<button class="tflash" data-a="t-flip" id="t-card" aria-pressed="false"><small>' + esc(c.deck || '') + '</small><span>' + esc(c.f) + '</span><small style="opacity:.7">' + esc(L(['Tap to reveal', 'انقر لإظهار الجواب'])) + '</small></button>' : (cards.length ? '<div class="tflash idle"><span>' + A.icon('check', 28) + '</span><small style="color:var(--t2)">' + esc(L(['All caught up for now.', 'أنجزت كل البطاقات المستحقة الآن.'])) + '</small><button class="btn sec sm" data-a="c-early">' + esc(L(['Review early', 'راجع مبكرًا'])) + '</button></div>' : '<button class="mempty" data-a="c-add"><span>' + PLUS + '</span><b>' + esc(L(['New card', 'بطاقة جديدة'])) + '</b></button>');
+    var ratings = c ? '<div class="grades" id="t-grade" hidden><button data-a="t-grade" data-g="0"><b>' + esc(L(['Again', 'أعد'])) + '</b><small>' + gapTxt(gp[0]) + '</small></button><button data-a="t-grade" data-g="1"><b>' + esc(L(['Hard', 'صعبة'])) + '</b><small>' + gapTxt(gp[1]) + '</small></button><button class="on" data-a="t-grade" data-g="2"><b>' + esc(L(['Knew it', 'عرفتها'])) + '</b><small>' + gapTxt(gp[2]) + '</small></button></div>' : '';
+    function keys(e) {
+      if (e.defaultPrevented || e.repeat || e.ctrlKey || e.altKey || e.metaKey || e.shiftKey || e.isComposing || $('.sheet.on, .dk-pal') ||
+          e.target.closest && e.target.closest('a, input, textarea, select, [contenteditable], [role="button"]')) return;
+      var rating = /^[1-3١-٣]$/.test(e.key) ? ('123١٢٣'.indexOf(e.key) % 3) : -1;
+      var button = e.key === ' ' && !document.activeElement.closest('button') ? $('#t-card') :
+        rating >= 0 && $('#t-grade:not([hidden]) [data-g="' + rating + '"]');
+      if (button) { e.preventDefault(); e.stopPropagation(); button.click(); }
+    }
     return {
-      html: head(L(['Cards', 'البطاقات']), '', ['study', ['Study', 'الدراسة']]) + '<div class="tw sw"><div class="fl-k"><span><b>' + N(due.length) + '</b>' + esc(L(['due', 'مستحقة'])) + '</span><span><b>' + N(cards.length) + '</b>' + esc(L(['in all', 'الكل'])) + '</span><button class="ibtn on" data-a="c-add" aria-label="' + esc(L(['New card', 'بطاقة جديدة'])) + '">' + PLUS + '</button></div>' +
-        '<div class="fl-acts"><button class="btn ghost sm" data-a="c-imp">' + A.icon('download', 16) + '<span>' + esc(L(['Import deck', 'استيراد بطاقات'])) + '</span></button>' + (cards.length ? '<button class="btn ghost sm" data-a="c-exp">' + esc(L(['Export deck', 'تصدير البطاقات'])) + '</button>' : '') + '</div>' +
-        (c ? '<button class="tflash" data-a="t-flip" id="t-card"><small>' + esc(c.deck || '') + '</small><span>' + esc(c.f) + '</span><small style="opacity:.7">' + esc(L(['Tap to reveal', 'انقر لإظهار الجواب'])) + '</small></button><div class="grades" id="t-grade" hidden><button data-a="t-grade" data-g="0"><b>' + esc(L(['Again', 'أعد'])) + '</b><small>' + gapTxt(gp[0]) + '</small></button><button data-a="t-grade" data-g="1"><b>' + esc(L(['Hard', 'صعبة'])) + '</b><small>' + gapTxt(gp[1]) + '</small></button><button class="on" data-a="t-grade" data-g="2"><b>' + esc(L(['Knew it', 'عرفتها'])) + '</b><small>' + gapTxt(gp[2]) + '</small></button></div>' : (cards.length ? '<div class="tflash idle"><span>' + A.icon('check', 28) + '</span><small style="color:var(--t2)">' + esc(L(['All caught up for now.', 'أنجزت كل البطاقات المستحقة الآن.'])) + '</small><button class="btn sec sm" data-a="c-early">' + esc(L(['Review early', 'راجع مبكرًا'])) + '</button></div>' : '<button class="mempty" data-a="c-add"><span>' + PLUS + '</span><b>' + esc(L(['New card', 'بطاقة جديدة'])) + '</b></button>')) +
+      html: head(L(['Cards', 'البطاقات']), '', ['study', ['Study', 'الدراسة']]) +
+        '<div class="tw sw flash-workspace"><div class="flash-studio"><div class="flash-stage">' + stage +
+        '</div><aside class="card flash-status"><div class="fl-k"><span><b>' + N(due.length) + '</b>' + esc(L(['due', 'مستحقة'])) +
+        '</span><span><b>' + N(cards.length) + '</b>' + esc(L(['in all', 'الكل'])) + '</span><button class="ibtn on" data-a="c-add" aria-label="' +
+        esc(L(['New card', 'بطاقة جديدة'])) + '">' + PLUS + '</button></div>' +
+        (total ? '<label class="flash-progress"><span>' + esc(L(['Reviewed', 'تمت مراجعتها'])) + ' · ' + N(reviewed) + ' / ' + N(total) +
+          '</span><progress value="' + reviewed + '" max="' + total + '"></progress></label>' : '') +
+        ratings + (c ? '<p class="flash-keys">' + esc(L(['Space to flip · 1, 2, 3 to rate', 'المسافة لقلب البطاقة · ١، ٢، ٣ للتقييم'])) + '</p>' : '') +
+        '<div class="fl-acts"><button class="btn ghost sm" data-a="c-imp">' + A.icon('download', 16) + '<span>' + esc(L(['Import deck', 'استيراد بطاقات'])) + '</span></button>' + (cards.length ? '<button class="btn ghost sm" data-a="c-exp">' + esc(L(['Export deck', 'تصدير البطاقات'])) + '</button>' : '') + '</div>' + '</aside></div>' +
         (list ? '<div class="card" style="margin-top:12px">' + list + '</div>' : '') + '</div>',
-      mount: function (v) { $$('[data-del]', v).forEach(function (b) { twoTap(b, function () { A.D().cards.splice(+b.dataset.del, 1); A.saveNow(); A.rerender(); }); }); }
+      mount: function (v) {
+        $$('[data-del]', v).forEach(function (b) { twoTap(b, function () { var card = A.D().cards.splice(+b.dataset.del, 1)[0]; session.reviewed.delete(card); A.saveNow(); A.rerender(); }); });
+        document.addEventListener('keydown', keys, true);
+      },
+      unmount: function () {
+        document.removeEventListener('keydown', keys, true);
+        if (A.route() !== 'flash') flashSession = null;
+      }
     };
   };
-  A.acts['c-early'] = function () { (A.D().cards || []).forEach(function (c) { c.next = 0; }); A.saveNow(); A.rerender(); };
+  A.acts['t-flip'] = function () {
+    var card = flashSession && flashSession.card, stage = $('#t-card'), grades = $('#t-grade');
+    if (!card || !stage || !grades) return;
+    grades.hidden = !grades.hidden;
+    stage.setAttribute('aria-pressed', String(!grades.hidden));
+    stage.innerHTML = grades.hidden ?
+      '<small>' + esc(card.deck || '') + '</small><span>' + esc(card.f) + '</span><small>' + esc(L(['Tap to reveal', 'انقر لإظهار الجواب'])) + '</small>' :
+      '<small>' + esc(card.f) + '</small><span>' + esc(card.b) + '</span>';
+  };
+  A.acts['t-grade'] = function (t) {
+    var card = flashSession && flashSession.card, grade = +t.dataset.g;
+    var grades = $('#t-grade');
+    if (!card || !grades || grades.hidden || ![0, 1, 2].includes(grade)) return;
+    card.gap = gaps(card)[grade];
+    card.next = A.now().getTime() + card.gap * DAY;
+    flashSession.reviewed.add(card);
+    A.saveNow(); A.rerender();
+  };
+  A.acts['c-early'] = function () {
+    if (!flashSession) return;
+    flashSession.early = true;
+    flashSession.reviewed.clear();
+    A.rerender();
+  };
   A.acts['c-add'] = function () {
     A.sheet(L(['New card', 'بطاقة جديدة']), '<div class="ed"><textarea class="tin" id="t-f" rows="2" placeholder="' + esc(L(['Question', 'سؤال'])) + '"></textarea><textarea class="tin" id="t-b" rows="2" placeholder="' + esc(L(['Answer', 'جواب'])) + '"></textarea><input class="tin" id="t-dk" placeholder="' + esc(L(['Subject', 'المادة'])) + '"><button class="btn pri wide" id="c-go">' + esc(L(['Add', 'إضافة'])) + '</button></div>', function (sh) {
       var f = $('#t-f', sh), b = $('#t-b', sh); setTimeout(function () { f.focus(); }, 220);
@@ -240,7 +313,7 @@
     var v = write0(args); var id = args && args[0]; if (id == null || !v || !v.html || !v.mount) return v;
     var w = (A.D().work || [])[+id]; if (!w) return v;
     var vers = (w.versions || []).length;
-    v.html = v.html.replace(/<\/div>$/, '<div class="trow" style="margin-top:8px">' + (vers ? '<button class="btn sec" id="t-w-v">' + esc(L(['Versions', 'النسخ'])) + ' · ' + N(vers) + '</button>' : '') + '<button class="btn sec" id="t-w-x">' + A.icon('trash', 18) + '<span>' + esc(L(['Delete', 'حذف'])) + '</span></button></div></div>');
+    v.html = v.html.replace('</aside></div>', '<div class="trow" style="margin-top:8px">' + (vers ? '<button class="btn sec" id="t-w-v">' + esc(L(['Versions', 'النسخ'])) + ' · ' + N(vers) + '</button>' : '') + '<button class="btn sec" id="t-w-x">' + A.icon('trash', 18) + '<span>' + esc(L(['Delete', 'حذف'])) + '</span></button></div></aside></div>');
     var m0 = v.mount, un0 = v.unmount; var gone = false;
     v.unmount = function () { if (!gone && un0) un0(); };
     v.mount = function (el) {

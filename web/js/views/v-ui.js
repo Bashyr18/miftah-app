@@ -131,11 +131,11 @@
       btn.setAttribute('aria-expanded', next ? 'true' : 'false');
     };
   }
-  /* phones and tablets fold extra tabs into More; wide desktop shows them inline */
+  /* phones fold extra tabs into More; wide desktop shows them inline */
   var KEEP = /\/(today|log|hear|make)$/;
   function foldTabs(row) {
     if (row.dataset.ui) return; var tabs = A.$$('a.tab', row); if (tabs.length < 6) return;
-    if (window.MIFTAH_DESKTOP && window.innerWidth >= 1080) return;
+    if (window.MIFTAH_DESKTOP && window.innerWidth >= 960) return;
     row.dataset.ui = '1';
     var more = tabs.filter(function (t) { return !KEEP.test(t.getAttribute('href')); }), active = more.filter(function (t) { return t.classList.contains('on'); })[0];
     more.forEach(function (t) { t.style.display = 'none'; });

@@ -337,23 +337,68 @@
   }
   function bookPage(id) {
     var bk = books().filter(function (b) { return b.id === id; })[0]; if (!bk) return { redirect: 'parent/books' };
-    var kind = kindOf(bk.kind), c = cover(bk), room = roomOf(bk), R = C.rooms[room], ar = room === 'arabic', uw = ar ? kind.unit : ['Lesson', 'الدرس'];
-    var grid = bk.lessons.map(function (ls, i) { return '<button class="bk-cell' + (filled(ls) ? ' on' : '') + '" data-ls="' + i + '" aria-label="' + esc(L(uw) + ' ' + ls.n) + '"><b>' + A.num(ls.n) + '</b>' + (filled(ls) ? '<small>' + A.num(count(ls)) + '</small>' : '') + '</button>'; }).join('');
+    var kind = kindOf(bk.kind), room = roomOf(bk), R = C.rooms[room], ar = room === 'arabic', uw = ar ? kind.unit : ['Lesson', 'الدرس'];
+    var selected = 0, wide, onResize;
+    function cell(ls, i) {
+      return '<button class="bk-cell' + (filled(ls) ? ' on' : '') + '" data-ls="' + i + '" aria-label="' +
+        esc(L(uw) + ' ' + A.num(ls.n) + (ls.title ? ': ' + ls.title : '')) + '"><b>' + A.num(ls.n) + '</b>' +
+        (filled(ls) ? '<small>' + A.num(count(ls)) + '</small>' : '') + '</button>';
+    }
+    function status() {
+      var c = cover(bk);
+      return A.num(c.f) + ' / ' + A.num(c.n) + ' ' + esc(L(['ready', 'جاهز'])) +
+        (c.f < c.n ? ' · ' + esc(L(['dashed squares are still empty', 'المربعات المتقطّعة ما زالت فارغة'])) : '');
+    }
     var kids = A.S.profiles.map(function (p) { var on = follows(p)[room] === bk.id; return '<button class="li" role="switch" aria-checked="' + (on ? 'true' : 'false') + '" data-follow="' + esc(p.id) + '"><span class="grow"><b>' + esc(p.name) + '</b><small>' + esc(on ? L(['Their ', '']) + L(R.name) + L([' comes from this course', ' من هذا المقرر']) : L(['Not following it', 'لا يتّبعه'])) + '</small></span><span class="switch' + (on ? ' on' : '') + '"></span></button>'; }).join('');
     var y = bk.y != null ? +bk.y : 3, years = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13];
     var yearSel = '<label class="bk-y"><span>' + esc(L(['Level', 'المستوى'])) + '</span><select class="tin" id="bk-y" aria-label="' + esc(L(['Level', 'المستوى'])) + '">' + years.map(function (n) { return '<option value="' + n + '"' + (n === y ? ' selected' : '') + '>' + esc(L(C.yearName(n))) + '</option>'; }).join('') + '</select></label>';
     return {
-      html: bar('parent/books', L(R.name)) + '<div class="dwrap"><div class="card"><div class="bk-name"><input class="tin" id="bk-name" dir="auto" value="' + esc(bk.name) + '" aria-label="' + esc(L(['Name', 'الاسم'])) + '">' + (ar ? '' : yearSel) + '</div><p class="bk-sum">' + A.num(c.f) + ' / ' + A.num(c.n) + ' ' + esc(L(['ready', 'جاهز'])) + (c.f < c.n ? ' · ' + esc(L(['dashed squares are still empty', 'المربعات المتقطّعة ما زالت فارغة'])) : '') + '</p><div class="bk-grid">' + grid + '</div>' +
+      html: bar('parent/books', L(R.name)) + '<div class="dwrap course-workspace"><div class="course-master"><div class="card"><div class="bk-name"><input class="tin" id="bk-name" dir="auto" value="' + esc(bk.name) + '" aria-label="' + esc(L(['Name', 'الاسم'])) + '">' + (ar ? '' : yearSel) + '</div><p class="bk-sum">' + status() + '</p><div class="bk-grid">' + bk.lessons.map(cell).join('') + '</div>' +
         '<div class="bk-acts"><button class="btn ghost sm" id="bk-add">' + esc(L(['Add a lesson', 'أضف درسًا'])) + '</button><button class="btn ghost sm" id="bk-paste">' + esc(L(['Paste a whole course', 'الصق مقررًا كاملًا'])) + '</button><button class="btn ghost sm" id="bk-copy">' + esc(L(['Copy to share', 'انسخه للمشاركة'])) + '</button><button class="btn ghost sm" id="bk-exp">' + esc(L(['Export file', 'تصدير ملف'])) + '</button></div></div>' +
         '<div class="card"><h3>' + esc(L(['Who follows it', 'من يتّبعه'])) + '</h3>' + (kids ? '<div class="lst">' + kids + '</div>' : '<p class="bk-help">' + esc(L(['Add a learner first to assign this course.', 'أضف متعلمًا أولًا ليتّبع هذا المقرر.'])) + '</p>') + '</div>' +
-        '<button class="btn ghost sm bk-del" id="bk-del">' + esc(L(['Remove this course', 'احذف هذا المقرر'])) + '</button></div>',
+        '<button class="btn ghost sm bk-del" id="bk-del">' + esc(L(['Remove this course', 'احذف هذا المقرر'])) + '</button></div><section class="card course-editor"></section></div>',
+      unmount: function () { if (wide && wide.removeEventListener && onResize) wide.removeEventListener('change', onResize); },
       mount: function (v) {
-        $$('[data-ls]', v).forEach(function (b) { b.onclick = function () { edit(bk, +b.dataset.ls); }; });
+        var grid = $('.bk-grid', v), panel = $('.course-editor', v), drafts = new Map();
+        wide = window.matchMedia && matchMedia('(min-width: 1040px)');
+        function select(i, focus) {
+          selected = i;
+          var lesson = bk.lessons[i];
+          if (!lesson) return;
+          $$('[data-ls]', grid).forEach(function (b) {
+            if (+b.dataset.ls === i) b.setAttribute('aria-current', 'true');
+            else b.removeAttribute('aria-current');
+          });
+          inlineLesson(panel, bk, lesson, L(uw) + ' ' + A.num(lesson.n), drafts, function () {
+            var previous = $('[data-ls="' + i + '"]', grid);
+            previous.outerHTML = cell(lesson, i);
+            $('[data-ls="' + i + '"]', grid).setAttribute('aria-current', 'true');
+            $('.bk-sum', v).innerHTML = status();
+          });
+          if (focus) $('#bk-t', panel).focus({ preventScroll: true });
+        }
+        grid.onclick = function (e) {
+          var b = e.target.closest('[data-ls]'); if (!b) return;
+          if (wide && wide.matches) select(+b.dataset.ls, true);
+          else edit(bk, +b.dataset.ls);
+        };
+        onResize = function () {
+          if (wide.matches) select(selected);
+          else { panel.innerHTML = ''; var current = $('[aria-current]', grid); if (current) current.removeAttribute('aria-current'); }
+        };
+        if (wide) { if (wide.addEventListener) wide.addEventListener('change', onResize); onResize(); }
         $$('[data-follow]', v).forEach(function (b) { b.onclick = function () { var p = A.profile(b.dataset.follow), f = follows(p); f[room] = f[room] === bk.id ? null : bk.id; if (!f[room]) delete f[room]; A.D(p.id).path = null; A.saveNow();
           var on = f[room] === bk.id, sw = $('.switch', b), sm = $('small', b); b.setAttribute('aria-checked', on ? 'true' : 'false'); if (sw) sw.classList.toggle('on', on); if (sm) sm.textContent = on ? L(['Their ', '']) + L(R.name) + L([' comes from this course', ' من هذا المقرر']) : L(['Not following it', 'لا يتّبعه']); }; });
         var nm = $('#bk-name', v); nm.onchange = function () { var t = nm.value.trim(); if (t) { bk.name = t; bk.at = Date.now(); B.register(); A.saveNow(); } };
         var ys = $('#bk-y', v); if (ys) ys.onchange = function () { bk.y = +ys.value; bk.at = Date.now(); B.register(); A.saveNow(); A.toast(L(['Saved', 'حُفظ'])); };
-        $('#bk-add', v).onclick = function () { bk.lessons.push(blank(nextLessonNum(bk))); A.saveNow(); A.rerender(); };
+        $('#bk-add', v).onclick = function () {
+          var lesson = blank(nextLessonNum(bk)), i = bk.lessons.length;
+          bk.lessons.push(lesson); A.saveNow();
+          if (!wide || !wide.matches) { A.rerender(); return; }
+          grid.insertAdjacentHTML('beforeend', cell(lesson, i));
+          $('.bk-sum', v).innerHTML = status();
+          select(i, true);
+        };
         $('#bk-paste', v).onclick = function () { paste(bk); };
         $('#bk-copy', v).onclick = function () {
           var t = B.exportText(bk); if (!t) { A.toast(L(['Fill a lesson first', 'املأ درسًا أولًا'])); return; }
@@ -390,11 +435,83 @@
       '<li><code>&gt; …</code> ' + esc(L(['a sentence from the book (a word is hidden in practice)', 'جملة من الكتاب (تُخفى كلمة في التدريب)'])) + '</li>' +
       '<li><code>? … = right | wrong | wrong</code> ' + esc(L(['a quiz question, right answer first', 'سؤال اختبار، الصحيح أولًا'])) + '</li></ul></div>';
   }
+  function saveLesson(bk, ls, data) {
+    Object.assign(ls, data);
+    bk.at = Date.now(); B.register(); A.saveNow();
+  }
+  function inlineLesson(panel, bk, lesson, title, drafts, saved) {
+    var fields = [
+      { key: 'words', label: L(['Terms', 'المصطلحات']), hint: L(['Term = definition', 'مصطلح = تعريف']) },
+      { key: 'grammar', label: L(['Facts and rules', 'الحقائق والقواعد']), hint: L(['One fact or rule per line', 'حقيقة أو قاعدة في كل سطر']) },
+      { key: 'sents', label: L(['Sentences', 'الجمل']), hint: L(['Sentence = notes (optional)', 'جملة = ملاحظات (اختيارية)']) },
+      { key: 'qs', label: L(['Questions', 'الأسئلة']), hint: L(['Question = correct answer | other answers', 'سؤال = الإجابة الصحيحة | الإجابات الأخرى']) }
+    ];
+    var original = fields.map(function (f) {
+      return (lesson[f.key] || []).map(function (x) {
+        return f.key === 'grammar' ? x : x[0] + '\t' + (f.key === 'qs' ? x.slice(1).join(' | ') : x[1]);
+      }).join('\n');
+    });
+    var draft = drafts.get(lesson) || { title: lesson.title || '', content: original };
+    panel.innerHTML = '<h2>' + esc(title) + '</h2><form class="course-form"><label><span>' + esc(L(['Title', 'العنوان'])) +
+      '</span><input class="tin" id="bk-t" dir="auto" value="' + esc(draft.title) + '"></label><div class="course-fields">' +
+      fields.map(function (f, i) {
+        return '<label><span>' + esc(f.label) + '</span><textarea class="tin" rows="2" dir="auto" placeholder="' +
+          esc(f.hint) + '">' + esc(draft.content[i]) + '</textarea></label>';
+      }).join('') + '</div><div class="course-preview"><h3>' + esc(L(['Preview', 'معاينة'])) + '</h3><div dir="auto"></div></div>' +
+      '<p class="bk-help course-error" role="status" hidden>' + esc(L(['Give each question a correct answer.', 'أضف إجابة صحيحة لكل سؤال.'])) +
+      '</p><button class="btn pri wide" id="bk-save" type="submit">' + esc(L(['Save', 'احفظ'])) + '</button></form>';
+    var form = $('.course-form', panel), input = $('#bk-t', form), textareas = $$('textarea', form),
+      preview = $('.course-preview > div', form), button = $('#bk-save', form), error = $('.course-error', form);
+    function read() {
+      var content = textareas.map(function (textarea) { return textarea.value; });
+      return { title: input.value, content: content };
+    }
+    function update() {
+      draft = read();
+      var dirty = draft.title !== (lesson.title || '') || draft.content.some(function (value, i) { return value !== original[i]; });
+      if (dirty) drafts.set(lesson, draft);
+      else drafts.delete(lesson);
+      button.disabled = !dirty;
+      error.hidden = true;
+      preview.textContent = [draft.title].concat(draft.content).map(function (value) {
+        return value.replace(/\t/g, ' · ').trim();
+      }).filter(Boolean).join('\n\n') || L(['This lesson is empty.', 'هذا الدرس فارغ.']);
+    }
+    form.oninput = update;
+    form.onsubmit = function (e) {
+      e.preventDefault();
+      if (!A.grownOpen()) { A.rerender(); return; }
+      update();
+      if (button.disabled) return;
+      var data = { title: draft.title.trim() }, valid = true;
+      fields.forEach(function (f, i) {
+        if (draft.content[i] === original[i]) return;
+        data[f.key] = draft.content[i].split(/\r?\n/).map(function (line) { return line.trim(); }).filter(Boolean).map(function (line) {
+          if (f.key === 'grammar') return line;
+          var tab = line.indexOf('\t');
+          var cut = tab >= 0 ? tab : f.key === 'qs' ? line.lastIndexOf('=') : line.indexOf('=');
+          var front = cut < 0 ? line : line.slice(0, cut).trim(), back = cut < 0 ? '' : line.slice(cut + 1).trim();
+          if (f.key !== 'qs') return front ? [front, back] : null;
+          var answers = back.split(/\s*\|\s*/);
+          if (!front || !answers[0]) { valid = false; return null; }
+          return [front].concat(answers.filter(Boolean));
+        }).filter(Boolean);
+      });
+      if (!valid) { error.hidden = false; textareas[3].focus(); return; }
+      saveLesson(bk, lesson, data);
+      original = read().content;
+      input.value = lesson.title;
+      update();
+      saved();
+      A.toast(L(['Saved', 'حُفظ']));
+    };
+    update();
+  }
   function edit(bk, i) {
     var ls = bk.lessons[i], kind = kindOf(bk.kind), ar = roomOf(bk) === 'arabic';
     var cur = B.text([ls]).split('\n').slice(1).join('\n');
     A.sheet(L(ar ? kind.unit : ['Lesson', 'الدرس']) + ' ' + A.num(ls.n), help(ar) + '<input class="tin" id="bk-t" dir="auto" aria-label="' + esc(L(['Title', 'العنوان'])) + '" placeholder="' + esc(L(['Title (optional)', 'العنوان (اختياري)'])) + '" value="' + esc(ls.title || '') + '"><textarea class="tin bk-ta" dir="auto" spellcheck="false" aria-label="' + esc(L(['Lesson items', 'محتوى الدرس'])) + '" placeholder="' + esc(ar ? EX_AR : EX) + '">' + esc(cur) + '</textarea><button class="btn pri wide" id="bk-save">' + esc(L(['Save', 'احفظ'])) + '</button>', function (sh) {
-      $('#bk-save', sh).onclick = function () { var got = B.parse('# ' + ls.n + '\n' + $('.bk-ta', sh).value)[0] || {}; ls.words = got.words || []; ls.grammar = got.grammar || []; ls.sents = got.sents || []; ls.qs = got.qs || []; ls.title = $('#bk-t', sh).value.trim(); bk.at = Date.now(); B.register(); A.saveNow(); A.closeSheet(); A.rerender(); };
+      $('#bk-save', sh).onclick = function () { var got = B.parse('# ' + ls.n + '\n' + $('.bk-ta', sh).value)[0] || {}; saveLesson(bk, ls, { words: got.words || [], grammar: got.grammar || [], sents: got.sents || [], qs: got.qs || [], title: $('#bk-t', sh).value.trim() }); A.closeSheet(); A.rerender(); };
     });
   }
   function paste(bk) {
