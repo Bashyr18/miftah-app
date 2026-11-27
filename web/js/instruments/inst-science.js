@@ -260,15 +260,25 @@
   SIMS.moon = function (h, s, c, done) {
     var age = s.real ? A.moonAge() : 1, touched = false, disc = null, qs = A.rng(9), stars = [];
     for (var i = 0; i < 80; i++) stars.push([qs.int(0, 340), qs.int(0, 220), qs() * 1.1 + .3, qs() * 6]);
-    A.Sky.moonDisc(62, function (cv) { disc = cv; });
+    if (A.Sky && !A.Sky.drawMoon && A.Sky.moonDisc) A.Sky.moonDisc(62, function (cv) { disc = cv; });
     var S = sim(h, 220, function (g, W, H, t) {
       var bg = g.createLinearGradient(0, 0, 0, H); bg.addColorStop(0, '#04071c'); bg.addColorStop(1, '#141a48'); g.fillStyle = bg; g.fillRect(0, 0, W, H);
-      stars.forEach(function (o) { g.globalAlpha = .45 + .55 * Math.sin(t * 1.4 + o[3]); g.fillStyle = '#fff'; g.fillRect(o[0], o[1], o[2], o[2]); }); g.globalAlpha = 1;
       var cx = W / 2, cy = 92, R = 62, full = Math.cos((age / 29.53) * Math.PI * 2);
+      stars.forEach(function (o) {
+        if (Math.hypot(o[0] - cx, o[1] - cy) < R * 1.15) return;
+        g.globalAlpha = .55 + .45 * Math.sin(t * 1.4 + o[3]); g.fillStyle = '#fff'; g.fillRect(o[0], o[1], o[2], o[2]);
+      });
+      g.globalAlpha = 1;
       var halo = g.createRadialGradient(cx, cy, R * .8, cx, cy, R * 2.1); halo.addColorStop(0, 'rgba(255,244,214,' + (.2 + (1 - full) * .1) + ')'); halo.addColorStop(1, 'rgba(255,244,214,0)'); g.fillStyle = halo; g.fillRect(0, 0, W, H);
-      if (disc) {
-        g.globalAlpha = .14; g.drawImage(disc, cx - R, cy - R, R * 2, R * 2); g.globalAlpha = 1;
-        g.save(); g.clip(new Path2D(A.moonPath(cx, cy, R, age))); g.drawImage(disc, cx - R, cy - R, R * 2, R * 2); g.restore();
+      if (A.Sky && A.Sky.drawMoon) A.Sky.drawMoon(g, cx, cy, R, age, 1);
+      else {
+        if (disc) {
+          g.globalAlpha = .14; g.drawImage(disc, cx - R, cy - R, R * 2, R * 2); g.globalAlpha = 1;
+        }
+        g.save(); g.clip(new Path2D(A.moonPath(cx, cy, R, age)));
+        if (disc) g.drawImage(disc, cx - R, cy - R, R * 2, R * 2);
+        else { g.fillStyle = '#e5d9c1'; g.fillRect(cx - R, cy - R, R * 2, R * 2); }
+        g.restore();
       }
       txt(g, T('Day') + ' ' + A.num(Math.max(1, Math.round(age))) + ' ' + T('of the Hijri month'), cx, 190, '#f1d59e', 15);
     });

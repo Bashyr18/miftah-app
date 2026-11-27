@@ -33,25 +33,125 @@
     return mix(x, [24, 32, 74], s.night * .55);
   }
 
-  /* ---------- the moon: a rendered disc when supplied, drawn otherwise, always in today's real phase ---------- */
-  function moonDisc(r, cb) {
-    var cv = document.createElement('canvas'), R = Math.ceil(r * 2);
-    cv.width = cv.height = R; var g = cv.getContext('2d');
-    if (A.hasImg('moon-disc')) { var im = new Image(); im.onload = function () { g.drawImage(im, 0, 0, R, R); cb(cv); }; im.onerror = function () { draw(); cb(cv); }; im.src = A.imgUrl('moon-disc'); return; }
-    function draw() {
-      var gr = g.createRadialGradient(r * .78, r * .72, r * .1, r, r, r);
-      gr.addColorStop(0, '#fbf5e0'); gr.addColorStop(.75, '#e4dabb'); gr.addColorStop(1, '#b0a585');
-      g.fillStyle = gr; g.beginPath(); g.arc(r, r, r, 0, 7); g.fill();
-      var q = A.rng(19); g.globalCompositeOperation = 'source-atop';
-      /* the seas, then a dusting of small craters */
-      [[.62, .55, .26], [.82, .42, .2], [.98, .68, .23], [.72, .95, .3], [1.25, .85, .16], [1.15, .5, .14]].forEach(function (m) { var c = g.createRadialGradient(m[0] * r, m[1] * r, 0, m[0] * r, m[1] * r, m[2] * r * 1.4); c.addColorStop(0, 'rgba(120,114,100,.5)'); c.addColorStop(1, 'rgba(120,114,100,0)'); g.fillStyle = c; g.fillRect(0, 0, R, R); });
-      for (var i = 0; i < 26; i++) { var a = q() * 6.28, d = Math.sqrt(q()) * r * .94, x = r + Math.cos(a) * d, y = r + Math.sin(a) * d, cr = r * (.012 + q() * .035); g.fillStyle = 'rgba(95,90,78,.3)'; g.beginPath(); g.arc(x, y, cr, 0, 7); g.fill(); g.fillStyle = 'rgba(255,250,232,.3)'; g.beginPath(); g.arc(x - cr * .35, y - cr * .35, cr * .55, 0, 7); g.fill(); }
-      g.globalCompositeOperation = 'source-over';
+  /* ---------- the moon: supersampled lunar albedo + true 3D spherical Lambertian phase shading ---------- */
+  var albedoCache = null;
+  function moonAlbedo() {
+    if (albedoCache) return albedoCache;
+    var S = 256, r = S / 2, cv = document.createElement('canvas'); cv.width = cv.height = S;
+    var g = cv.getContext('2d');
+    var base = g.createRadialGradient(r, r, r * .05, r, r, r);
+    base.addColorStop(0, '#faf3df'); base.addColorStop(.68, '#ebe0c4'); base.addColorStop(.92, '#d5c7a7'); base.addColorStop(1, '#b8a98a');
+    g.fillStyle = base; g.beginPath(); g.arc(r, r, r, 0, Math.PI * 2); g.fill();
+    g.save(); g.beginPath(); g.arc(r, r, r, 0, Math.PI * 2); g.clip();
+    /* major lunar maria: soft layered basalt basins */
+    var maria = [
+      [.34, .34, .24, .18, -.3, .22], [.50, .28, .17, .14, .2, .20],
+      [.62, .42, .16, .15, .4, .23], [.72, .50, .11, .09, -.2, .19],
+      [.30, .54, .22, .20, .5, .18], [.48, .54, .16, .12, -.1, .16],
+      [.78, .37, .07, .06, 0, .21], [.41, .68, .14, .10, .3, .14]
+    ];
+    maria.forEach(function (m) {
+      g.save(); g.translate(m[0] * S, m[1] * S); g.rotate(m[4]); g.scale(1, m[3] / m[2]);
+      var rad = m[2] * S, gr = g.createRadialGradient(0, 0, rad * .1, 0, 0, rad);
+      gr.addColorStop(0, 'rgba(92,88,78,' + m[5] + ')'); gr.addColorStop(.65, 'rgba(104,99,88,' + (m[5] * .55) + ')'); gr.addColorStop(1, 'rgba(104,99,88,0)');
+      g.fillStyle = gr; g.beginPath(); g.arc(0, 0, rad, 0, Math.PI * 2); g.fill(); g.restore();
+    });
+    var q = A.rng(29);
+    for (var j = 0; j < 42; j++) {
+      var ma = q() * Math.PI * 2, md = Math.sqrt(q()) * r * .9;
+      var mx = r + Math.cos(ma) * md, my = r + Math.sin(ma) * md, mr = r * (.04 + q() * .09);
+      var mg = g.createRadialGradient(mx, my, 0, mx, my, mr);
+      var dark = q() < .55;
+      mg.addColorStop(0, dark ? 'rgba(110,104,92,.09)' : 'rgba(255,252,240,.11)');
+      mg.addColorStop(1, 'rgba(0,0,0,0)');
+      g.fillStyle = mg; g.beginPath(); g.arc(mx, my, mr, 0, Math.PI * 2); g.fill();
     }
-    draw(); cb(cv);
+    for (var i = 0; i < 38; i++) {
+      var a = q() * Math.PI * 2, d = Math.sqrt(q()) * r * .88;
+      var x = r + Math.cos(a) * d, y = r + Math.sin(a) * d, cr = r * (.012 + q() * .032);
+      g.fillStyle = 'rgba(84,79,68,.24)'; g.beginPath(); g.arc(x, y, cr, 0, Math.PI * 2); g.fill();
+      g.fillStyle = 'rgba(255,250,235,.22)'; g.beginPath(); g.arc(x - cr * .28, y - cr * .28, cr * .62, 0, Math.PI * 2); g.fill();
+    }
+    g.restore();
+    albedoCache = cv;
+    return cv;
+  }
+  function moonDisc(r, cb) {
+    var dpr = Math.min(devicePixelRatio || 1, 2), S = Math.max(64, Math.ceil(r * 2 * dpr));
+    var cv = document.createElement('canvas'); cv.width = cv.height = S;
+    var g = cv.getContext('2d');
+    if (A.hasImg('moon-disc')) {
+      var im = new Image();
+      im.onload = function () { g.save(); g.beginPath(); g.arc(S / 2, S / 2, S / 2, 0, Math.PI * 2); g.clip(); g.drawImage(im, 0, 0, S, S); g.restore(); cb(cv); };
+      im.onerror = function () { g.drawImage(moonAlbedo(), 0, 0, S, S); cb(cv); };
+      im.src = A.imgUrl('moon-disc');
+      return;
+    }
+    g.drawImage(moonAlbedo(), 0, 0, S, S);
+    cb(cv);
+  }
+  var phaseCache = { key: '', cv: null };
+  function renderMoonPhase(r, age, night) {
+    var dpr = Math.min(devicePixelRatio || 1, 2), S = Math.max(64, Math.min(320, Math.ceil(r * 2 * dpr)));
+    var key = S + '|' + Math.round(age * 20) + '|' + Math.round(night * 20);
+    if (phaseCache.key === key && phaseCache.cv) return phaseCache.cv;
+    var cv = document.createElement('canvas'); cv.width = cv.height = S;
+    var g = cv.getContext('2d');
+    g.drawImage(moonAlbedo(), 0, 0, S, S);
+    try {
+      var img = g.getImageData(0, 0, S, S), data = img.data;
+      /* synodic phase angle: 0 = new (sun behind), pi/2 = first quarter (right lit), pi = full, 3pi/2 = last quarter (left lit) */
+      var phi = ((age / 29.530588853) % 1) * Math.PI * 2;
+      var lx = Math.sin(phi), lz = -Math.cos(phi);
+      var half = S * .5, inv = 1 / (half - 1), earthshine = .085 * night, dayFade = .96 - (1 - night) * .45;
+      for (var py = 0; py < S; py++) {
+        var ny = (py + .5 - half) * inv;
+        for (var px = 0; px < S; px++) {
+          var nx = (px + .5 - half) * inv, d2 = nx * nx + ny * ny, idx = (py * S + px) * 4;
+          if (d2 >= 1) { data[idx + 3] = 0; continue; }
+          var d = Math.sqrt(d2), edge = Math.min(1, (1 - d) * (half - 1));
+          var nz = Math.sqrt(Math.max(0, 1 - d2));
+          var ndotl = nx * lx + nz * lz;
+          var lit0 = smooth(ramp(ndotl, -.09, .14));
+          var limb = .76 + .24 * Math.pow(nz, .35);
+          var shade = lit0 * limb;
+          if (shade > .001) {
+            var lum = .14 + .86 * shade;
+            data[idx] = Math.min(255, Math.round(data[idx] * lum));
+            data[idx + 1] = Math.min(255, Math.round(data[idx + 1] * lum));
+            data[idx + 2] = Math.min(255, Math.round(data[idx + 2] * (lum * .98 + .02)));
+            data[idx + 3] = Math.round(255 * edge * Math.max(earthshine, dayFade * Math.min(1, lit0 * 1.15)));
+          } else {
+            data[idx] = Math.round(data[idx] * .58);
+            data[idx + 1] = Math.round(data[idx + 1] * .64);
+            data[idx + 2] = Math.min(255, Math.round(data[idx + 2] * .82));
+            data[idx + 3] = Math.round(255 * edge * earthshine);
+          }
+        }
+      }
+      g.putImageData(img, 0, 0);
+    } catch (e) { /* fallback for environments without getImageData */ }
+    phaseCache.key = key; phaseCache.cv = cv;
+    return cv;
+  }
+  function drawMoon(g, cx, cy, r, age, night) {
+    night = night == null ? 1 : night;
+    g.save(); g.translate(cx, cy);
+    if (night > .25) {
+      var illum = .5 - .5 * Math.cos(((age / 29.530588853) % 1) * Math.PI * 2);
+      var haloR = r * (2.6 + illum * 1.4), halo = g.createRadialGradient(0, 0, r * .88, 0, 0, haloR);
+      halo.addColorStop(0, 'rgba(255,244,214,' + ((.08 + .16 * illum) * night).toFixed(3) + ')');
+      halo.addColorStop(.45, 'rgba(220,228,255,' + ((.03 + .05 * illum) * night).toFixed(3) + ')');
+      halo.addColorStop(1, 'rgba(255,244,214,0)');
+      g.fillStyle = halo; g.beginPath(); g.arc(0, 0, haloR, 0, Math.PI * 2); g.fill();
+    }
+    var disc = renderMoonPhase(r, age, night);
+    g.drawImage(disc, -r, -r, r * 2, r * 2);
+    g.restore();
   }
 
   Sky.moonDisc = moonDisc;
+  Sky.drawMoon = drawMoon;
 
   /* ---------- soft clouds, painted once, then re-coloured for the hour ---------- */
   function cloudSprite(seed) {
@@ -84,7 +184,6 @@
   function arch(g, x, y, w, h) { g.beginPath(); g.moveTo(x, y); g.lineTo(x, y - h * .62); g.quadraticCurveTo(x, y - h * .9, x + w / 2, y - h); g.quadraticCurveTo(x + w, y - h * .9, x + w, y - h * .62); g.lineTo(x + w, y); g.closePath(); }
   function sunX(s) { return s.sun.up ? s.sun.t : .5; }
   function faceGrad(g, x0, x1, s, base, gain) {
-    /* the side facing the sun is brighter, the far side falls into shade */
     var left = sunX(s) < .5, a = lit(base, s, (gain || 1) * (left ? 1.08 : .68)), b = lit(base, s, (gain || 1) * (left ? .68 : 1.08));
     var gr = g.createLinearGradient(x0, 0, x1, 0); gr.addColorStop(0, css(a)); gr.addColorStop(1, css(b)); return gr;
   }
@@ -104,13 +203,10 @@
     g.strokeStyle = css(lit('#a8823e', s, 1)); g.lineWidth = 2.4; g.beginPath(); g.moveTo(x, top - 50); g.lineTo(x, top - 68); g.stroke();
     g.fillStyle = css(lit('#e8c47c', s, 1.1)); g.beginPath(); g.arc(x, top - 66, 3.6, 0, 7); g.fill();
   }
-  /* scene space is 1000 wide and 560 tall, anchored to the bottom of the hero */
   function paintFar(g, s, atm) {
-    /* each distance is closer to the colour of the horizon */
     var far = mix(lit('#6d7f8c', s, .95), atm, .62), far2 = mix(lit('#5a6a66', s, .95), atm, .36);
     g.fillStyle = css(far); g.beginPath(); g.moveTo(0, 412); g.bezierCurveTo(140, 356, 240, 372, 370, 396); g.bezierCurveTo(500, 352, 640, 346, 760, 390); g.bezierCurveTo(850, 372, 930, 364, 1000, 388); g.lineTo(1000, 560); g.lineTo(0, 560); g.closePath(); g.fill();
     g.fillStyle = css(far2); g.beginPath(); g.moveTo(0, 452); g.bezierCurveTo(160, 416, 300, 428, 440, 452); g.bezierCurveTo(600, 420, 780, 418, 1000, 448); g.lineTo(1000, 560); g.lineTo(0, 560); g.closePath(); g.fill();
-    /* houses of the town behind the courtyard */
     var q = A.rng(23), x = -6;
     while (x < 1010) {
       var w = 34 + q() * 46, h = 34 + q() * 54, y = 486 - h;
@@ -123,17 +219,13 @@
   function paintMid(g, s, atm) {
     var ST = '#f0e4cc', G = 500;
     minaret(g, 306, 192, G, s); minaret(g, 694, 192, G, s);
-    /* wings and arcade */
     g.fillStyle = faceGrad(g, 222, 778, s, ST, .92); g.fillRect(222, 414, 556, 90);
     g.fillStyle = css(lit('#c7ad7e', s, .86)); g.fillRect(216, 408, 568, 7);
     for (var i = 0; i < 16; i++) { if (i > 5 && i < 10) continue; windowGlow(g, 238 + i * 33.2, 494, 20, 58, s); }
-    /* the hall */
     g.fillStyle = faceGrad(g, 370, 630, s, ST); g.fillRect(370, 356, 260, 148);
     g.fillStyle = css(lit('#c7ad7e', s, .9)); g.fillRect(362, 350, 276, 8);
     [[396, 408], [428, 408], [548, 408], [580, 408]].forEach(function (q) { windowGlow(g, q[0], q[1], 22, 38, s); });
-    /* side domes */
     [404, 596].forEach(function (cx) { g.fillStyle = faceGrad(g, cx - 30, cx + 30, s, ST, .96); g.fillRect(cx - 28, 330, 56, 22); dome(g, cx, 332, 32, 60); g.fillStyle = faceGrad(g, cx - 32, cx + 32, s, '#d9b26f', 1); g.fill(); });
-    /* the great drum and dome */
     g.fillStyle = faceGrad(g, 432, 568, s, ST, 1.02); g.fillRect(434, 306, 132, 46);
     for (var d = 0; d < 7; d++) windowGlow(g, 442 + d * 17.4, 345, 9, 28, s);
     g.fillStyle = css(lit('#c7ad7e', s, .9)); g.fillRect(428, 300, 144, 7);
@@ -142,10 +234,8 @@
     dg.addColorStop(0, css(hi)); dg.addColorStop(.48, css(mid)); dg.addColorStop(1, css(lo)); g.fillStyle = dg; g.fill();
     g.strokeStyle = css(lit('#a8823e', s, 1)); g.lineWidth = 3; g.beginPath(); g.moveTo(500, 168); g.lineTo(500, 138); g.stroke();
     g.fillStyle = css(lit('#f1d59e', s, 1.1)); g.beginPath(); g.arc(500, 158, 5, 0, 7); g.fill();
-    /* the great door */
     arch(g, 466, 504, 68, 104); g.fillStyle = css(lit('#c7ad7e', s, .8)); g.fill();
     arch(g, 474, 504, 52, 90); g.fillStyle = css(mix(lit('#3a2614', s, .9), [255, 196, 110], s.night * .8)); g.fill();
-    /* the courtyard floor and low wall */
     g.fillStyle = faceGrad(g, 0, 1000, s, '#d6c19c', .8); g.fillRect(0, 500, 1000, 12);
     var fl = g.createLinearGradient(0, 508, 0, 560); fl.addColorStop(0, css(lit('#c1a982', s, .94))); fl.addColorStop(1, css(lit('#7d6c55', s, .8))); g.fillStyle = fl; g.fillRect(0, 508, 1000, 52);
   }
@@ -167,14 +257,12 @@
       }
       g.strokeStyle = css(lit('#6c8f4e', s, 1)); g.lineWidth = 2; g.beginPath(); g.moveTo(tx, ty); g.quadraticCurveTo(cx0, cy0, ex, ey); g.stroke();
     }
-    /* the dates, hanging in the crown */
     for (var dd = 0; dd < 12; dd++) { g.fillStyle = css(lit(dd % 2 ? '#a9602a' : '#7c4218', s, 1)); g.beginPath(); g.ellipse(tx + (dd % 4 - 1.5) * 7 + (dd % 2 ? 2 : -2), ty + 10 + (dd % 3) * 7, 3.4, 4.8, 0, 0, 7); g.fill(); }
   }
 
   /* ---------- mounting ---------- */
   function canvas(cls, host) { var c = document.createElement('canvas'); c.className = cls; host.appendChild(c); return c; }
   var sprites = null;
-  /* the courtyard, already graded for this hour and sized for this screen: coming back to it costs nothing */
   var fgCache = [];
   function fgLayer(name, filter, iw, ih, dpr, opacity, wrap, before, gone) {
     var key = name + '|' + filter + '|' + Math.round(iw), hit = fgCache.filter(function (x) { return x.key === key; })[0];
@@ -204,77 +292,86 @@
     var hour = function () { return opts.hour != null ? opts.hour : Sky.hour(); };
     var W = host.clientWidth || 360, H = host.clientHeight || 280, dpr = Math.min(devicePixelRatio || 1, 2);
     var back = document.createElement('div'); back.className = 'sky-back'; host.appendChild(back);
-    var sky = canvas('sky-c', back); sky.width = W * dpr; sky.height = H * dpr;
-    var g = sky.getContext('2d'); g.scale(dpr, dpr);
+    var sky = canvas('sky-c', back);
+    var g = sky.getContext('2d');
     var s = Sky.at(hour()), stopped = false, raf = 0;
     var horizon = H * .78;
-    /* stars live above the horizon, a few of them bright */
-    var q = A.rng(11), stars = []; for (var i = 0; i < 150; i++) stars.push({ x: q() * W, y: q() * horizon, r: q() < .08 ? 1.5 : .45 + q() * .7, p: q() * 6.28, sp: .5 + q() * 1.5, c: q() < .25 ? '#ffe7c4' : q() < .4 ? '#c9dcff' : '#ffffff' });
+    /* normalised star positions so resizing never stretches or crowds them */
+    var q = A.rng(11), stars = [];
+    for (var i = 0; i < 150; i++) stars.push({ nx: q(), ny: q(), r: q() < .08 ? 1.5 : .45 + q() * .7, p: q() * 6.28, sp: .5 + q() * 1.5, c: q() < .25 ? '#ffe7c4' : q() < .4 ? '#c9dcff' : '#ffffff' });
     if (!sprites) sprites = [cloudSprite(3), cloudSprite(7), cloudSprite(13)];
     var tinted = sprites.map(function (c) { return tintCloud(c, s); });
     var q2 = A.rng(5), clouds = []; for (var k = 0; k < 6; k++) clouds.push({ i: k % 3, x: q2() * W * 1.4 - W * .2, y: H * (.03 + q2() * .34), sc: (.45 + q2() * .75) * Math.max(1, W / 600), sp: 2 + q2() * 4 });
-    var anims = [], birdT = 0;
+    var anims = [], birdT = 0, starEls = [];
     function drift(el, from, to, secs, atSecs) {
       if (A.reduced() || !el.animate) { el.style.transform = 'translate3d(' + (from + (to - from) * .4) + 'px,0,0)'; return null; }
       var an = el.animate([{ transform: 'translate3d(' + from + 'px,0,0)' }, { transform: 'translate3d(' + to + 'px,0,0)' }], { duration: secs * 1000, iterations: Infinity });
       an.currentTime = (atSecs || 0) * 1000; anims.push(an); return an;
     }
-    var moon = null, moonAge = A.moonAge(), moonR = Math.max(16, Math.min(W, H) * .075);
-    moonDisc(moonR, function (c) { moon = c; paint(0); });
+    var moonAge = A.moonAge(), moonR = Math.max(18, Math.min(44, Math.min(W, H) * .08));
     /* the moon rises and sets through its real phase: new with the sun, full opposite it */
     function moonPos() {
       var tr = (12 + moonAge / 29.530588853 * 24) % 24, ha = s.h - tr; if (ha > 12) ha -= 24; if (ha < -12) ha += 24;
       if (Math.abs(ha) > 6.3) return null;
-      return { x: W * (.5 + ha / 6.3 * .42), y: horizon - Math.cos(ha / 6.3 * Math.PI / 2) * (horizon - moonR * 2.2) };
+      return { x: W * (.5 + ha / 6.3 * .42), y: Math.max(moonR * 1.6, horizon - Math.cos(ha / 6.3 * Math.PI / 2) * (horizon - moonR * 2.2)) };
     }
-    function paint(t) {
+    function nearMoon(x, y, mp, pad) {
+      if (!mp) return false;
+      var dx = x - mp.x, dy = y - mp.y, lim = moonR + (pad || 0);
+      return dx * dx + dy * dy < lim * lim;
+    }
+    function paint() {
+      dpr = Math.min(devicePixelRatio || 1, 2);
+      horizon = H * .78;
+      moonR = Math.max(18, Math.min(44, Math.min(W, H) * .08));
+      sky.width = Math.max(1, Math.round(W * dpr));
+      sky.height = Math.max(1, Math.round(H * dpr));
+      g.setTransform(dpr, 0, 0, dpr, 0, 0);
       var gr = g.createLinearGradient(0, 0, 0, horizon * 1.08); gr.addColorStop(0, css(s.top)); gr.addColorStop(.62, css(s.mid)); gr.addColorStop(1, css(s.low));
       g.globalCompositeOperation = 'source-over'; g.globalAlpha = 1; g.fillStyle = gr; g.fillRect(0, 0, W, H);
+      var mp = moonPos();
       if (s.night > .02) {
         stars.forEach(function (o) {
           if (o.r > 1.2) return;
-          var tw = .55 + .45 * Math.sin(o.p), fade = 1 - o.y / horizon * .55;
-          g.globalAlpha = s.night * tw * fade; g.fillStyle = o.c; g.beginPath(); g.arc(o.x, o.y, o.r, 0, 7); g.fill();
+          var sx = o.nx * W, sy = o.ny * horizon;
+          if (nearMoon(sx, sy, mp, 6)) return;
+          var tw = .55 + .45 * Math.sin(o.p), fade = 1 - sy / horizon * .55;
+          g.globalAlpha = s.night * tw * fade; g.fillStyle = o.c; g.beginPath(); g.arc(sx, sy, o.r, 0, Math.PI * 2); g.fill();
         });
         g.globalAlpha = 1;
       }
-      /* the moon, in its phase, with a little earthshine on the dark part at night */
-      var mp = moonPos();
-      if (mp && moon) {
-        var dayMoon = 1 - s.night;
-        g.save(); g.translate(mp.x, mp.y);
-        if (s.night > .3) { var halo = g.createRadialGradient(0, 0, moonR, 0, 0, moonR * 4); halo.addColorStop(0, 'rgba(255,244,214,' + (.22 * s.night) + ')'); halo.addColorStop(1, 'rgba(255,244,214,0)'); g.fillStyle = halo; g.fillRect(-moonR * 4, -moonR * 4, moonR * 8, moonR * 8); }
-        var path = window.Path2D ? new Path2D(A.moonPath(0, 0, moonR, moonAge)) : null;
-        g.globalAlpha = s.night * .13; g.drawImage(moon, -moonR, -moonR, moonR * 2, moonR * 2);
-        g.globalAlpha = .96 - dayMoon * .5;
-        if (path) { g.save(); g.clip(path); g.drawImage(moon, -moonR, -moonR, moonR * 2, moonR * 2); g.restore(); }
-        g.restore(); g.globalAlpha = 1;
-      }
-      /* the sun, and the warmth it throws along the horizon */
+      if (mp) drawMoon(g, mp.x, mp.y, moonR, moonAge, s.night);
       if (s.sun.up) {
-        var sx = W * (.06 + s.sun.t * .88), sy = horizon + 8 - s.sun.alt * (horizon * .84), Rg = Math.max(W, H) * (.34 + s.sun.low * .3);
+        var sx0 = W * (.06 + s.sun.t * .88), sy0 = horizon + 8 - s.sun.alt * (horizon * .84), Rg = Math.max(W, H) * (.34 + s.sun.low * .3);
         g.globalCompositeOperation = 'lighter';
-        var gl = g.createRadialGradient(sx, sy, 0, sx, sy, Rg); gl.addColorStop(0, 'rgba(255,240,196,.72)'); gl.addColorStop(.14, 'rgba(255,214,140,.32)'); gl.addColorStop(.5, 'rgba(255,170,96,' + (.06 + s.sun.low * .12) + ')'); gl.addColorStop(1, 'rgba(255,150,80,0)');
+        var gl = g.createRadialGradient(sx0, sy0, 0, sx0, sy0, Rg); gl.addColorStop(0, 'rgba(255,240,196,.72)'); gl.addColorStop(.14, 'rgba(255,214,140,.32)'); gl.addColorStop(.5, 'rgba(255,170,96,' + (.06 + s.sun.low * .12) + ')'); gl.addColorStop(1, 'rgba(255,150,80,0)');
         g.fillStyle = gl; g.fillRect(0, 0, W, H);
         g.globalCompositeOperation = 'source-over';
-        var rS = Math.max(13, Math.min(W, H) * .05), dc = g.createRadialGradient(sx, sy, 0, sx, sy, rS); dc.addColorStop(0, '#fffbe6'); dc.addColorStop(.75, '#fff0bd'); dc.addColorStop(1, 'rgba(255,226,150,0)');
-        g.fillStyle = dc; g.beginPath(); g.arc(sx, sy, rS, 0, 7); g.fill();
+        var rS = Math.max(13, Math.min(W, H) * .05), dc = g.createRadialGradient(sx0, sy0, 0, sx0, sy0, rS); dc.addColorStop(0, '#fffbe6'); dc.addColorStop(.75, '#fff0bd'); dc.addColorStop(1, 'rgba(255,226,150,0)');
+        g.fillStyle = dc; g.beginPath(); g.arc(sx0, sy0, rS, 0, Math.PI * 2); g.fill();
       }
+      /* reposition bright DOM sparkles and hide any overlapping the moon */
+      starEls.forEach(function (it) {
+        var sx = it.o.nx * W, sy = it.o.ny * horizon;
+        it.el.style.left = sx.toFixed(1) + 'px';
+        it.el.style.top = sy.toFixed(1) + 'px';
+        it.el.style.display = nearMoon(sx, sy, mp, 16) ? 'none' : '';
+      });
     }
-    /* what moves is its own layer, drawn once and slid by the compositor, so the sky costs nothing per frame */
     tinted.length && clouds.forEach(function (c) {
       var cw = 420 * c.sc, ch = 150 * c.sc, el = document.createElement('canvas'), src = tinted[c.i]; el.className = 'sky-cloud'; el.width = src.width; el.height = src.height;
       el.getContext('2d').drawImage(src, 0, 0); el.style.cssText = 'width:' + cw + 'px;height:' + ch + 'px;top:' + c.y + 'px;opacity:' + (.92 - s.night * .72);
       back.appendChild(el);
       var dist = W + cw * 1.2; drift(el, -cw * .6, W + cw * .6, dist / c.sp, (c.x % dist) / c.sp);
     });
-    /* the bright stars twinkle by themselves */
+    /* the bright stars twinkle by themselves, never overlapping the moon */
     if (s.night > .02) stars.forEach(function (o, i) {
       if (o.r <= 1.2) return;
-      var el = document.createElement('i'); el.className = 'sky-star'; el.style.cssText = 'left:' + o.x + 'px;top:' + o.y + 'px;color:' + o.c + ';--o:' + (s.night * (1 - o.y / horizon * .55)).toFixed(2) + ';animation-duration:' + (2.6 + (i % 5) * .9) + 's;animation-delay:-' + (i % 7) * .7 + 's';
+      var el = document.createElement('i'); el.className = 'sky-star';
+      el.style.cssText = 'color:' + o.c + ';--o:' + (s.night * (1 - o.ny * .55)).toFixed(2) + ';animation-duration:' + (2.6 + (i % 5) * .9) + 's;animation-delay:-' + (i % 7) * .7 + 's';
       back.appendChild(el);
+      starEls.push({ o: o, el: el });
     });
-    /* now and then, birds crossing the day */
     function flock() {
       if (stopped || A.motion() !== 'full' || A.reduced() || s.night >= .2) return;
       var n = 4 + Math.floor(Math.random() * 4), dir = Math.random() < .5 ? 1 : -1, y = H * (.12 + Math.random() * .25), el = document.createElement('div'), col = css(mix(s.top, [20, 26, 48], .7), .8), html = '';
@@ -287,15 +384,18 @@
     }
     birdT = setTimeout(flock, 3000);
     /* the foreground: render if supplied, drawn if not */
-    var layers = [];
+    var layers = [], fgWrap = null;
+    function fitFg() {
+      if (!fgWrap) return;
+      var iw = Math.max(W, (H * .94 + 26) * 1.5), ih = iw / 1.5;
+      fgWrap.style.width = iw + 'px'; fgWrap.style.height = ih + 'px'; fgWrap.style.left = (W - iw) / 2 + 'px';
+      fgWrap.style.top = (ih > H * .94 + 26 ? H * .08 : H - ih + 26) + 'px';
+    }
     if (opts.fg !== false) {
       if (A.hasImg('court-fg-day') || A.hasImg('court-fg-night')) {
-        /* the sky has been cut out of the renders, so the real sky and the real moon sit behind the building */
         var iw = Math.max(W, (H * .94 + 26) * 1.5), ih = iw / 1.5, wrap = document.createElement('div');
-        wrap.className = 'sky-fgw'; wrap.style.width = iw + 'px'; wrap.style.height = ih + 'px'; wrap.style.left = (W - iw) / 2 + 'px';
-        wrap.style.top = (ih > H * .94 + 26 ? H * .08 : H - ih + 26) + 'px';
+        wrap.className = 'sky-fgw'; fgWrap = wrap; fitFg();
         var nightO = A.hasImg('court-fg-night') ? smooth(ramp(s.night, .22, .72)) : 0;
-        /* small things that live: a slow shimmer on the pool, and the lanterns breathing after dusk */
         wrap.insertAdjacentHTML('beforeend', '<i class="sky-pool"></i>' + (s.night > .12 ? [[23.1, 74.2], [33.1, 69.5], [67, 69.5], [77.1, 74.2]].map(function (q, i) { return '<i class="sky-glow" style="left:' + q[0] + '%;top:' + q[1] + '%;--d:' + (i * 1.3) + 's;opacity:' + (.3 + s.night * .6).toFixed(2) + '"></i>'; }).join('') : ''));
         host.appendChild(wrap);
         var isGone = function () { return stopped; }, top0 = wrap.firstChild;
@@ -327,13 +427,25 @@
         back.style.transform = 'translate3d(0,' + (y * .3) + 'px,0)'; layers.forEach(function (l) { l.el.style.transform = 'translate3d(0,' + (y * l.k) + 'px,0)'; });
       });
     }
-    /* nothing runs for what nobody can see */
+    var rzT = 0;
+    function onResize() {
+      if (stopped) return;
+      var nw = host.clientWidth, nh = host.clientHeight;
+      if (!nw || !nh || (Math.abs(nw - W) < 2 && Math.abs(nh - H) < 2)) return;
+      W = nw; H = nh;
+      paint();
+      fitFg();
+    }
+    function queueResize() { clearTimeout(rzT); rzT = setTimeout(onResize, 30); }
+    var ro = window.ResizeObserver ? new ResizeObserver(queueResize) : null;
+    if (ro) ro.observe(host);
+    window.addEventListener('resize', queueResize, { passive: true });
     var io = window.IntersectionObserver ? new IntersectionObserver(function (es) {
       var on = es[es.length - 1].isIntersecting; host.classList.toggle('sky-off', !on); anims.forEach(function (x) { if (on) x.play(); else x.pause(); });
     }) : null;
     if (io) io.observe(host);
-    paint(0);
+    paint();
     if (!A.reduced()) window.addEventListener('scroll', onScroll, { passive: true });
-    return function () { stopped = true; cancelAnimationFrame(raf); clearTimeout(birdT); window.removeEventListener('scroll', onScroll); if (io) io.disconnect(); anims.forEach(function (x) { x.cancel(); }); };
+    return function () { stopped = true; cancelAnimationFrame(raf); clearTimeout(birdT); clearTimeout(rzT); window.removeEventListener('scroll', onScroll); window.removeEventListener('resize', queueResize); if (ro) ro.disconnect(); if (io) io.disconnect(); anims.forEach(function (x) { x.cancel(); }); };
   };
 })();
