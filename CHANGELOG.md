@@ -2,6 +2,12 @@
 
 The version is set in `version.txt`.
 
+## 2.8.0 (code 14), November 2026
+
+- **Desktop & tablet workspace overhaul**: rebuilt all 44 Lab simulations into a balanced responsive Workbench with direct manipulation on Fraction bars, keyboard controls across pointer-driven sims, and a filterable Lab gallery with completion progress.
+- **Native split workspaces**: added a native split Lesson Player with shared question-scoped working paper, a 2-pane Qurʾān Sūrah Reader with a searchable 114-sūrah index and āyah jumps, a 2-column Welcome hero, docked wide-screen Ink tools, inline Course lesson editing, 2-pane Essay & Marking views, and deterministic 2-column desktop/tablet Parent, Settings, and Print Studio layouts.
+- **Night-sky Moon & resize stability**: replaced the moon disc with a supersampled 3D spherical phase shader, occluded stars behind the lunar disc, kept the sky canvas at a true 1:1 ratio across rail toggles and window resizes, and preserved active learner sessions across screen posture changes.
+
 ## 2.7.1 (code 13), November 2026
 
 - Refined mobile typography, touch targets, RTL icon flips, stacked date/time pickers inside form sheets, and quick access to Setup and Settings across phones, tablets, and Windows desktop.
