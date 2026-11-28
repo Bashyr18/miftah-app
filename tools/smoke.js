@@ -22,7 +22,10 @@ function boot(stored, iso) {
   w.scrollTo = () => { };
   if (stored) w.localStorage.setItem('miftah.v1', JSON.stringify(stored));
   const R = Date; if (iso) { const t = new R(iso).getTime(); w.eval('(function(){var R=Date;var t=' + t + ';window.__t=t;window.Date=function(a,b,c,d,e,f){if(arguments.length===0)return new R(window.__t);if(arguments.length===1)return new R(a);return new R(a,b,c||0,d||0,e||0,f||0)};Date.UTC=R.UTC;Date.now=function(){return window.__t};Date.prototype=R.prototype;})()'); }
-  for (const s of scripts) w.eval(fs.readFileSync(path.join(root, s), 'utf8'));
+  for (const s of scripts) {
+    w.eval(fs.readFileSync(path.join(root, s), 'utf8'));
+    if (s === 'js/core/core.js') w.A.quranAll = function (done) { if (done) done(); };
+  }
   return { w, A: w.A, errors, go: (h) => { w.location.hash = '#/' + h; w.A.rerender(); } };
 }
 const year = 2026;
